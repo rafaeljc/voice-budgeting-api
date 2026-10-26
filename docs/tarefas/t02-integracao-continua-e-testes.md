@@ -240,9 +240,9 @@ mensagem em pt-BR) e healthcheck em `CMD-SHELL` lendo `$$MYSQL_USER` e `$$MYSQL_
 
 ## Fase 3: Divisão dos testes e banco nos testes de integração
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `build.gradle`: `test` filtrando `*Test`; task `integrationTest` (mesmo source set, filtrando
+- [x] [verificação] `build.gradle`: `test` filtrando `*Test`; task `integrationTest` (mesmo source set, filtrando
   `*IT`, `shouldRunAfter test`); `check` dependendo de `integrationTest` e de `jacocoTestReport`;
   `jacocoTestReport` (HTML e XML) com os dados das duas tasks; dependências de teste (webmvc-test,
   spring-boot-testcontainers, testcontainers-mysql, testcontainers-junit-jupiter)
