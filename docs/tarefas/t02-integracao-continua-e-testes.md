@@ -249,7 +249,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `src/test/resources/application-test.properties`: `spring.ai.openai.api-key` fictícia,
   `spring.ai.openai.base-url=http://localhost:1` e `spring.ai.retry.max-attempts=1` (confirmar o nome da
   propriedade)
-- [ ] [verificação] `support/IntegrationTest` (meta-anotação: `@SpringBootTest`, `@ActiveProfiles("test")`,
+- [x] [verificação] `support/IntegrationTest` (meta-anotação: `@SpringBootTest`, `@ActiveProfiles("test")`,
   `@ImportTestcontainers(MySqlTestContainer.class)`, `@ExtendWith(ResetMySqlExtension.class)`) e
   `support/mysql/MySqlTestContainer` (interface com o container `mysql:9.6` estático, `@Container` e
   `@ServiceConnection`)
