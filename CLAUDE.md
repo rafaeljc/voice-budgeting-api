@@ -58,6 +58,9 @@ src/test/resources/audio/       # áudios de exemplo para testes
 
 - `record` para IDs, value objects e DTOs; classe para entidades de domínio
 - Injeção por construtor com campos `private final`
+- Forma idiomática do Spring: usar o que o framework oferece (injeção por construtor, anotações, auto-configuração,
+  `@ConfigurationProperties`, `@Transactional`) em vez de reimplementar à mão; nos testes, `@ExtendWith(MockitoExtension.class)`
+  com `@Mock` e `@InjectMocks`, não `mock(...)` e `new` manuais
 - Mapeamento manual: `Response.from(output)`, `request.toInput()`, `entity.toDomain()`
 - Invariantes validadas no construtor (compact constructor nos records)
 - Logger SLF4J declarado explicitamente (`LoggerFactory.getLogger`)

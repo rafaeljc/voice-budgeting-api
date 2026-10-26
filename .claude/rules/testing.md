@@ -21,6 +21,7 @@ paths:
 - JUnit 5 + AssertJ (não usar `assertEquals`).
 - Nome: `should_<resultado>_when_<condição>`.
 - Estrutura `// given // when // then`; um comportamento por teste.
+- Teste unitário: `@ExtendWith(MockitoExtension.class)`, `@Mock` nas portas e `@InjectMocks` na classe testada.
 - Áudios de exemplo em `src/test/resources/audio/`.
 
 ## O que testar

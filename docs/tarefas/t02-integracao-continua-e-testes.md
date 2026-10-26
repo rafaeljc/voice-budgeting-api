@@ -87,6 +87,9 @@ QA-02, SEG-07, SEG-08, DOC-01).
 - Formatação local por hook do Claude Code (PostToolUse) no `.java` editado, não por pre-commit — o código do
   agente já sai formatado, sem pagar a inicialização do Gradle a cada commit do ciclo TDD; o código manual é
   barrado pelo `build` e pelo CI
+- Forma idiomática do Spring como padrão do projeto inteiro, registrada no `CLAUDE.md`, e testes unitários com
+  `@Mock`/`@InjectMocks` no `testing.md` — decidido na Fase 3, a pedido do usuário; os testes seguem
+  `// given // when // then`
 - ArchUnit fica para a T09 — as regras de camadas já são violadas hoje, e a correção pertence à T09
 
 ## Definição de pronto
