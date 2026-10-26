@@ -253,7 +253,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `@ImportTestcontainers(MySqlTestContainer.class)`, `@ExtendWith(ResetMySqlExtension.class)`) e
   `support/mysql/MySqlTestContainer` (interface com o container `mysql:9.6` estático, `@Container` e
   `@ServiceConnection`)
-- [ ] [TDD] `support/mysql/MySqlCleaner` (lista as tabelas do schema em `information_schema.tables` e roda
+- [x] [TDD] `support/mysql/MySqlCleaner` (lista as tabelas do schema em `information_schema.tables` e roda
   `TRUNCATE` em cada uma, com `FOREIGN_KEY_CHECKS=0` durante a limpeza) e `ResetMySqlExtension`
   (`BeforeEachCallback` que obtém o cleaner do contexto via `SpringExtension.getApplicationContext`) —
   `MySqlCleanerIT.should_removeAllRows_when_cleaned`
