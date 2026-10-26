@@ -55,9 +55,9 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Instruções e plano do projeto
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Ampliar o `.gitignore` (segredos, arquivos locais do agente, Python, logs, SO)
+- [x] [verificação] Ampliar o `.gitignore` (segredos, arquivos locais do agente, Python, logs, SO)
 - [ ] [verificação] Adicionar `docs/escopo.md` e `docs/tarefas.md`
 - [ ] [verificação] Adicionar `CLAUDE.md` e `.claude/rules/`
 
