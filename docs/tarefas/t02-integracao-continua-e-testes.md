@@ -262,7 +262,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `MySqlCleanerIT.should_removeAllRows_when_cleaned`
 - [x] [TDD] `AiProviderIsolationIT.should_failWithoutExternalCall_when_aiIsNotStubbed`: sem
   `@AutoConfigureAiStub`, chamar o `TranscriptionModel` lança exceção cuja causa raiz é `ConnectException`
-- [ ] [TDD] `PersistTransactionUseCaseTest.should_saveTransactionWithInputData_when_executed`: Mockito na porta
+- [x] [TDD] `PersistTransactionUseCaseTest.should_saveTransactionWithInputData_when_executed`: Mockito na porta
   `TransactionRepository`, verifica descrição, valor (centavos, sem conversão) e categoria gravados e o id da saída
 - [ ] [TDD] `TransactionEndpointsIT.should_returnCreatedTransaction_when_listingByCategory`
   (`@IntegrationTest` + `@AutoConfigureMockMvc`): `POST /transactions` responde 201, e
