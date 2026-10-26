@@ -147,9 +147,9 @@ Notas técnicas (confirme na versão em uso antes de aplicar):
 
 ## Fase 1: Padrão de código
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Remover `OpenAiChatClientIT`, `OpenAiChatModelIT`, `OpenAiSpeechModelIT`,
+- [x] [verificação] Remover `OpenAiChatClientIT`, `OpenAiChatModelIT`, `OpenAiSpeechModelIT`,
   `OpenAiTranscriptionModelIT`, `ToolCallingIT` e `BudgetingApplicationTests` — chamam a OpenAI real, usam
   `System.out` (violariam o Checkstyle) e o `contextLoads` exige o MySQL no ar; sem eles, o `build` passa sem
   infraestrutura até a Fase 3 trazer os novos testes
