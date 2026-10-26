@@ -66,7 +66,10 @@ jacoco {
 }
 
 tasks.named('jacocoTestReport') {
-    executionData tasks.named('test'), tasks.named('integrationTest')
+    dependsOn tasks.named('test'), tasks.named('integrationTest')
+    executionData.setFrom fileTree(layout.buildDirectory.dir('jacoco')) {
+        include 'test.exec', 'integrationTest.exec'
+    }
     reports {
         html.required = true
         xml.required = true
