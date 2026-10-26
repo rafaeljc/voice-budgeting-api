@@ -153,7 +153,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `OpenAiTranscriptionModelIT`, `ToolCallingIT` e `BudgetingApplicationTests` — chamam a OpenAI real, usam
   `System.out` (violariam o Checkstyle) e o `contextLoads` exige o MySQL no ar; sem eles, o `build` passa sem
   infraestrutura até a Fase 3 trazer os novos testes
-- [ ] [verificação] Spotless no `build.gradle`: Java com palantir-java-format, ordem de imports, remoção de
+- [x] [verificação] Spotless no `build.gradle`: Java com palantir-java-format, ordem de imports, remoção de
   imports não usados e nova linha no fim; `*.gradle`, `*.yml`, `*.md` e `*.properties` só com remoção de espaços
   no fim da linha e nova linha no fim. Rodar `./gradlew spotlessApply` no projeto em um commit próprio, sem outras
   mudanças

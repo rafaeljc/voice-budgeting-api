@@ -7,11 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Entity
 @Data
@@ -20,6 +19,7 @@ import java.util.UUID;
 public class TransactionEntity {
     @Id
     private UUID id;
+
     private String description;
     private long amount;
 
@@ -35,11 +35,6 @@ public class TransactionEntity {
     }
 
     public Transaction toDomain() {
-        return new Transaction(
-                new TransactionId(this.id),
-                this.description,
-                this.amount,
-                this.category
-        );
+        return new Transaction(new TransactionId(this.id), this.description, this.amount, this.category);
     }
 }
