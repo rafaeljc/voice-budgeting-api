@@ -147,7 +147,7 @@ Notas técnicas (confirme na versão em uso antes de aplicar):
 
 ## Fase 1: Padrão de código
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Remover `OpenAiChatClientIT`, `OpenAiChatModelIT`, `OpenAiSpeechModelIT`,
   `OpenAiTranscriptionModelIT`, `ToolCallingIT` e `BudgetingApplicationTests` — chamam a OpenAI real, usam
@@ -167,7 +167,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
     `MultipleVariableDeclarations`, `OneStatementPerLine`, `FallThrough`, `ModifiedControlVariable`,
     `SimplifyBooleanExpression`
   - tamanho: `MethodLength` (máx. 50) e `ParameterNumber` (máx. 7)
-- [ ] [verificação] `.claude/hooks/format_java.py` (código em inglês), registrado em `.claude/settings.json`
+- [x] [verificação] `.claude/hooks/format_java.py` (código em inglês), registrado em `.claude/settings.json`
   como `PostToolUse` com matcher `Edit|Write`: se o arquivo editado for `.java` dentro do projeto, roda
   `./gradlew spotlessApply -PspotlessIdeHook=<caminho absoluto>`; se a formatação falhar, sai com código 2 e a
   mensagem em stderr (o agente vê o erro); nos demais casos, sai com 0 sem fazer nada
@@ -186,7 +186,21 @@ Os arquivos temporários são removidos ao fim de cada comando.
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Removidos os cinco `*IT` que chamavam a OpenAI real e o `BudgetingApplicationTests`; Spotless (palantir-java-format
+8.4.0 do plugin, funcionou com Java 25) aplicado ao projeto em commit próprio; Checkstyle 13.4.0 com
+`config/checkstyle/checkstyle.xml` e `suppressions.xml`; hook `format_java.py` registrado em `PostToolUse`.
+
+- Decisões de implementação: os nomes de método são validados por duas regras com `id` (`MainMethodName` e
+  `TestMethodName`), e o `suppressions.xml` ativa cada uma só no seu source set; `@Autowired` é proibido só em
+  `src/main` (`NoFieldInjection` suprimida em `src/test`). O formato do teste também aceita métodos auxiliares em
+  camelCase. O Checkstyle apontou imports com `*` em `TransactionController`, trocados por imports explícitos.
+- O `spotlessApply` também ajustou espaços no fim da linha e nova linha no fim em `README.md` e `compose.yml`.
+- Verificação: todos os comandos do plano passaram — `spotlessCheck checkstyleMain checkstyleTest` com sucesso;
+  `System.out` temporário falha no `checkstyleMain` (`RegexpSinglelineJava`); indentação errada falha no
+  `spotlessCheck` citando o arquivo; o hook formata o `.java` (exit 0) e deixa o `.md` inalterado (exit 0);
+  `./gradlew build` sem `OPENAI_API_KEY` e sem MySQL passa (ainda sem testes: a Fase 3 os traz).
+- Para uma sessão nova: o `build.gradle` ainda não tem a separação `test`/`integrationTest` nem o JaCoCo (Fase 3).
+  O `gradlew spotlessApply` é o comando de correção de formatação.
 
 ## Fase 2: Segredos fora do versionamento
 
