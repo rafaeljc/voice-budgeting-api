@@ -257,7 +257,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `TRUNCATE` em cada uma, com `FOREIGN_KEY_CHECKS=0` durante a limpeza) e `ResetMySqlExtension`
   (`BeforeEachCallback` que obtém o cleaner do contexto via `SpringExtension.getApplicationContext`) —
   `MySqlCleanerIT.should_removeAllRows_when_cleaned`
-- [ ] [TDD] `AiProviderIsolationIT.should_failWithoutExternalCall_when_aiIsNotStubbed`: sem
+- [x] [TDD] `AiProviderIsolationIT.should_failWithoutExternalCall_when_aiIsNotStubbed`: sem
   `@AutoConfigureAiStub`, chamar o `TranscriptionModel` lança exceção cuja causa raiz é `ConnectException`
 - [ ] [TDD] `PersistTransactionUseCaseTest.should_saveTransactionWithInputData_when_executed`: Mockito na porta
   `TransactionRepository`, verifica descrição, valor (centavos, sem conversão) e categoria gravados e o id da saída
