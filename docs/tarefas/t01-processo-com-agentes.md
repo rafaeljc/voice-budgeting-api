@@ -87,9 +87,9 @@ ambiente. O build não foi alterado; Testcontainers entrará em uma tarefa poste
 
 ## Fase 2: Fluxo de tarefas
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Adicionar `docs/adr/template.md` e `.github/pull_request_template.md`
+- [x] [verificação] Adicionar `docs/adr/template.md` e `.github/pull_request_template.md`
 - [ ] [verificação] Adicionar as skills `planejar-tarefa` (com `template.md`), `executar-tarefa` e `pr`
 
 ### Plano de verificação
