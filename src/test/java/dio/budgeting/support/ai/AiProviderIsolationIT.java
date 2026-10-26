@@ -19,6 +19,7 @@ class AiProviderIsolationIT {
 
     @Test
     void should_failWithoutExternalCall_when_aiIsNotStubbed() {
+        // given
         var audio = new ByteArrayResource(new byte[] {1}) {
             @Override
             public String getFilename() {
@@ -26,6 +27,7 @@ class AiProviderIsolationIT {
             }
         };
 
+        // when / then
         assertThatThrownBy(() -> transcriptionModel.transcribe(audio)).hasRootCauseInstanceOf(ConnectException.class);
     }
 }

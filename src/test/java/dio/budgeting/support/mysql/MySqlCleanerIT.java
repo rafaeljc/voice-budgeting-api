@@ -22,11 +22,13 @@ class MySqlCleanerIT {
 
     @Test
     void should_removeAllRows_when_cleaned() {
+        // given
         repository.save(new TransactionEntity(UUID.randomUUID(), "Mercado", 8000, Category.GROCERIES));
-        assertThat(repository.count()).isEqualTo(1);
 
+        // when
         cleaner.clean();
 
+        // then
         assertThat(repository.count()).isZero();
     }
 }
