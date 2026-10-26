@@ -58,7 +58,7 @@ Execute com `/executar-tarefa`. Durante a execução:
 Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Ampliar o `.gitignore` (segredos, arquivos locais do agente, Python, logs, SO)
-- [ ] [verificação] Adicionar `docs/escopo.md` e `docs/tarefas.md`
+- [x] [verificação] Adicionar `docs/escopo.md` e `docs/tarefas.md`
 - [ ] [verificação] Adicionar `CLAUDE.md` e `.claude/rules/`
 
 ### Plano de verificação
