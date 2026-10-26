@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""Validates work commits: Conventional Commits without scope, title only, no attribution.
+
+Activation (once per clone): git config core.hooksPath .githooks
+"""
+import re
+import sys
+
+TITLE = re.compile(r"^(feat|fix|refactor|perf|test|docs|build|ci|chore)!?: [^A-Z\s].*[^.]$")
+MAX_TITLE_LENGTH = 72
+
+
+def errors(message: str) -> list[str]:
+    lines = [line for line in message.splitlines() if not line.startswith("#")]
+    title = lines[0] if lines else ""
+    body = [line for line in lines[1:] if line.strip()]
+
+    found = []
+    if not TITLE.match(title):
+        found.append("use '<type>[!]: <description>' — no scope, lowercase description, no trailing period")
+    if len(title) > MAX_TITLE_LENGTH:
+        found.append(f"title longer than {MAX_TITLE_LENGTH} characters")
+    if any("co-authored-by" in line.lower() for line in lines):
+        found.append("attribution lines (Co-authored-by) are not allowed")
+    if body:
+        found.append("work commits have a title only, no body")
+    return found
+
+
+def main() -> int:
+    with open(sys.argv[1], encoding="utf-8") as file:
+        message = file.read()
+    found = errors(message)
+    for error in found:
+        print(f"commit-msg: {error}", file=sys.stderr)
+    return 1 if found else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
