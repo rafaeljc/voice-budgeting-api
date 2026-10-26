@@ -21,6 +21,9 @@ branch, commit e PR, e modelo de ADR (DOC-07, DOC-03).
 
 ## Decisões
 
+- Artefatos já existiam sem commit quando a execução começou; a execução os commitou item a item, sem recriá-los
+- Falha do `./gradlew build` por falta do container/datasource nos testes não é corrigida na T01; Testcontainers
+  entra em tarefa posterior
 - Plan file escrito depois do trabalho, sem entrevista — os artefatos precedem o fluxo que eles definem; o PR
   segue o processo mesmo assim
 - Plan file como fonte da verdade, executado em sessão nova — a execução não depende do contexto do planejamento
@@ -55,11 +58,11 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Instruções e plano do projeto
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Ampliar o `.gitignore` (segredos, arquivos locais do agente, Python, logs, SO)
 - [x] [verificação] Adicionar `docs/escopo.md` e `docs/tarefas.md`
-- [ ] [verificação] Adicionar `CLAUDE.md` e `.claude/rules/`
+- [x] [verificação] Adicionar `CLAUDE.md` e `.claude/rules/`
 
 ### Plano de verificação
 
@@ -69,7 +72,18 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Entregues `.gitignore` ampliado, `docs/escopo.md`, `docs/tarefas.md`, `CLAUDE.md` e `.claude/rules/`. Os artefatos
+já existiam sem commit (ver Decisões); cada item foi commitado separadamente.
+
+Verificação: `git check-ignore` imprimiu as três entradas e `git status --short` não mostrou segredo nem arquivo
+pessoal. `./gradlew build` falhou de início (`Failed to determine a suitable driver class`): `./gradlew test` não sobe
+o `compose.yml` (`spring-boot-docker-compose` está em `developmentOnly`) e não há `spring.datasource.*` no teste. Com
+o container no ar (`docker compose up -d --wait`) e `SPRING_DATASOURCE_URL/USERNAME/PASSWORD` apontando para
+`localhost:3307`, o build passou (`BUILD SUCCESSFUL`). Sem `OPENAI_API_KEY`, os `*IT` de OpenAI não foram
+exercitados.
+
+Para uma sessão nova: para rodar `./gradlew build`, suba o MySQL antes e informe o datasource por variável de
+ambiente. O build não foi alterado; Testcontainers entrará em uma tarefa posterior, por decisão do usuário.
 
 ## Fase 2: Fluxo de tarefas
 
