@@ -246,7 +246,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `*IT`, `shouldRunAfter test`); `check` dependendo de `integrationTest` e de `jacocoTestReport`;
   `jacocoTestReport` (HTML e XML) com os dados das duas tasks; dependências de teste (webmvc-test,
   spring-boot-testcontainers, testcontainers-mysql, testcontainers-junit-jupiter)
-- [ ] [verificação] `src/test/resources/application-test.properties`: `spring.ai.openai.api-key` fictícia,
+- [x] [verificação] `src/test/resources/application-test.properties`: `spring.ai.openai.api-key` fictícia,
   `spring.ai.openai.base-url=http://localhost:1` e `spring.ai.retry.max-attempts=1` (confirmar o nome da
   propriedade)
 - [ ] [verificação] `support/IntegrationTest` (meta-anotação: `@SpringBootTest`, `@ActiveProfiles("test")`,
