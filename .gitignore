@@ -39,6 +39,7 @@ out/
 ### Secrets ###
 .env
 .env.*
+!.env.example
 
 ### Claude Code (personal) ###
 .claude/settings.local.json

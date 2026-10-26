@@ -204,11 +204,11 @@ Removidos os cinco `*IT` que chamavam a OpenAI real e o `BudgetingApplicationTes
 
 ## Fase 2: Segredos fora do versionamento
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `compose.yml`: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER` e `MYSQL_PASSWORD` por `${VAR:?mensagem}`;
+- [x] [verificação] `compose.yml`: `MYSQL_ROOT_PASSWORD`, `MYSQL_USER` e `MYSQL_PASSWORD` por `${VAR:?mensagem}`;
   healthcheck lendo usuário e senha do ambiente do container; `MYSQL_DATABASE` permanece fixo (não é segredo)
-- [ ] [verificação] `.env.example` com `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD` e `OPENAI_API_KEY`,
+- [x] [verificação] `.env.example` com `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD` e `OPENAI_API_KEY`,
   com valores de exemplo e comentários; `!.env.example` no `.gitignore`
 
 ### Plano de verificação
@@ -224,7 +224,19 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+`compose.yml` sem credenciais (`${VAR:?mensagem}` para `MYSQL_ROOT_PASSWORD`, `MYSQL_USER` e `MYSQL_PASSWORD`, com
+mensagem em pt-BR) e healthcheck em `CMD-SHELL` lendo `$$MYSQL_USER` e `$$MYSQL_PASSWORD` do container;
+`.env.example` versionado (`!.env.example` no `.gitignore`) e `.env` local, não versionado.
+
+- Decisões: o healthcheck passou de `CMD` para `CMD-SHELL`, porque só o shell expande as variáveis do ambiente do
+  container. O volume local tinha as credenciais antigas (`Access denied for user 'app'`); com a aprovação do
+  usuário, foi removido com `docker compose down -v` e recriado com as do `.env`.
+- Verificação: todos os comandos passaram. A exceção é o `grep -nE 'PASSWORD: *[^$ ]|-papp|-uapp' compose.yml`, que
+  casa as linhas `${MYSQL_*:?mensagem}` porque o `:?` da sintaxe satisfaz `[^$ ]` (falso positivo do padrão). Com
+  `PASSWORD: +[^$ ]` (só valor literal), nenhuma linha. `bootRun` com o `.env`: `Started BudgetingApplication`;
+  `./gradlew build`: `BUILD SUCCESSFUL`.
+- Para uma sessão nova: o `.env` local foi copiado do `.env.example` (valores de exemplo). Outros clones precisam
+  fazer `cp .env.example .env` e carregá-lo no shell antes do `bootRun`; o README documenta isso na Fase 6.
 
 ## Fase 3: Divisão dos testes e banco nos testes de integração
 
