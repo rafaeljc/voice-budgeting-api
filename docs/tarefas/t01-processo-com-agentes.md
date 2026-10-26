@@ -38,12 +38,12 @@ branch, commit e PR, e modelo de ADR (DOC-07, DOC-03).
 
 ## Definição de pronto
 
-- [ ] Todos os artefatos do escopo versionados na branch
-- [ ] `commit-msg` rejeita mensagem fora do padrão e aceita os commits da branch
-- [ ] `guard_git.py` bloqueia `git push`, `git merge`, `gh pr merge` e `--no-verify`, e pede aprovação para
+- [x] Todos os artefatos do escopo versionados na branch
+- [x] `commit-msg` rejeita mensagem fora do padrão e aceita os commits da branch
+- [x] `guard_git.py` bloqueia `git push`, `git merge`, `gh pr merge` e `--no-verify`, e pede aprovação para
   `gh pr create`
-- [ ] `./gradlew build` passa
-- [ ] Nenhum arquivo pessoal ou de segredo versionado
+- [x] `./gradlew build` passa (com o MySQL no ar e o datasource por variável de ambiente; ver Resumo final)
+- [x] Nenhum arquivo pessoal ou de segredo versionado
 
 ## Para futuros agentes
 
@@ -110,10 +110,10 @@ create` e o push vem na Fase 3.
 
 ## Fase 3: Proteções do git
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Adicionar `.githooks/commit-msg`, `.claude/hooks/guard_git.py` e `.claude/settings.json`
-- [ ] [verificação] Adicionar `scripts/merge.py`
+- [x] [verificação] Adicionar `scripts/merge.py`
 
 ### Plano de verificação
 
@@ -130,8 +130,22 @@ Os arquivos temporários (`m`) ficam fora do repositório.
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Entregues `.githooks/commit-msg`, `.claude/hooks/guard_git.py`, `.claude/settings.json` e `scripts/merge.py`.
+
+Verificação, todos conforme o esperado: `commit-msg` rejeitou `Feat: X.` (exit 1) e aceitou `docs: ok` (exit 0);
+`guard_git.py` bloqueou o push, o merge local, o merge de PR e o `--no-verify` (exit 2, com mensagem) e
+retornou `"permissionDecision": "ask"` para a criação de PR; `merge.py --help` saiu com exit 0 e o uso;
+`git log --format=%s main..HEAD` mostrou só títulos no padrão, sem corpo.
+
+Para uma sessão nova: o hook casa o texto do comando inteiro, então até um `echo` que cite push ou merge é
+bloqueado; para testá-lo, gere os payloads dentro de um script Python. Cada clone precisa de
+`git config core.hooksPath .githooks`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A T01 definiu o processo com agentes: instruções e regras por tema, escopo e plano de tarefas, skills de
+planejar, executar e abrir PR, modelos de ADR e PR, validação de commits, bloqueio de push e merge pelo agente e
+squash merge padronizado. Nenhum código da aplicação foi alterado.
+
+Pendência conhecida: `./gradlew build` só passa com o MySQL do `compose.yml` no ar e o datasource informado por
+variável de ambiente, porque o `test` não sobe o compose. A correção virá com Testcontainers em tarefa posterior.
