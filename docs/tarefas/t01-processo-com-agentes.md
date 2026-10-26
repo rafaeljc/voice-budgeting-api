@@ -87,10 +87,10 @@ ambiente. O build não foi alterado; Testcontainers entrará em uma tarefa poste
 
 ## Fase 2: Fluxo de tarefas
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Adicionar `docs/adr/template.md` e `.github/pull_request_template.md`
-- [ ] [verificação] Adicionar as skills `planejar-tarefa` (com `template.md`), `executar-tarefa` e `pr`
+- [x] [verificação] Adicionar as skills `planejar-tarefa` (com `template.md`), `executar-tarefa` e `pr`
 
 ### Plano de verificação
 
@@ -99,7 +99,14 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Entregues `docs/adr/template.md`, `.github/pull_request_template.md` e as skills `planejar-tarefa` (com
+`template.md`), `executar-tarefa` e `pr`.
+
+Verificação: `ls .claude/skills/*/SKILL.md` listou os três arquivos e `grep -c '^## ' .github/pull_request_template.md`
+retornou `4`, como esperado.
+
+Para uma sessão nova: as skills já estavam em uso nesta execução (`/executar-tarefa`); o hook que protege `gh pr
+create` e o push vem na Fase 3.
 
 ## Fase 3: Proteções do git
 
