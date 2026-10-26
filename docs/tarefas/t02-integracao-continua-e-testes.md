@@ -157,7 +157,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   imports não usados e nova linha no fim; `*.gradle`, `*.yml`, `*.md` e `*.properties` só com remoção de espaços
   no fim da linha e nova linha no fim. Rodar `./gradlew spotlessApply` no projeto em um commit próprio, sem outras
   mudanças
-- [ ] [verificação] Checkstyle: plugin `checkstyle` no `build.gradle` (`maxWarnings = 0`, `src/main` e
+- [x] [verificação] Checkstyle: plugin `checkstyle` no `build.gradle` (`maxWarnings = 0`, `src/main` e
   `src/test`) e `config/checkstyle/checkstyle.xml` com as regras abaixo, sem regras de formatação:
   - convenções: proibir `System.out`/`System.err`; proibir `@Autowired` em `src/main`; proibir
     `lombok.extern.*`; proibir `org.junit.jupiter.api.Assertions` (usar AssertJ)
