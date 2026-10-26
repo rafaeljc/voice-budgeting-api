@@ -243,7 +243,7 @@ mensagem em pt-BR) e healthcheck em `CMD-SHELL` lendo `$$MYSQL_USER` e `$$MYSQL_
 
 ## Fase 3: Divisão dos testes e banco nos testes de integração
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: `test` filtrando `*Test`; task `integrationTest` (mesmo source set, filtrando
   `*IT`, `shouldRunAfter test`); `check` dependendo de `integrationTest` e de `jacocoTestReport`;
@@ -264,7 +264,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `@AutoConfigureAiStub`, chamar o `TranscriptionModel` lança exceção cuja causa raiz é `ConnectException`
 - [x] [TDD] `PersistTransactionUseCaseTest.should_saveTransactionWithInputData_when_executed`: Mockito na porta
   `TransactionRepository`, verifica descrição, valor (centavos, sem conversão) e categoria gravados e o id da saída
-- [ ] [TDD] `TransactionEndpointsIT.should_returnCreatedTransaction_when_listingByCategory`
+- [x] [TDD] `TransactionEndpointsIT.should_returnCreatedTransaction_when_listingByCategory`
   (`@IntegrationTest` + `@AutoConfigureMockMvc`): `POST /transactions` responde 201, e
   `GET /transactions/{category}` devolve a transação com id, descrição e categoria (o valor não é verificado — T03)
 
@@ -279,7 +279,26 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+`test` roda só `*Test` e `integrationTest` roda só `*IT` (mesmo source set), com `check` dependendo das duas e do
+`jacocoTestReport` (HTML e XML). Perfil `test` sem provedor de IA real, `@IntegrationTest` (contexto, perfil, MySQL
+via Testcontainers, limpeza do banco), `MySqlCleaner` e `ResetMySqlExtension`, e os testes de exemplo
+`PersistTransactionUseCaseTest`, `TransactionEndpointsIT`, `MySqlCleanerIT` e `AiProviderIsolationIT`.
+
+- Decisões: `@IntegrationTest` inclui `@TestConstructor(autowireMode = ALL)` (sem ele, a injeção por construtor nos
+  testes não resolve os parâmetros) e `@Import(MySqlCleaner.class)` (o cleaner é um bean do contexto de teste). O
+  `@ExtendWith(ResetMySqlExtension.class)` entrou no ciclo do `MySqlCleaner`, porque a classe não existia no item
+  anterior. A propriedade `spring.ai.retry.max-attempts` foi confirmada nos metadados do Spring AI. Por decisão do
+  usuário, a forma idiomática do Spring virou padrão do projeto (`CLAUDE.md`) e os testes unitários usam
+  `@Mock`/`@InjectMocks` (`testing.md`); os testes seguem `// given // when // then`.
+- Corrigido na fase: o `jacocoTestReport` apontava para as saídas das tasks, não para os `.exec`, e falhou assim que
+  existiram testes; agora lê `build/jacoco/test.exec` e `integrationTest.exec`.
+- Verificação: todos os comandos do plano passaram — `test` gera só `PersistTransactionUseCaseTest`;
+  `integrationTest` (sem `OPENAI_API_KEY` e com o `compose.yml` parado) gera só os três `*IT`; `build` passa e gera
+  `build/reports/jacoco/test/html/index.html`; o `grep` de `EnabledIfEnvironmentVariable|System.out|System.err` em
+  `src/test` não acha nada. O RED dos testes de comportamento que já existia foi provado quebrando o código ou a
+  asserção, sem commitar a quebra.
+- Para uma sessão nova: o `AiStub` e o `@AutoConfigureAiStub` vêm na Fase 4 (`VoiceCommandIT`); os testes atuais
+  não usam IA simulada. O `integrationTest` exige Docker (o Testcontainers sobe o `mysql:9.6`).
 
 ## Fase 4: IA simulada e fluxo de voz
 
