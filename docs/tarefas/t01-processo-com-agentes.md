@@ -110,9 +110,9 @@ create` e o push vem na Fase 3.
 
 ## Fase 3: Proteções do git
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Adicionar `.githooks/commit-msg`, `.claude/hooks/guard_git.py` e `.claude/settings.json`
+- [x] [verificação] Adicionar `.githooks/commit-msg`, `.claude/hooks/guard_git.py` e `.claude/settings.json`
 - [ ] [verificação] Adicionar `scripts/merge.py`
 
 ### Plano de verificação
