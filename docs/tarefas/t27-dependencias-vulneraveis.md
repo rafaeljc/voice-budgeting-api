@@ -181,7 +181,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       SDK `openai-java`, e conferir `chat-tool-call.json`, `chat-answer.json`, a resposta de transcrição
       (`text/plain`) e a de voz (`audio/mpeg`) contra a documentação da API da OpenAI; `VoiceCommandIT` passa sem
       mudar o que verifica
-- [ ] [verificação] `mcp-core`: conferir que saiu da árvore; se continuar, adicionar constraint para a versão
+- [x] [verificação] `mcp-core`: conferir que saiu da árvore; se continuar, adicionar constraint para a versão
       corrigida mais recente da linha 1.1.x e registrar em Decisões
 - [ ] [verificação] `CLAUDE.md` (Stack): "Spring AI 2.0.0-M4" → "Spring AI 2.0.2"
 
