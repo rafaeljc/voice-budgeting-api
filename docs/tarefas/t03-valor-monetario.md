@@ -115,9 +115,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Money de ponta a ponta
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Commitar as marcações da T27 já presentes no working tree (`docs/tarefas.md`, checkbox da
+- [x] [verificação] Commitar as marcações da T27 já presentes no working tree (`docs/tarefas.md`, checkbox da
       T27; `docs/tarefas/t27-dependencias-vulneraveis.md`, último critério da definição de pronto) — commit
       `docs: marca a tarefa t27 como concluída`
 - [ ] [TDD] `domain/Money` (`record Money(BigDecimal value)`, constante `CURRENCY = "BRL"`) com `MoneyTest`:

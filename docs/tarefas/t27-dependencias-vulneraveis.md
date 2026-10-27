@@ -59,7 +59,7 @@ Spring AI 2.0.0-M4 → 2.0.2 (SEG-07, correção dos achados).
 - [x] `mcp-core` fora da árvore de dependências (ou em versão corrigida, com o motivo em Decisões)
 - [x] `VoiceCommandIT` e `AiProviderIsolationIT` passam com o Spring AI 2.0.2, sem mudar o que os `*IT` verificam
 - [x] `docs/tarefas.md` com a entrada da T27 (descrição nova) e `CLAUDE.md` com Spring Boot 4.1.2 e Spring AI 2.0.2
-- [ ] Não verificável localmente (fica para o PR e o pós-merge): job `dependencies` verde no PR; zero alertas
+- [x] Não verificável localmente (fica para o PR e o pós-merge): job `dependencies` verde no PR; zero alertas
       abertos no Dependabot após o merge
 
 ## Para futuros agentes
