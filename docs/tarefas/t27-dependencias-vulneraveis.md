@@ -122,7 +122,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Spring Boot 4.1.2 e Checkstyle 13.11.0
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Commitar a entrada da T27 em `docs/tarefas.md` (já presente no working tree: item na lista da
       Fase 2, seção `<a id="t27"></a>` e `SEG-07 → T02, T27` na tabela), com a descrição trocada por:
@@ -136,7 +136,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `build.gradle`: `checkstyle.toolVersion` 13.4.0 → 13.11.0; corrigir violações novas, se houver
 - [x] [verificação] `build.gradle`: constraint de `commons-lang3` 3.20.0 no `buildscript` (item incluído com
       aprovação do usuário; ver Decisões)
-- [ ] [verificação] `CLAUDE.md` (Stack): "Spring Boot 4.0.5" → "Spring Boot 4.1.2"
+- [x] [verificação] `CLAUDE.md` (Stack): "Spring Boot 4.0.5" → "Spring Boot 4.1.2"
 
 ### Plano de verificação
 
@@ -150,7 +150,20 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Spring Boot 4.0.5 → 4.1.2 e Checkstyle 13.4.0 → 13.11.0, sem nenhum ajuste de código: `./gradlew build` passou de
+primeira (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY`. A entrada da T27 foi commitada em
+`docs/tarefas.md` e o `CLAUDE.md` aponta Spring Boot 4.1.2.
+
+Decisão: a conferência achou um alerta fora da tabela — `commons-lang3` 3.16.0 no classpath do plugin do Boot (via
+`commons-compress`). Com aprovação do usuário, o `buildscript` ganhou uma constraint para 3.20.0.
+
+Verificação: `httpclient5` 5.6.5, `httpcore5`/`httpcore5-h2` 5.4.4, `jackson-databind` 3.1.7; `plexus-utils` fora do
+Checkstyle; Netty 4.2.19, Tomcat 11.0.27, spring-webmvc 7.0.10, logback 1.5.38, log4j-api 2.25.5, micrometer 1.17.2 e
+spring-data-commons 4.1.2 no `runtimeClasspath`. O script de conferência só acusa `mcp-core` 1.1.0 (Fase 2); as linhas
+`{strictly ...}` de constraints que ele também lista são falsos positivos do parser (resolvem para versões corrigidas).
+
+Para uma sessão nova: o script de conferência vive no scratchpad e não é versionado; ao reescrevê-lo, ignore as linhas
+de constraint (`(c)`, `{strictly ...}`) e considere também pacotes fora da tabela (ex.: `commons-lang3`, `netty-handler-proxy`).
 
 ## Fase 2: Spring AI 2.0.2
 
