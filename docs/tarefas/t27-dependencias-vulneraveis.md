@@ -128,7 +128,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       dependências, inclusive as do classpath dos plugins do Gradle. O Dependabot não atualiza dependências
       transitivas gerenciadas pelos BOMs, por isso a atualização é feita nas versões declaradas no build e conferida
       com o dependency review e com o `build`." — commit `docs: adiciona a tarefa de atualização das dependências vulneráveis`
-- [ ] [verificação] `build.gradle`: plugin `org.springframework.boot` 4.0.5 → 4.1.2; corrigir o que o `build`
+- [x] [verificação] `build.gradle`: plugin `org.springframework.boot` 4.0.5 → 4.1.2; corrigir o que o `build`
       acusar (depreciações que viram erro, mudanças de comportamento nos `*IT`), sem mudar o Spring AI
 - [ ] [verificação] `build.gradle`: `checkstyle.toolVersion` 13.4.0 → 13.11.0; corrigir violações novas, se houver
 - [ ] [verificação] `CLAUDE.md` (Stack): "Spring Boot 4.0.5" → "Spring Boot 4.1.2"
