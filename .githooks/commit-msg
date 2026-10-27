@@ -6,7 +6,7 @@ Activation (once per clone): git config core.hooksPath .githooks
 import re
 import sys
 
-TITLE = re.compile(r"^(feat|fix|refactor|perf|test|docs|build|ci|chore)!?: [^A-Z\s].*[^.]$")
+TITLE = re.compile(r"^(feat|fix|refactor|perf|test|docs|build|ci|chore): [^A-Z\s].*[^.]$")
 MAX_TITLE_LENGTH = 72
 
 
@@ -17,7 +17,7 @@ def errors(message: str) -> list[str]:
 
     found = []
     if not TITLE.match(title):
-        found.append("use '<type>[!]: <description>' — no scope, lowercase description, no trailing period")
+        found.append("use '<type>: <description>' — no scope, lowercase description, no trailing period")
     if len(title) > MAX_TITLE_LENGTH:
         found.append(f"title longer than {MAX_TITLE_LENGTH} characters")
     if any("co-authored-by" in line.lower() for line in lines):

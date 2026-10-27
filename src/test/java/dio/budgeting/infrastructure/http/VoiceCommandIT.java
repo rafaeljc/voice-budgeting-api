@@ -6,10 +6,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -38,7 +40,7 @@ class VoiceCommandIT {
         var speech = new byte[] {1, 2, 3, 4};
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("persist-transaction", """
-                {"input": {"description": "Mercado", "amount": 8000, "category": "GROCERIES"}}
+                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(speech);
@@ -59,7 +61,7 @@ class VoiceCommandIT {
                 .singleElement()
                 .satisfies(transaction -> {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
-                    assertThat(transaction.getAmount()).isEqualTo(8000);
+                    assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
                 });
     }
 }

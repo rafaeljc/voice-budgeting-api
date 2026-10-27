@@ -6,6 +6,7 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +24,8 @@ class MySqlCleanerIT {
     @Test
     void should_removeAllRows_when_cleaned() {
         // given
-        repository.save(new TransactionEntity(UUID.randomUUID(), "Mercado", 8000, Category.GROCERIES));
+        repository.save(
+                new TransactionEntity(UUID.randomUUID(), "Mercado", new BigDecimal("80.00"), Category.GROCERIES));
 
         // when
         cleaner.clean();

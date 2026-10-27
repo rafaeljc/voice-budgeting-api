@@ -10,8 +10,8 @@ argument-hint: "[T<nn>]"
 2. Rode localmente os mesmos comandos dos workflows de `.github/workflows/`. Se algum falhar, corrija antes de
    continuar — não abra PR com check quebrado.
 3. Identifique a tarefa ($ARGUMENTS ou o plan file adicionado na branch: `git diff --name-only main...HEAD -- docs/tarefas/`).
-4. Monte o título no formato de commit: `<tipo>[!]: <descrição>` — mesmo tipo da branch, sem escopo, minúsculo,
-   sem ponto final, até 72 caracteres. Use `!` se houver quebra de contrato.
+4. Monte o título no formato de commit: `<tipo>: <descrição>` — mesmo tipo da branch, sem escopo, minúsculo,
+   sem ponto final, até 72 caracteres.
 5. Preencha o corpo com as seções de `.github/pull_request_template.md`, sem os comentários `<!-- -->`:
    - **Descrição**: o que o PR faz e o link para o plan file da tarefa.
    - **Mudanças**: só bullets curtos com as mudanças relevantes, sem explicações — esta lista vira o corpo

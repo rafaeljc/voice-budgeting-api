@@ -51,7 +51,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - JSON com campos em camelCase; o recurso é o corpo, sem envelope.
 - IDs como string; enums como string em `UPPER_SNAKE_CASE`.
 - Data e hora em ISO 8601 com fuso (UTC); data sem hora em `yyyy-MM-dd`.
-- Valores monetários nunca em ponto flutuante.
+- Valor monetário como string decimal `^\d{1,16}\.\d{2}$` mais `currency` (`BRL`), lado a lado; nunca em ponto
+  flutuante.
 - Campos ausentes omitidos; listas nunca `null`.
 - Áudio com o tipo de mídia correto (`audio/mpeg` para MP3); upload em `multipart/form-data`.
 

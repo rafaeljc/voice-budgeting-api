@@ -16,7 +16,7 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
 - Prompts em `src/main/resources/prompts/*.st`, lidos em UTF-8.
 - Prompts, descrições de tools e de parâmetros em pt-BR.
 - Nome de tool em kebab-case (`persist-transaction`).
-- `@ToolParam` informa unidade e formato do valor (ex.: centavos).
+- `@ToolParam` informa unidade e formato do valor (ex.: valor em reais com 2 casas decimais).
 - Opções dos modelos (modelo, temperatura, voz, idioma) em `application.properties`.
 
 ## Regras de produto
