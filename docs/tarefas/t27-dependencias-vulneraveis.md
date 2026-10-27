@@ -130,7 +130,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       com o dependency review e com o `build`." — commit `docs: adiciona a tarefa de atualização das dependências vulneráveis`
 - [x] [verificação] `build.gradle`: plugin `org.springframework.boot` 4.0.5 → 4.1.2; corrigir o que o `build`
       acusar (depreciações que viram erro, mudanças de comportamento nos `*IT`), sem mudar o Spring AI
-- [ ] [verificação] `build.gradle`: `checkstyle.toolVersion` 13.4.0 → 13.11.0; corrigir violações novas, se houver
+- [x] [verificação] `build.gradle`: `checkstyle.toolVersion` 13.4.0 → 13.11.0; corrigir violações novas, se houver
 - [ ] [verificação] `CLAUDE.md` (Stack): "Spring Boot 4.0.5" → "Spring Boot 4.1.2"
 
 ### Plano de verificação

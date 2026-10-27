@@ -97,6 +97,6 @@ spotless {
 }
 
 checkstyle {
-    toolVersion = '13.4.0'
+    toolVersion = '13.11.0'
     maxWarnings = 0
 }
