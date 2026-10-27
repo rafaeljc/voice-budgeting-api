@@ -174,7 +174,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `application.properties`: ajustar as propriedades `spring.ai.*` que mudaram de nome ou tipo no
       2.0.2 (conferir o bind de `chat.options.response-format.type=TEXT` e das opções de transcrição e voz),
       mantendo os mesmos valores
-- [ ] [verificação] `application-test.properties`: trocar `spring.ai.retry.max-attempts=1` por
+- [x] [verificação] `application-test.properties`: trocar `spring.ai.retry.max-attempts=1` por
       `spring.ai.openai.max-retries=0` (manter o `spring.ai.retry.*` só se ainda for usado), para o
       `AiProviderIsolationIT` continuar falhando rápido com `ConnectException` na causa raiz
 - [x] [verificação] Stub da OpenAI: alinhar base URL (`AiStubConfiguration`) e caminhos (`OpenAiWireMockStub`) ao
