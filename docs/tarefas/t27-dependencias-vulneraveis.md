@@ -46,6 +46,9 @@ Spring AI 2.0.0-M4 → 2.0.2 (SEG-07, correção dos achados).
   audio transcriptions com `response_format=text`, audio speech), não contra a API real
 - Fases separadas para Boot e Spring AI — o M4 deve rodar no Boot 4.1.2 (sua base é 4.1.0-M2); se não rodar, as
   fases 1 e 2 viram uma só, com o motivo registrado aqui
+- Constraint de `commons-lang3` 3.20.0 no `buildscript` — o plugin do Boot 4.1.2 ainda traz `commons-lang3` 3.16.0
+  (via `commons-compress` 1.27.1 do `buildpack-platform`), vulnerável (média, < 3.18.0); alerta não previsto na
+  tabela, aprovado pelo usuário na Fase 1
 - Sem ADR — atualização de versões, sem decisão arquitetural nova
 
 ## Definição de pronto
@@ -131,6 +134,8 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `build.gradle`: plugin `org.springframework.boot` 4.0.5 → 4.1.2; corrigir o que o `build`
       acusar (depreciações que viram erro, mudanças de comportamento nos `*IT`), sem mudar o Spring AI
 - [x] [verificação] `build.gradle`: `checkstyle.toolVersion` 13.4.0 → 13.11.0; corrigir violações novas, se houver
+- [x] [verificação] `build.gradle`: constraint de `commons-lang3` 3.20.0 no `buildscript` (item incluído com
+      aprovação do usuário; ver Decisões)
 - [ ] [verificação] `CLAUDE.md` (Stack): "Spring Boot 4.0.5" → "Spring Boot 4.1.2"
 
 ### Plano de verificação

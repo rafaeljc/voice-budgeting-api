@@ -1,3 +1,12 @@
+buildscript {
+    dependencies {
+        constraints {
+            // Boot plugin pulls a vulnerable commons-lang3 (< 3.18.0) through commons-compress
+            classpath('org.apache.commons:commons-lang3:3.20.0')
+        }
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.1.2'
