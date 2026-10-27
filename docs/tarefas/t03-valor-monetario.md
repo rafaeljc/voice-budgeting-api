@@ -71,14 +71,14 @@ decimal com 2 casas mais o código da moeda (API-02).
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Nenhum valor monetário em `double`/`float` em `src/main/java`
-- [ ] `POST /transactions` com `{"amount": "80.00", "currency": "BRL", ...}` responde 201 com `"amount": "80.00"`
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
+- [x] Nenhum valor monetário em `double`/`float` em `src/main/java`
+- [x] `POST /transactions` com `{"amount": "80.00", "currency": "BRL", ...}` responde 201 com `"amount": "80.00"`
       e `"currency": "BRL"`, e a listagem por categoria devolve o mesmo valor (não `8000.0`)
-- [ ] Formato inválido de `amount` ou `currency` (ou campo ausente) responde 400, sem chegar ao use case
-- [ ] Pela voz, a tool recebe o valor em reais e a transação é gravada com o mesmo valor
-- [ ] ADR 0001 aceito; `CLAUDE.md` e as regras de API e de IA sem menção a centavos como unidade
-- [ ] Marcações da T27 commitadas; checkbox da T03 marcado em `docs/tarefas.md` no último commit
+- [x] Formato inválido de `amount` ou `currency` (ou campo ausente) responde 400, sem chegar ao use case
+- [x] Pela voz, a tool recebe o valor em reais e a transação é gravada com o mesmo valor
+- [x] ADR 0001 aceito; `CLAUDE.md` e as regras de API e de IA sem menção a centavos como unidade
+- [x] Marcações da T27 commitadas; checkbox da T03 marcado em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
 
@@ -118,7 +118,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Money de ponta a ponta
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Commitar as marcações da T27 já presentes no working tree (`docs/tarefas.md`, checkbox da
       T27; `docs/tarefas/t27-dependencias-vulneraveis.md`, último critério da definição de pronto) — commit
@@ -149,7 +149,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `CLAUDE.md` (Estrutura: `domain/` com `Money`); `.claude/rules/api-conventions.md`
       (Representação: valor monetário como string `^\d{1,16}\.\d{2}$` mais `currency`);
       `.claude/rules/ai-integration.md` (exemplo do `@ToolParam` sem "centavos": valor em reais com 2 casas)
-- [ ] [verificação] Marcar a T03 em `docs/tarefas.md` (último commit)
+- [x] [verificação] Marcar a T03 em `docs/tarefas.md` (último commit)
 
 ### Plano de verificação
 
@@ -163,14 +163,28 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+O valor monetário agora é exato e em reais de ponta a ponta, e a FN-01 está corrigida.
+
+- `Money(BigDecimal)` no domínio: o construtor é estrito (escala 2 exata, até 16 dígitos inteiros) e `Money.of`
+  normaliza a escala sem arredondar. A conversão de entrada da tool fica em `PersistTransactionInput.toMoney()`,
+  espelhando `TransactionOutput.from`.
+- Contrato HTTP no padrão Open Finance: `amount` string e `currency` na entrada e na saída, validados por
+  `@NotNull` + `@Pattern` (400 fora do formato). Coluna `DECIMAL(18,2)`; a tool recebe e devolve reais.
+- Decisões tomadas na execução: construtor estrito mais fábrica `Money.of` (em vez de normalizar no construtor);
+  conversão no `Input`; commits e títulos de PR sem `!` (`CLAUDE.md`, skill `/pr` e este plano ajustados; o hook
+  `commit-msg` e `scripts/merge.py` ainda aceitam `!` na regex).
+- O item de voz não teve RED: o comportamento veio no item de `Transaction.amount`, e o item só ajustou o teste
+  para 80.00.
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL` sem `OPENAI_API_KEY`; os dois greps não retornam nada.
+- Para uma sessão nova: nada pendente; falta o PR (`/pr`).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Dinheiro passa a ser `Money(BigDecimal)` em reais, exposto como string decimal com `currency` (ADR 0001), e a
+FN-01 (valor 100× maior) está corrigida, com teste de regressão. Entregue em uma fase, sem desvios de escopo.
 
 ## Plano de deploy
 
-_(preencher ao concluir todas as fases)_ — sem ambiente de produção. Passo local antes do próximo `bootRun`:
+Sem ambiente de produção. Passo local antes do próximo `bootRun`:
 `docker compose down -v` (apaga o volume `transaction_data`), porque o `ddl-auto=update` não muda a coluna
 `amount` de `BIGINT` (centavos) para `DECIMAL(18,2)` (reais).
