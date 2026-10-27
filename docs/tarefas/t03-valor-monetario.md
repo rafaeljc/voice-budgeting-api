@@ -142,7 +142,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       ausente e `currency` ausente, sem gravar nada
 - [x] [TDD] Voz em reais: `VoiceCommandIT` com a tool `persist-transaction` recebendo `"amount": 80.00` grava a
       transação com `Money` `80.00`
-- [ ] [verificação] ADR `docs/adr/0001-representacao-de-valores-monetarios.md` (a partir de `docs/adr/template.md`,
+- [x] [verificação] ADR `docs/adr/0001-representacao-de-valores-monetarios.md` (a partir de `docs/adr/template.md`,
       `status: aceito`): contexto (FN-01, API-02), opções (centavos inteiros, string decimal Open Finance, número
       JSON decimal), decisão e consequências — contrato, `Money(BigDecimal)` com escala 2 e sem arredondamento
       implícito, `DECIMAL(18,2)`, IA em reais
