@@ -12,7 +12,9 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Spring AI 2.0.0-M4 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
 - Lombok (`io.freefair.lombok`), Jackson 3 (`tools.jackson.*`)
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
-- Configuração em `application.properties`; segredos só por variável de ambiente (`OPENAI_API_KEY`)
+- Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
+- Configuração em `application.properties`; segredos só por variável de ambiente (`OPENAI_API_KEY`, credenciais do
+  MySQL), modelo em `.env.example` e `.env` fora do versionamento
 
 ## Arquitetura
 
@@ -39,6 +41,7 @@ src/main/resources/
   application.properties
   prompts/                      # prompts do sistema (*.st, UTF-8)
 src/test/resources/audio/       # áudios de exemplo para testes
+src/test/resources/ai/          # payloads da IA simulada, por provedor (ai/openai/)
 ```
 
 ## Nomenclatura
@@ -80,15 +83,20 @@ src/test/resources/audio/       # áudios de exemplo para testes
 
 ```bash
 git config core.hooksPath .githooks   # uma vez por clone: ativa a validação de commits
-./gradlew build                       # compila e roda todos os testes
-./gradlew test --tests "<FQN>"        # roda um teste específico
+./gradlew build                       # formatação, Checkstyle, todos os testes e cobertura
+./gradlew test                        # unitários (*Test), sem Docker
+./gradlew integrationTest             # integração (*IT), exige Docker
+./gradlew test --tests "<FQN>"        # roda um teste específico (integrationTest para um *IT)
+./gradlew spotlessApply               # formata o código
+set -a && source .env && set +a       # carrega o .env (cp .env.example .env) antes do bootRun
 ./gradlew bootRun                     # sobe a API (MySQL via compose.yml; exige OPENAI_API_KEY)
 ```
 
 ## Fluxo de trabalho
 
 - Cada tarefa de `docs/tarefas.md` é planejada com `/planejar-tarefa`, executada com `/executar-tarefa` e entregue
-  em um PR. O primeiro commit do PR é o plan file `docs/tarefas/t<nn>-<slug>.md` (ex.: `t03-valor-monetario.md`).
+  em um PR. O primeiro commit do PR é o plan file `docs/tarefas/t<nn>-<slug>.md` (ex.: `t03-valor-monetario.md`);
+  o último commit marca o checkbox da tarefa em `docs/tarefas.md`.
 - Branch: `<tipo>/<descrição>` — tipo igual ao do título do PR; descrição em kebab-case, pt-BR sem acentos,
   sem número de tarefa (ex.: `fix/valor-em-centavos`).
 - Commits: Conventional Commits, sem escopo — `<tipo>[!]: <descrição>`.
