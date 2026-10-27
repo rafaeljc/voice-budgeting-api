@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!-- Conventions and hygiene only; formatting belongs to Spotless. -->
+<module name="Checker">
+    <property name="severity" value="error"/>
+    <property name="charset" value="UTF-8"/>
+
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Conventions -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\s*\.\s*(out|err)\b"/>
+            <property name="message" value="Use the SLF4J logger instead of System.out/System.err"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="IllegalImport">
+            <property name="id" value="NoFieldInjection"/>
+            <property name="illegalClasses" value="org.springframework.beans.factory.annotation.Autowired"/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="lombok.extern"/>
+            <property name="illegalClasses" value="org.junit.jupiter.api.Assertions"/>
+        </module>
+
+        <!-- Naming -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+        <module name="TypeName"/>
+        <module name="MethodName">
+            <property name="id" value="MainMethodName"/>
+        </module>
+        <module name="MethodName">
+            <property name="id" value="TestMethodName"/>
+            <property name="format" value="^(should_[a-zA-Z0-9]+_when_[a-zA-Z0-9]+|[a-z][a-zA-Z0-9]*)$"/>
+        </module>
+        <module name="MemberName"/>
+        <module name="StaticVariableName"/>
+        <module name="ConstantName"/>
+        <module name="LocalVariableName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="ParameterName"/>
+        <module name="LambdaParameterName"/>
+        <module name="RecordComponentName"/>
+
+        <!-- Hygiene -->
+        <module name="AvoidStarImport"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="NeedBraces"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="OneStatementPerLine"/>
+        <module name="FallThrough"/>
+        <module name="ModifiedControlVariable"/>
+        <module name="SimplifyBooleanExpression"/>
+
+        <!-- Size -->
+        <module name="MethodLength">
+            <property name="max" value="50"/>
+        </module>
+        <module name="ParameterNumber">
+            <property name="max" value="7"/>
+        </module>
+    </module>
+</module>

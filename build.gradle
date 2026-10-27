@@ -3,7 +3,9 @@ plugins {
     id 'org.springframework.boot' version '4.0.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id("io.freefair.lombok") version "9.2.0"
-
+    id 'checkstyle'
+    id 'jacoco'
+    id 'com.diffplug.spotless' version '8.4.0'
 }
 
 group = 'dio'
@@ -23,6 +25,11 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-mysql'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation platform("org.springframework.ai:spring-ai-bom:2.0.0-M4")
@@ -38,4 +45,58 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    filter {
+        includeTestsMatching '*Test'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs the integration tests (*IT), which need Docker.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching '*IT'
+    }
+    shouldRunAfter tasks.named('test')
+}
+
+jacoco {
+    toolVersion = '0.8.14'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test'), tasks.named('integrationTest')
+    executionData.setFrom fileTree(layout.buildDirectory.dir('jacoco')) {
+        include 'test.exec', 'integrationTest.exec'
+    }
+    reports {
+        html.required = true
+        xml.required = true
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest'), tasks.named('jacocoTestReport')
+}
+
+spotless {
+    java {
+        palantirJavaFormat()
+        importOrder()
+        removeUnusedImports()
+        endWithNewline()
+    }
+    format 'misc', {
+        target '*.gradle', '*.yml', '*.md', '*.properties', '.github/**/*.yml', 'docs/**/*.md', '.claude/**/*.md',
+                'src/**/*.properties'
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+checkstyle {
+    toolVersion = '13.4.0'
+    maxWarnings = 0
 }
