@@ -28,8 +28,11 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
 ## Testes
 
 - Nenhum teste chama a OpenAI real nem exige API key.
-- Testes unitários usam mocks das portas de IA; testes de integração simulam a OpenAI com WireMock.
-- Falhas da OpenAI (timeout, erro, conexão derrubada) são testadas com stubs do WireMock.
+- Testes unitários usam mocks das portas de IA; testes de integração simulam a IA com `@AutoConfigureAiStub` e a
+  interface neutra `AiStub` (`support/ai/`), sem citar o provedor no `*IT`.
+- O protocolo do provedor fica só na implementação do stub (hoje WireMock) e em `src/test/resources/ai/<provedor>/`;
+  trocar de provedor não reescreve os testes.
+- Falhas da IA (timeout, erro, conexão derrubada) são testadas com stubs do WireMock, estendendo o `AiStub`.
 
 ## Não fazer
 
