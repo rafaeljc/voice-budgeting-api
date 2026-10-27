@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 
-TITLE = re.compile(r"^(feat|fix|refactor|perf|test|docs|build|ci|chore)!?: [^A-Z\s].*[^.]$")
+TITLE = re.compile(r"^(feat|fix|refactor|perf|test|docs|build|ci|chore): [^A-Z\s].*[^.]$")
 CHANGES_HEADING = "## Mudanças"
 
 

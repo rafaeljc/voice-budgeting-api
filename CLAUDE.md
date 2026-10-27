@@ -99,8 +99,8 @@ set -a && source .env && set +a       # carrega o .env (cp .env.example .env) an
   o último commit marca o checkbox da tarefa em `docs/tarefas.md`.
 - Branch: `<tipo>/<descrição>` — tipo igual ao do título do PR; descrição em kebab-case, pt-BR sem acentos,
   sem número de tarefa (ex.: `fix/valor-em-centavos`).
-- Commits: Conventional Commits, sem escopo — `<tipo>[!]: <descrição>`.
-  Tipos: feat, fix, refactor, perf, test, docs, build, ci, chore. `!` marca quebra de contrato.
+- Commits: Conventional Commits, sem escopo — `<tipo>: <descrição>`.
+  Tipos: feat, fix, refactor, perf, test, docs, build, ci, chore.
 - Descrição: minúscula, sem ponto final, até 72 caracteres, verbo no presente (ex.: `feat: adiciona ...`).
 - Commits de trabalho: só título, nunca corpo.
 - Nunca adicionar `Co-authored-by` nem qualquer linha de atribuição.

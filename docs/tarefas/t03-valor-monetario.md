@@ -93,8 +93,8 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 Contexto para uma sessão nova:
 
-- Branch `fix/valor-monetario`; título do PR `fix!: corrige o valor monetário no padrão open finance`. Commits:
-  `fix!:` no que muda o contrato HTTP ou da tool, `fix:`/`refactor:`/`test:` nos demais, `docs:` para documentação.
+- Branch `fix/valor-monetario`; título do PR `fix: corrige o valor monetário no padrão open finance`. Commits:
+  `fix:`, `refactor:`, `test:`, `docs:`.
 - O bug: `TransactionOutput.from` faz `BigDecimal.valueOf(amount).setScale(2).doubleValue()` sobre o valor em
   centavos, sem dividir por 100; `TransactionResponse.amount` e o retorno da tool `list-transactions-by-category`
   saem 100× maiores. Nenhum teste atual verifica o valor na resposta.
