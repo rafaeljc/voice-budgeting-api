@@ -146,8 +146,8 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `status: aceito`): contexto (FN-01, API-02), opções (centavos inteiros, string decimal Open Finance, número
       JSON decimal), decisão e consequências — contrato, `Money(BigDecimal)` com escala 2 e sem arredondamento
       implícito, `DECIMAL(18,2)`, IA em reais
-- [ ] [verificação] `CLAUDE.md` (Estrutura: `domain/` com `Money`); `.claude/rules/api-conventions.md`
-      (Representação: valor monetário como string `^\d{1,16}\.\d{2}$` mais `currency`, com link para o ADR 0001);
+- [x] [verificação] `CLAUDE.md` (Estrutura: `domain/` com `Money`); `.claude/rules/api-conventions.md`
+      (Representação: valor monetário como string `^\d{1,16}\.\d{2}$` mais `currency`);
       `.claude/rules/ai-integration.md` (exemplo do `@ToolParam` sem "centavos": valor em reais com 2 casas)
 - [ ] [verificação] Marcar a T03 em `docs/tarefas.md` (último commit)
 
