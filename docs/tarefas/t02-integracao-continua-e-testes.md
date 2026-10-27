@@ -302,9 +302,9 @@ via Testcontainers, limpeza do banco), `MySqlCleaner` e `ResetMySqlExtension`, e
 
 ## Fase 4: IA simulada e fluxo de voz
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandIT.should_persistTransactionAndReturnSpeech_when_commandRegistersExpense`
+- [x] [TDD] `VoiceCommandIT.should_persistTransactionAndReturnSpeech_when_commandRegistersExpense`
   (`@IntegrationTest` + `@AutoConfigureMockMvc` + `@AutoConfigureAiStub`): o stub transcreve "gastei 80 reais no
   mercado", o chat pede `persist-transaction` e depois devolve a resposta final, e a voz devolve bytes fixos;
   `POST /transactions/ai` (multipart com `audio/recording-1.m4a`) responde 200 `audio/mp3` com esses bytes, e a
@@ -328,7 +328,21 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+`VoiceCommandIT` cobre o fluxo de voz inteiro com a IA simulada: o stub transcreve "gastei 80 reais no mercado", o
+chat pede `persist-transaction` e depois devolve a resposta final, a voz devolve bytes fixos, e `POST /transactions/ai`
+responde 200 `audio/mp3` com esses bytes e grava a transação. O suporte de IA (`AiStub`, `OpenAiWireMockStub`,
+`AutoConfigureAiStub`, `AiStubConfiguration`, `ResetAiStubExtension`) isola o protocolo da OpenAI: só a
+`OpenAiWireMockStub` e os payloads em `src/test/resources/ai/openai/` o conhecem.
+
+- Decisões: `wiremock-standalone` na `3.13.2`, a última estável (a 4.x ainda é beta). O cenário de chat só usa
+  estados quando há `givenToolCall`: sem ele, `givenAnswer` responde já na primeira chamada. A configuração do stub
+  é `@TestConfiguration`, e não `@Configuration`, porque o pacote `dio.budgeting.support` está sob o component scan
+  da aplicação — como `@Configuration`, ela subia o WireMock em todo `@SpringBootTest` e sobrescrevia a `base-url`,
+  quebrando o `AiProviderIsolationIT`.
+- Verificação: `VoiceCommandIT` e `build` passam sem `OPENAI_API_KEY` (`BUILD SUCCESSFUL`, quatro `*IT` com zero
+  falhas); o `grep -rli 'openai' src/test/java --include='*IT.java'` não acha nenhum arquivo.
+- Para uma sessão nova: um novo IT que use IA ganha o stub com `@AutoConfigureAiStub` e injeta `AiStub`; sem a
+  anotação, a IA falha na hora (`AiProviderIsolationIT`). Payloads novos entram em `src/test/resources/ai/openai/`.
 
 ## Fase 5: Integração contínua
 
