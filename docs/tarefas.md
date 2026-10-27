@@ -6,8 +6,8 @@
 ## Sumário
 
 **Fase 1 — Fundação**
-- [ ] [T01 — Processo de desenvolvimento com agentes](#t01)
-- [ ] [T02 — Integração contínua e base de testes](#t02)
+- [x] [T01 — Processo de desenvolvimento com agentes](#t01)
+- [x] [T02 — Integração contínua e base de testes](#t02)
 
 **Fase 2 — Correções urgentes**
 - [ ] [T03 — Correção do valor monetário](#t03)

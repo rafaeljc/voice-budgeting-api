@@ -90,22 +90,25 @@ QA-02, SEG-07, SEG-08, DOC-01).
 - Forma idiomática do Spring como padrão do projeto inteiro, registrada no `CLAUDE.md`, e testes unitários com
   `@Mock`/`@InjectMocks` no `testing.md` — decidido na Fase 3, a pedido do usuário; os testes seguem
   `// given // when // then`
+- README enxuto, por decisão do usuário na Fase 6: ficaram configuração, execução e testes; as seções de padrão de
+  código e de CI, a nota do volume com credenciais antigas e o `git config core.hooksPath` (que segue no
+  `CLAUDE.md`) foram dispensados. O `ci.yml` e o `CLAUDE.md` já documentam esses pontos
 - ArchUnit fica para a T09 — as regras de camadas já são violadas hoje, e a correção pertence à T09
 
 ## Definição de pronto
 
-- [ ] Nenhuma credencial em arquivos versionados: `compose.yml` sem senha e gitleaks local sem achados novos
-- [ ] `./gradlew build` passa sem `OPENAI_API_KEY` e sem o `compose.yml` no ar (exige só o Docker)
-- [ ] `./gradlew build` falha com código desformatado ou que viola o Checkstyle; o hook formata o `.java` editado
+- [x] Nenhuma credencial em arquivos versionados: `compose.yml` sem senha e gitleaks local sem achados novos
+- [x] `./gradlew build` passa sem `OPENAI_API_KEY` e sem o `compose.yml` no ar (exige só o Docker)
+- [x] `./gradlew build` falha com código desformatado ou que viola o Checkstyle; o hook formata o `.java` editado
   pelo agente
-- [ ] `./gradlew test` roda só `*Test`; `./gradlew integrationTest` roda só `*IT`
-- [ ] Cada `*IT` começa com o banco vazio e, quando usa `@AutoConfigureAiStub`, com o stub sem estado
-- [ ] Nenhum teste chama provedor de IA real; nenhum `*IT` cita a OpenAI
-- [ ] `.github/workflows/ci.yml` válido (actionlint), com os jobs `build`, `secrets` e `dependencies`
-- [ ] README em pt-BR documenta configuração, execução, testes e CI, sem links quebrados
-- [ ] `testing.md`, `ai-integration.md` e `CLAUDE.md` refletem os comandos, o padrão de código e a
+- [x] `./gradlew test` roda só `*Test`; `./gradlew integrationTest` roda só `*IT`
+- [x] Cada `*IT` começa com o banco vazio e, quando usa `@AutoConfigureAiStub`, com o stub sem estado
+- [x] Nenhum teste chama provedor de IA real; nenhum `*IT` cita a OpenAI
+- [x] `.github/workflows/ci.yml` válido (actionlint), com os jobs `build`, `secrets` e `dependencies`
+- [x] README em pt-BR documenta configuração, execução, testes e CI, sem links quebrados
+- [x] `testing.md`, `ai-integration.md` e `CLAUDE.md` refletem os comandos, o padrão de código e a
   infraestrutura de testes
-- [ ] T01 e T02 marcadas em `docs/tarefas.md`
+- [x] T01 e T02 marcadas em `docs/tarefas.md`
 
 ## Para futuros agentes
 
@@ -385,22 +388,22 @@ PRs, falhando com severidade alta).
 
 ## Fase 6: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Reescrever o `README.md` em pt-BR: título, resumo em 2–3 frases e badge do CI;
+- [x] [verificação] Reescrever o `README.md` em pt-BR: título, resumo em 2–3 frases e badge do CI;
   pré-requisitos (JDK 25, Docker); configuração (`.env.example` → `.env`, tabela das variáveis, nenhuma credencial
   versionada); execução (`set -a && source .env && set +a && ./gradlew bootRun`, MySQL pelo `compose.yml`,
   volume criado com credenciais antigas); testes (`test`, `integrationTest`, `build`, relatório de cobertura, sem
   chave de IA); padrão de código (`./gradlew spotlessApply` antes do commit; Checkstyle no `build`); CI (o que
   cada job verifica). Remover a parte didática do curso e os links `../README.md`
-- [ ] [verificação] `.claude/rules/testing.md`: remover o aviso de rascunho e o "A definir na T02"; documentar
+- [x] [verificação] `.claude/rules/testing.md`: remover o aviso de rascunho e o "A definir na T02"; documentar
   tasks, CI, `@IntegrationTest`, `@AutoConfigureAiStub`/`AiStub`, limpeza do banco e payloads em
   `src/test/resources/ai/<provedor>/`. `.claude/rules/ai-integration.md`: seção "Testes" com a fixture neutra
-- [ ] [verificação] `CLAUDE.md`: comandos `./gradlew test`, `./gradlew integrationTest` e
+- [x] [verificação] `CLAUDE.md`: comandos `./gradlew test`, `./gradlew integrationTest` e
   `./gradlew spotlessApply`; em "Stack", Spotless (palantir-java-format) e Checkstyle; `bootRun` com `.env`;
   em "Stack", segredos por variável de ambiente (`.env.example`); em "Estrutura", `src/test/resources/ai/`; em
   "Fluxo de trabalho", o último commit da tarefa marca o checkbox dela em `docs/tarefas.md`
-- [ ] [verificação] `git stash pop` (T01 marcada) e marcar a T02 em `docs/tarefas.md`
+- [x] [verificação] `git stash pop` (T01 marcada) e marcar a T02 em `docs/tarefas.md`
 
 ### Plano de verificação
 
@@ -413,15 +416,35 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+README em pt-BR (badge do CI, pré-requisitos, configuração com `.env.example`, execução e testes), `testing.md` sem
+o rascunho e com a infraestrutura de integração, `ai-integration.md` com a fixture neutra, `CLAUDE.md` com os novos
+comandos, stack, estrutura e o checkbox no último commit da tarefa, e T01 e T02 marcadas em `docs/tarefas.md`
+(`git stash pop`).
+
+- Decisões: o README ficou enxuto por edição do usuário (ver Decisões); itens do plano dispensados: padrão de código,
+  CI, nota do volume e `core.hooksPath`.
+- Verificação: sem `Rascunho`/`A definir na T02` em `testing.md`; sem `../README` no README; `integrationTest` aparece
+  no README (1), no `CLAUDE.md` (2) e no `testing.md` (1); `grep` de T01/T02 marcadas acha duas linhas; `git stash
+  list` vazio; `build` passa sem `OPENAI_API_KEY`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A T02 deixou a base de qualidade do projeto: Spotless (palantir-java-format) e Checkstyle no `build`, hook que formata
+o `.java` editado pelo agente, credenciais fora do versionamento (`.env.example`), `test` (`*Test`) separado de
+`integrationTest` (`*IT`) com JaCoCo, MySQL via Testcontainers com banco zerado a cada teste, IA simulada por
+`AiStub` (WireMock isolado na implementação), `VoiceCommandIT` cobrindo o fluxo de voz, workflow de CI
+(`build`, `secrets`, `dependencies`) e documentação. Os cinco `*IT` que chamavam a OpenAI real foram removidos.
+
+- Definição de pronto: todos os itens conferidos. O `build` passa sem `OPENAI_API_KEY` e com o `compose.yml` parado;
+  o gitleaks não achou segredos no histórico; o `actionlint` passou.
+- Não verificável localmente: o workflow só roda após o push; o primeiro run do CI e o dependency-review ficam para
+  o PR.
+- Decisões tomadas durante a execução: forma idiomática do Spring como padrão do projeto, README enxuto e
+  `@TestConfiguration` para a config do stub.
 
 ## Plano de deploy
 
-_(preencher ao concluir todas as fases)_ Passos do usuário no GitHub, após o merge:
+Passos do usuário no GitHub, após o merge:
 
 - ativar Dependabot alerts e Dependabot security updates (Settings → Code security)
 - criar a regra de proteção da `main` exigindo os jobs `build`, `secrets` e `dependencies`
