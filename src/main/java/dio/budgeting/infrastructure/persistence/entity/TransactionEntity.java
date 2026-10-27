@@ -1,12 +1,15 @@
 package dio.budgeting.infrastructure.persistence.entity;
 
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
 import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionId;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +24,9 @@ public class TransactionEntity {
     private UUID id;
 
     private String description;
-    private long amount;
+
+    @Column(precision = 18, scale = 2)
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     private Category category;
@@ -30,11 +35,11 @@ public class TransactionEntity {
         return new TransactionEntity(
                 transaction.getId().uuid(),
                 transaction.getDescription(),
-                transaction.getAmount(),
+                transaction.getAmount().value(),
                 transaction.getCategory());
     }
 
     public Transaction toDomain() {
-        return new Transaction(new TransactionId(this.id), this.description, this.amount, this.category);
+        return new Transaction(new TransactionId(this.id), this.description, new Money(this.amount), this.category);
     }
 }

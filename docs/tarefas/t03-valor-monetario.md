@@ -62,7 +62,7 @@ decimal com 2 casas mais o código da moeda (API-02).
   (ex.: 80.00)", e a tool de consulta devolve `amount` em reais + `currency` — o modelo repete o valor ouvido em
   vez de multiplicar por 100 (fonte de erros de 100×); a conversão exata fica no `Money`
 - `PersistTransactionInput.amount` é `BigDecimal` (não `Money`) porque o record também define o schema da tool, e
-  `Money` viraria um objeto aninhado para o modelo; o use case cria o `Money` com `Money.of`. A separação fica para a T09
+  `Money` viraria um objeto aninhado para o modelo; `PersistTransactionInput.toMoney()` cria o `Money` com `Money.of`, como `TransactionOutput.from` converte do domínio (decisão do usuário). A separação fica para a T09
 - ADR 0001 registra a representação (contrato, domínio, banco e IA) — decisão não óbvia, que afeta o contrato
   público e será consultada pela T06 (teto), T07 (OpenAPI) e T14 (formatação em R$)
 - Uma fase só — tarefa pequena (esforço P), e domínio, persistência, aplicação e HTTP mudam juntos
@@ -128,9 +128,9 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `IllegalArgumentException`; aceita 16 dígitos inteiros); fábrica `Money.of` normaliza para escala 2
       (`80` → `80.00`, `80.5` → `80.50`, `80.000` → `80.00`), rejeita `80.005` e devolve valores iguais para
       escalas de entrada diferentes
-- [ ] [TDD] `Transaction.amount` como `Money`; `PersistTransactionInput.amount` como `BigDecimal` em reais
+- [x] [TDD] `Transaction.amount` como `Money`; `PersistTransactionInput.amount` como `BigDecimal` em reais
       (`@ToolParam` "Valor do gasto em reais, com até 2 casas decimais e ponto como separador (ex.: 80.00)");
-      `PersistTransactionUseCase` cria o `Money` com `Money.of`; `TransactionOutput` com `BigDecimal amount` e `String currency`
+      `PersistTransactionInput.toMoney()` cria o `Money` com `Money.of`; `TransactionOutput` com `BigDecimal amount` e `String currency`
       (sem `double`); `TransactionEntity.amount` como `BigDecimal` `DECIMAL(18,2)` — `PersistTransactionUseCaseTest`
       verifica que a entrada `80` em reais é gravada como `Money` `80.00`
 - [ ] [TDD] Contrato HTTP: `TransactionRequest` e `TransactionResponse` com `amount` (string) e `currency`;

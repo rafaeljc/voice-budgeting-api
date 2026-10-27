@@ -6,10 +6,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,7 @@ class VoiceCommandIT {
                 .singleElement()
                 .satisfies(transaction -> {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
-                    assertThat(transaction.getAmount()).isEqualTo(8000);
+                    assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("8000.00")));
                 });
     }
 }
