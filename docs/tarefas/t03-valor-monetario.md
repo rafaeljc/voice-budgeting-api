@@ -136,7 +136,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] Contrato HTTP: `TransactionRequest` e `TransactionResponse` com `amount` (string) e `currency`;
       `toPlainString()` na resposta — `TransactionEndpointsIT`: criação responde 201 com `"amount": "80.00"` e
       `"currency": "BRL"`; listagem por categoria devolve `"80.00"` (regressão da FN-01)
-- [ ] [TDD] Validação de formato: `spring-boot-starter-validation` no `build.gradle`; `@NotNull` + `@Pattern` em
+- [x] [TDD] Validação de formato: `spring-boot-starter-validation` no `build.gradle`; `@NotNull` + `@Pattern` em
       `amount` e `currency`, `@Valid` no `TransactionController` — `TransactionEndpointsIT` parametrizado responde
       400 para `"80,00"`, `"80.5"`, `"80"`, `"abc"`, `"-10.00"`, 17 dígitos inteiros, `currency` `"USD"`, `amount`
       ausente e `currency` ausente, sem gravar nada
