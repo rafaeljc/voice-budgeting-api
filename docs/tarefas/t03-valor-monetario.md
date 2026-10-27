@@ -43,11 +43,14 @@ decimal com 2 casas mais o código da moeda (API-02).
   sem a verbosidade do aninhamento da API de contas
 - `currency` obrigatória na entrada e só aceita `BRL` — única moeda do produto; o domínio não tem campo de moeda,
   e a constante `Money.CURRENCY = "BRL"` é a fonte única do código
-- Domínio com `record Money(BigDecimal value)`: valor não nulo, escala normalizada para 2 (`80` → `80.00`,
-  `80.000` → `80.00`), mais de 2 casas significativas (`80.005`) → `IllegalArgumentException` sem arredondar
-  (`setScale(2, RoundingMode.UNNECESSARY)`), no máximo 16 dígitos inteiros (limite de representação do contrato e
-  do `DECIMAL(18,2)`, não teto de negócio); sem restrição de sinal — escolhido `BigDecimal` em vez de centavos em
-  `long`, pelo usuário; a normalização faz `equals` de `Money` independer da escala de entrada
+- Domínio com `record Money(BigDecimal value)`: o construtor compacto é estrito e não ajusta o valor — exige valor
+  não nulo, escala exatamente 2 (`80.00`; `80`, `80.5` e `80.005` → `IllegalArgumentException`) e no máximo 16
+  dígitos inteiros (limite de representação do contrato e do `DECIMAL(18,2)`, não teto de negócio); sem restrição
+  de sinal. A fábrica `Money.of(BigDecimal)` normaliza a escala para 2 sem arredondar
+  (`setScale(2, RoundingMode.UNNECESSARY)`: `80` → `80.00`, `80.000` → `80.00`, `80.005` → exceção) e delega ao
+  construtor — usada onde a escala não é garantida (tool de IA). Escolhido `BigDecimal` em vez de centavos em
+  `long`, pelo usuário; construtor estrito + fábrica explícita (decisão do usuário) mantém a invariante visível e
+  o `equals` independente da escala de entrada, sem efeito colateral escondido no construtor
 - Banco com `DECIMAL(18,2)` na coluna `amount` (16 + 2 dígitos, igual ao contrato)
 - Banco local recriado (`docker compose down -v`) em vez de migração — o `ddl-auto=update` não altera o tipo de
   uma coluna existente, não há produção nem dados reais, e Flyway não entra agora (decisão do usuário)
@@ -59,7 +62,7 @@ decimal com 2 casas mais o código da moeda (API-02).
   (ex.: 80.00)", e a tool de consulta devolve `amount` em reais + `currency` — o modelo repete o valor ouvido em
   vez de multiplicar por 100 (fonte de erros de 100×); a conversão exata fica no `Money`
 - `PersistTransactionInput.amount` é `BigDecimal` (não `Money`) porque o record também define o schema da tool, e
-  `Money` viraria um objeto aninhado para o modelo; o use case cria o `Money`. A separação fica para a T09
+  `Money` viraria um objeto aninhado para o modelo; o use case cria o `Money` com `Money.of`. A separação fica para a T09
 - ADR 0001 registra a representação (contrato, domínio, banco e IA) — decisão não óbvia, que afeta o contrato
   público e será consultada pela T06 (teto), T07 (OpenAPI) e T14 (formatação em R$)
 - Uma fase só — tarefa pequena (esforço P), e domínio, persistência, aplicação e HTTP mudam juntos
@@ -120,13 +123,14 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] Commitar as marcações da T27 já presentes no working tree (`docs/tarefas.md`, checkbox da
       T27; `docs/tarefas/t27-dependencias-vulneraveis.md`, último critério da definição de pronto) — commit
       `docs: marca a tarefa t27 como concluída`
-- [ ] [TDD] `domain/Money` (`record Money(BigDecimal value)`, constante `CURRENCY = "BRL"`) com `MoneyTest`:
-      normaliza para escala 2 (`80` → `80.00`, `80.5` → `80.50`, `80.000` → `80.00`); valores iguais em escalas
-      diferentes são iguais; rejeita `null`, mais de 2 casas significativas (`80.005`) e mais de 16 dígitos
-      inteiros com `IllegalArgumentException`; aceita 16 dígitos inteiros
+- [x] [TDD] `domain/Money` (`record Money(BigDecimal value)`, constante `CURRENCY = "BRL"`) com `MoneyTest`:
+      construtor estrito (aceita `80.00`; rejeita `null`, escala diferente de 2 e mais de 16 dígitos inteiros com
+      `IllegalArgumentException`; aceita 16 dígitos inteiros); fábrica `Money.of` normaliza para escala 2
+      (`80` → `80.00`, `80.5` → `80.50`, `80.000` → `80.00`), rejeita `80.005` e devolve valores iguais para
+      escalas de entrada diferentes
 - [ ] [TDD] `Transaction.amount` como `Money`; `PersistTransactionInput.amount` como `BigDecimal` em reais
       (`@ToolParam` "Valor do gasto em reais, com até 2 casas decimais e ponto como separador (ex.: 80.00)");
-      `PersistTransactionUseCase` cria o `Money`; `TransactionOutput` com `BigDecimal amount` e `String currency`
+      `PersistTransactionUseCase` cria o `Money` com `Money.of`; `TransactionOutput` com `BigDecimal amount` e `String currency`
       (sem `double`); `TransactionEntity.amount` como `BigDecimal` `DECIMAL(18,2)` — `PersistTransactionUseCaseTest`
       verifica que a entrada `80` em reais é gravada como `Money` `80.00`
 - [ ] [TDD] Contrato HTTP: `TransactionRequest` e `TransactionResponse` com `amount` (string) e `currency`;
