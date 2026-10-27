@@ -167,17 +167,17 @@ de constraint (`(c)`, `{strictly ...}`) e considere também pacotes fora da tabe
 
 ## Fase 2: Spring AI 2.0.2
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `build.gradle`: `spring-ai-bom` 2.0.0-M4 → 2.0.2; ajustar `TransactionController` só se a API
+- [x] [verificação] `build.gradle`: `spring-ai-bom` 2.0.0-M4 → 2.0.2; ajustar `TransactionController` só se a API
       de `TranscriptionModel`, `ChatClient` ou `TextToSpeechModel` mudar, mantendo o comportamento
-- [ ] [verificação] `application.properties`: ajustar as propriedades `spring.ai.*` que mudaram de nome ou tipo no
+- [x] [verificação] `application.properties`: ajustar as propriedades `spring.ai.*` que mudaram de nome ou tipo no
       2.0.2 (conferir o bind de `chat.options.response-format.type=TEXT` e das opções de transcrição e voz),
       mantendo os mesmos valores
 - [ ] [verificação] `application-test.properties`: trocar `spring.ai.retry.max-attempts=1` por
       `spring.ai.openai.max-retries=0` (manter o `spring.ai.retry.*` só se ainda for usado), para o
       `AiProviderIsolationIT` continuar falhando rápido com `ConnectException` na causa raiz
-- [ ] [verificação] Stub da OpenAI: alinhar base URL (`AiStubConfiguration`) e caminhos (`OpenAiWireMockStub`) ao
+- [x] [verificação] Stub da OpenAI: alinhar base URL (`AiStubConfiguration`) e caminhos (`OpenAiWireMockStub`) ao
       SDK `openai-java`, e conferir `chat-tool-call.json`, `chat-answer.json`, a resposta de transcrição
       (`text/plain`) e a de voz (`audio/mpeg`) contra a documentação da API da OpenAI; `VoiceCommandIT` passa sem
       mudar o que verifica

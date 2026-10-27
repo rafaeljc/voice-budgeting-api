@@ -16,7 +16,7 @@ class AiStubConfiguration {
 
     @Bean
     DynamicPropertyRegistrar aiBaseUrlRegistrar(WireMockServer aiWireMockServer) {
-        return registry -> registry.add("spring.ai.openai.base-url", aiWireMockServer::baseUrl);
+        return registry -> registry.add("spring.ai.openai.base-url", () -> aiWireMockServer.baseUrl() + "/v1");
     }
 
     @Bean
