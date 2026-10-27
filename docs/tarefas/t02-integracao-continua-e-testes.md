@@ -346,9 +346,9 @@ responde 200 `audio/mp3` com esses bytes e grava a transação. O suporte de IA 
 
 ## Fase 5: Integração contínua
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `.github/workflows/ci.yml`: gatilhos `pull_request` e `push` na `main`; `permissions:
+- [x] [verificação] `.github/workflows/ci.yml`: gatilhos `pull_request` e `push` na `main`; `permissions:
   contents: read` no topo; jobs:
   - `build` — `actions/checkout`, `actions/setup-java` (Temurin 25), `gradle/actions/setup-gradle`,
     `./gradlew build` (inclui `spotlessCheck` e Checkstyle pelo `check`); `actions/upload-artifact` com os relatórios de teste e de cobertura (sempre, inclusive em
@@ -357,7 +357,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
   - `dependencies` — `contents: write`; `gradle/actions/dependency-submission` nos dois gatilhos e
     `actions/dependency-review-action` só em `pull_request`, com `fail-on-severity: high` e
     `retry-on-snapshot-warnings: true`
-- [ ] [verificação] Rodar o gitleaks no histórico; se houver achado que não é segredo real, registrar em
+- [x] [verificação] Rodar o gitleaks no histórico; se houver achado que não é segredo real, registrar em
   `.gitleaksignore` com aprovação do usuário
 
 ### Plano de verificação
@@ -368,7 +368,20 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+`.github/workflows/ci.yml` com os gatilhos `pull_request` e `push` na `main`, `permissions: contents: read` no topo
+e três jobs: `build` (`./gradlew build` e upload dos relatórios de teste, cobertura e Checkstyle, sempre), `secrets`
+(gitleaks em todo o histórico) e `dependencies` (dependency-submission nos dois gatilhos e dependency-review só nos
+PRs, falhando com severidade alta).
+
+- Decisões: versões das actions pela tag de versão maior mais recente (`checkout@v7`, `setup-java@v6`,
+  `gradle/actions@v6`, `upload-artifact@v7`, `gitleaks-action@v3`). O `dependency-review-action` não publica tag
+  flutuante de versão maior, então usa `v5.0.0` exata. Os jobs têm `timeout-minutes`, que o plano não pedia, para
+  evitar execução presa.
+- Verificação: `actionlint` com exit 0 e sem saída; `gitleaks git` achou `no leaks found` em 28 commits, então o
+  `.gitleaksignore` não foi necessário; `build` passa sem `OPENAI_API_KEY`.
+- Para uma sessão nova: o workflow só roda de fato depois do push; o primeiro PR pode avisar que não há snapshot da
+  `main` para o dependency-review (`retry-on-snapshot-warnings` cobre). Os security updates e o Dependabot alerts
+  precisam ser ativados nas configurações do repositório.
 
 ## Fase 6: Documentação
 
