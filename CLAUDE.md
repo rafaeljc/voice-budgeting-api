@@ -7,9 +7,9 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 
 ## Stack
 
-- Java 25 (toolchain), Spring Boot 4.0.5, Gradle 9.4.1 (Groovy DSL, wrapper)
+- Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
 - Spring Web MVC, Spring Data JPA, MySQL 9.6 (`compose.yml`, iniciado pelo `spring-boot-docker-compose`)
-- Spring AI 2.0.0-M4 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
+- Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
 - Lombok (`io.freefair.lombok`), Jackson 3 (`tools.jackson.*`)
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
 - Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
