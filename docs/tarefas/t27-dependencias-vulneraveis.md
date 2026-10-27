@@ -53,12 +53,12 @@ Spring AI 2.0.0-M4 → 2.0.2 (SEG-07, correção dos achados).
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Nenhum pacote alertado pelo Dependabot resolve, em nenhuma configuração do Gradle nem no `buildEnvironment`,
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
+- [x] Nenhum pacote alertado pelo Dependabot resolve, em nenhuma configuração do Gradle nem no `buildEnvironment`,
       para uma versão dentro de uma faixa vulnerável
-- [ ] `mcp-core` fora da árvore de dependências (ou em versão corrigida, com o motivo em Decisões)
-- [ ] `VoiceCommandIT` e `AiProviderIsolationIT` passam com o Spring AI 2.0.2, sem mudar o que os `*IT` verificam
-- [ ] `docs/tarefas.md` com a entrada da T27 (descrição nova) e `CLAUDE.md` com Spring Boot 4.1.2 e Spring AI 2.0.2
+- [x] `mcp-core` fora da árvore de dependências (ou em versão corrigida, com o motivo em Decisões)
+- [x] `VoiceCommandIT` e `AiProviderIsolationIT` passam com o Spring AI 2.0.2, sem mudar o que os `*IT` verificam
+- [x] `docs/tarefas.md` com a entrada da T27 (descrição nova) e `CLAUDE.md` com Spring Boot 4.1.2 e Spring AI 2.0.2
 - [ ] Não verificável localmente (fica para o PR e o pós-merge): job `dependencies` verde no PR; zero alertas
       abertos no Dependabot após o merge
 
@@ -167,7 +167,7 @@ de constraint (`(c)`, `{strictly ...}`) e considere também pacotes fora da tabe
 
 ## Fase 2: Spring AI 2.0.2
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: `spring-ai-bom` 2.0.0-M4 → 2.0.2; ajustar `TransactionController` só se a API
       de `TranscriptionModel`, `ChatClient` ou `TextToSpeechModel` mudar, mantendo o comportamento
@@ -183,7 +183,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       mudar o que verifica
 - [x] [verificação] `mcp-core`: conferir que saiu da árvore; se continuar, adicionar constraint para a versão
       corrigida mais recente da linha 1.1.x e registrar em Decisões
-- [ ] [verificação] `CLAUDE.md` (Stack): "Spring AI 2.0.0-M4" → "Spring AI 2.0.2"
+- [x] [verificação] `CLAUDE.md` (Stack): "Spring AI 2.0.0-M4" → "Spring AI 2.0.2"
 
 ### Plano de verificação
 
@@ -199,11 +199,33 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Spring AI 2.0.0-M4 → 2.0.2. `TransactionController` compilou sem mudanças e as propriedades `spring.ai.*` de
+`application.properties` continuaram válidas (o bind de `chat.options.response-format.type=TEXT` funciona; o contexto
+sobe e o `VoiceCommandIT` passa). Dois ajustes, ambos só em testes:
+
+- `AiStubConfiguration`: a base URL do stub passou a ser `<WireMock>/v1`, porque o SDK `openai-java` anexa
+  `/chat/completions` etc. à base; o `OpenAiWireMockStub` e os payloads em `ai/openai/` ficaram como estavam, e o
+  SDK os deserializou sem erro.
+- `application-test.properties`: `spring.ai.retry.max-attempts=1` → `spring.ai.openai.max-retries=0` (os retries da
+  OpenAI agora são do SDK, padrão 3; `spring.ai.retry.*` não é mais usado). O `AiProviderIsolationIT` segue falhando
+  com `ConnectException` na causa raiz; o caso leva ~3 s (testado com 0 e com 1, sem diferença relevante; 0 foi
+  escolhido pelo usuário por ser determinístico).
+
+O `mcp-core` saiu da árvore (0 ocorrências no `runtimeClasspath`), sem constraint. Verificação: `build`,
+`VoiceCommandIT` e `AiProviderIsolationIT` passam; `spring-ai-openai` 2.0.2; nenhuma ocorrência de `4.0.5` ou
+`2.0.0-M4` em `CLAUDE.md`/`build.gradle`; o script de conferência só acusa falsos positivos de linhas de constraint
+`{strictly ...}` (logback, netty-codec-compression, netty-codec-http3), todas resolvidas para versões corrigidas.
+
+Não verificado: payloads contra a API real da OpenAI (fora do escopo; decisão registrada).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Todos os pacotes alertados pelo Dependabot (levantamento de 27/10/2026) resolvem para versões fora das faixas
+vulneráveis, em todas as configurações do Gradle e no `buildEnvironment`: Spring Boot 4.1.2 (BOM e plugin), Checkstyle
+13.11.0 (sem `plexus-utils`), Spring AI 2.0.2 (sem `mcp-core`) e uma constraint de `commons-lang3` 3.20.0 no
+`buildscript`, único item fora do plano original (aprovado na Fase 1). Mudanças de código: nenhuma em `src/main`;
+em testes, a base URL do stub e os retries da OpenAI. O pendente é só o que não dá para verificar localmente: job
+`dependencies` verde no PR e zero alertas abertos após o merge.
 
 ## Plano de deploy
 
