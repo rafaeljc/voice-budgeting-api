@@ -133,7 +133,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `PersistTransactionInput.toMoney()` cria o `Money` com `Money.of`; `TransactionOutput` com `BigDecimal amount` e `String currency`
       (sem `double`); `TransactionEntity.amount` como `BigDecimal` `DECIMAL(18,2)` — `PersistTransactionUseCaseTest`
       verifica que a entrada `80` em reais é gravada como `Money` `80.00`
-- [ ] [TDD] Contrato HTTP: `TransactionRequest` e `TransactionResponse` com `amount` (string) e `currency`;
+- [x] [TDD] Contrato HTTP: `TransactionRequest` e `TransactionResponse` com `amount` (string) e `currency`;
       `toPlainString()` na resposta — `TransactionEndpointsIT`: criação responde 201 com `"amount": "80.00"` e
       `"currency": "BRL"`; listagem por categoria devolve `"80.00"` (regressão da FN-01)
 - [ ] [TDD] Validação de formato: `spring-boot-starter-validation` no `build.gradle`; `@NotNull` + `@Pattern` em
