@@ -140,7 +140,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `amount` e `currency`, `@Valid` no `TransactionController` — `TransactionEndpointsIT` parametrizado responde
       400 para `"80,00"`, `"80.5"`, `"80"`, `"abc"`, `"-10.00"`, 17 dígitos inteiros, `currency` `"USD"`, `amount`
       ausente e `currency` ausente, sem gravar nada
-- [ ] [TDD] Voz em reais: `VoiceCommandIT` com a tool `persist-transaction` recebendo `"amount": 80.00` grava a
+- [x] [TDD] Voz em reais: `VoiceCommandIT` com a tool `persist-transaction` recebendo `"amount": 80.00` grava a
       transação com `Money` `80.00`
 - [ ] [verificação] ADR `docs/adr/0001-representacao-de-valores-monetarios.md` (a partir de `docs/adr/template.md`,
       `status: aceito`): contexto (FN-01, API-02), opções (centavos inteiros, string decimal Open Finance, número
