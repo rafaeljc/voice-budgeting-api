@@ -119,9 +119,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Spring Boot 4.1.2 e Checkstyle 13.11.0
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Commitar a entrada da T27 em `docs/tarefas.md` (já presente no working tree: item na lista da
+- [x] [verificação] Commitar a entrada da T27 em `docs/tarefas.md` (já presente no working tree: item na lista da
       Fase 2, seção `<a id="t27"></a>` e `SEG-07 → T02, T27` na tabela), com a descrição trocada por:
       "Atualizar o Spring Boot (4.0.5 → 4.1.2), o Spring AI (2.0.0-M4 → 2.0.2, que troca o cliente da OpenAI pelo
       SDK `openai-java`) e o Checkstyle (13.4.0 → 13.11.0), eliminando todos os alertas de vulnerabilidade das

@@ -10,6 +10,7 @@
 - [x] [T02 — Integração contínua e base de testes](#t02)
 
 **Fase 2 — Correções urgentes**
+- [ ] [T27 — Atualização das dependências vulneráveis](#t27)
 - [ ] [T03 — Correção do valor monetário](#t03)
 - [ ] [T04 — Logs estruturados e proteção de dados nos logs](#t04)
 
@@ -113,6 +114,16 @@ Adotar logs estruturados com identificador de correlação por requisição e im
 **Itens do escopo:**
 - OBS-01 — Logs estruturados com ID de correlação
 - SEG-06 — Dados sensíveis fora dos logs
+
+<a id="t27"></a>
+### T27 — Atualização das dependências vulneráveis
+
+**Depende de:** T02
+
+Atualizar o Spring Boot (4.0.5 → 4.1.2), o Spring AI (2.0.0-M4 → 2.0.2, que troca o cliente da OpenAI pelo SDK `openai-java`) e o Checkstyle (13.4.0 → 13.11.0), eliminando todos os alertas de vulnerabilidade das dependências, inclusive as do classpath dos plugins do Gradle. O Dependabot não atualiza dependências transitivas gerenciadas pelos BOMs, por isso a atualização é feita nas versões declaradas no build e conferida com o dependency review e com o `build`. Se o job `dependencies` passar, passa a ser exigido na proteção da `main`.
+
+**Itens do escopo:**
+- SEG-07 — Análise de vulnerabilidades das dependências (correção dos achados)
 
 ## Fase 3 — Base para evolução
 
@@ -388,7 +399,7 @@ Concluir o README com a visão geral do projeto, tecnologias, melhorias implemen
 | Fluxo e regras de negócio | FN-01 → T03 · FN-02 → T06 · FN-03 → T12 · FN-04 → T13 · FN-05 → T11 · FN-06 → T06 · FN-07 → T14 · FN-08 → T14 · FN-09 → T09 |
 | API | API-01 → T07, T12 · API-02 → T03 · API-03 → T07 · API-04 → T05 · API-05 → T07 |
 | Resiliência | RES-01 → T10 · RES-02 → T10 · RES-03 → T15 · RES-04 → T15 · RES-05 → T16 · RES-06 → T17 · RES-07 → T13 · RES-08 → T12 · RES-09 → T18 · RES-10 → T18 |
-| Segurança e rastreabilidade | SEG-01 → T08 · SEG-02 → T08 · SEG-03 → T19 · SEG-04 → T20 · SEG-05 → T21 · SEG-06 → T04 · SEG-07 → T02 · SEG-08 → T02 |
+| Segurança e rastreabilidade | SEG-01 → T08 · SEG-02 → T08 · SEG-03 → T19 · SEG-04 → T20 · SEG-05 → T21 · SEG-06 → T04 · SEG-07 → T02, T27 · SEG-08 → T02 |
 | Custo e desempenho | CUS-01 → T23 · CUS-02 → T24 · CUS-03 → T25 |
 | Observabilidade | OBS-01 → T04 · OBS-02 → T22 · OBS-03 → T22 |
 | Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T10, T15, T16, T17, T21 · QA-05 → T02 |
