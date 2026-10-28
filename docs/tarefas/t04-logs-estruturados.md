@@ -140,9 +140,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Correlação e logs estruturados
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `spring-boot-starter-opentelemetry` e `spring-boot-starter-actuator` no `build.gradle`;
+- [x] [verificação] `spring-boot-starter-opentelemetry` e `spring-boot-starter-actuator` no `build.gradle`;
       `logging.structured.format.console=ecs` no `application.properties`
 - [ ] [TDD] `RequestCorrelationIT` (novo, `infrastructure/http`): `GET /transactions/GROCERIES` responde com
       `X-Request-Id` (32 hex) e as linhas de log da requisição saem em JSON com o mesmo `traceId` — implementa o
