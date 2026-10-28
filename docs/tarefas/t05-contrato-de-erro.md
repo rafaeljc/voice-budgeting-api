@@ -150,9 +150,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Erros HTTP
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `ErrorResponseIT` (novo, `infrastructure/http`): `POST /transactions` com `amount` inválido → 400
+- [x] [TDD] `ErrorResponseIT` (novo, `infrastructure/http`): `POST /transactions` com `amount` inválido → 400
       `application/problem+json`, `type` `urn:problem-type:budgeting:validation-error`, `title` e `detail` em
       pt-BR, `instance` `/transactions`, `errors` `[{pointer: "#/amount", detail: <mensagem própria>}]` sem a
       regex — implementa `ApiExceptionHandler`, `ProblemType`, `InvalidField`, `messages.properties`, locale fixo

@@ -10,9 +10,11 @@ import java.math.BigDecimal;
 public record TransactionRequest(
         String description,
         Category category,
-        @NotNull @Pattern(regexp = "^\\d{1,16}\\.\\d{2}$") String amount,
 
-        @NotNull @Pattern(regexp = "^" + Money.CURRENCY + "$")
+        @NotNull @Pattern(regexp = "^\\d{1,16}\\.\\d{2}$", message = "{transaction.amount.invalid}")
+        String amount,
+
+        @NotNull @Pattern(regexp = "^" + Money.CURRENCY + "$", message = "{transaction.currency.invalid}")
         String currency) {
     public PersistTransactionInput toInput() {
         return new PersistTransactionInput(description, new BigDecimal(amount), category);
