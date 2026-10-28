@@ -164,7 +164,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `parameter` `file`
 - [x] [TDD] `ErrorResponseIT`: rota inexistente (404), método não suportado (405) e `Content-Type` não suportado
       (415) → `about:blank` com `title` e `detail` em pt-BR
-- [ ] [TDD] `UploadLimitIT` (novo, servidor real): upload acima do limite em `/transactions/ai` → 413
+- [x] [TDD] `UploadLimitIT` (novo, servidor real): upload acima do limite em `/transactions/ai` → 413
       `about:blank` em `application/problem+json` — expõe `webEnvironment` em `@IntegrationTest`
 - [ ] [TDD] `ErrorResponseIT`: falha inesperada na porta `TransactionRepository` (`@MockitoBean`) → 500
       `about:blank` com `detail` genérico, sem a mensagem da exceção no corpo
