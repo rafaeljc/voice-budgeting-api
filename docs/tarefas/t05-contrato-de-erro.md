@@ -211,9 +211,9 @@ e o handler de `com.openai.errors.OpenAIException` ainda não existem.
 
 ## Fase 2: Falhas da IA
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandIT` (parametrizado): falha transitória na transcrição (`CONNECTION_FAILURE`,
+- [x] [TDD] `VoiceCommandIT` (parametrizado): falha transitória na transcrição (`CONNECTION_FAILURE`,
       `RATE_LIMITED`, `PROVIDER_ERROR`) → 503 `application/problem+json`,
       `urn:problem-type:budgeting:assistant-unavailable`, `Retry-After: 30` — implementa
       `AiStub.givenTranscriptionFailure(AiFailure)` no `OpenAiWireMockStub`, o handler de

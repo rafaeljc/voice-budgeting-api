@@ -1,11 +1,15 @@
 package dio.budgeting.infrastructure.http.error;
 
+import com.openai.errors.OpenAIException;
+import com.openai.errors.OpenAIIoException;
+import com.openai.errors.OpenAIServiceException;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +28,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 
 @RestControllerAdvice
+@EnableConfigurationProperties(ErrorProperties.class)
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
@@ -31,6 +36,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String ERRORS_PROPERTY = "errors";
     private static final String INVALID_VALUE_CODE = "problem.invalid-value";
     private static final String UNEXPECTED_ERROR_CODE = "problem.unexpected-error";
+
+    private final ErrorProperties properties;
+
+    public ApiExceptionHandler(ErrorProperties properties) {
+        this.properties = properties;
+    }
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -72,6 +83,20 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.VALIDATION_ERROR, status, errors), headers, status, request);
     }
 
+    @ExceptionHandler(OpenAIException.class)
+    ResponseEntity<Object> handleAiProviderFailure(OpenAIException ex, WebRequest request) {
+        if (!isTransient(ex)) {
+            return handleUnexpected(ex, request);
+        }
+        var status = HttpStatus.SERVICE_UNAVAILABLE;
+        var headers = new HttpHeaders();
+        headers.set(
+                HttpHeaders.RETRY_AFTER,
+                String.valueOf(properties.assistantUnavailableRetryAfter().toSeconds()));
+        return handleExceptionInternal(
+                ex, problem(ProblemType.ASSISTANT_UNAVAILABLE, status, null), headers, status, request);
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<Object> handleUnexpected(Exception ex, WebRequest request) {
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -88,12 +113,30 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         if (response.getBody() instanceof ProblemDetail problem && problem.getType() == null) {
             problem.setType(BLANK_TYPE);
         }
-        if (statusCode.is5xxServerError()) {
+        if (ex instanceof OpenAIException providerFailure && isTransient(providerFailure)) {
+            logProviderUnavailable(statusCode, providerFailure);
+        } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (response.getBody() instanceof ProblemDetail problem) {
             logRejected(statusCode, problem);
         }
         return response;
+    }
+
+    // Network failures, rate limiting and provider 5xx may succeed on a later attempt; anything else is on our side
+    private static boolean isTransient(OpenAIException ex) {
+        return ex instanceof OpenAIIoException
+                || ex instanceof OpenAIServiceException service
+                        && (service.statusCode() == HttpStatus.TOO_MANY_REQUESTS.value()
+                                || service.statusCode() >= 500);
+    }
+
+    private void logProviderUnavailable(HttpStatusCode status, OpenAIException ex) {
+        var event = log.atWarn().addKeyValue("status", status.value());
+        if (ex instanceof OpenAIServiceException service) {
+            event = event.addKeyValue("providerStatus", service.statusCode());
+        }
+        event.log("AI provider unavailable");
     }
 
     private void logRejected(HttpStatusCode status, ProblemDetail problem) {

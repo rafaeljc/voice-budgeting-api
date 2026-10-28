@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -31,6 +32,18 @@ public class OpenAiWireMockStub implements AiStub {
     public void givenTranscription(String text) {
         server.stubFor(post(urlEqualTo("/v1/audio/transcriptions"))
                 .willReturn(aResponse().withHeader("Content-Type", "text/plain").withBody(text)));
+    }
+
+    @Override
+    public void givenTranscriptionFailure(AiFailure failure) {
+        var response =
+                switch (failure) {
+                    case CONNECTION_FAILURE -> aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER);
+                    case RATE_LIMITED -> aResponse().withStatus(429);
+                    case PROVIDER_ERROR -> aResponse().withStatus(500);
+                    case REQUEST_REJECTED -> aResponse().withStatus(401);
+                };
+        server.stubFor(post(urlEqualTo("/v1/audio/transcriptions")).willReturn(response));
     }
 
     // The first chat call asks for the tool; the second one carries the tool result and gets the final answer
