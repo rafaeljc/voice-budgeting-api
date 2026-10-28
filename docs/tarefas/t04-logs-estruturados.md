@@ -186,12 +186,12 @@ reaproveitar no `VoiceCommandIT`.
 
 ## Fase 2: Proteção de dados e eventos do fluxo de voz
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandIT`: nenhuma linha da saída capturada contém a transcrição nem a resposta do modelo —
       remove `logging.level.org.springframework.ai=DEBUG` e `spring.jpa.show-sql=true` e define em `false` as
       opções de conteúdo do Spring AI (se o teste não falhar no RED, registrar no resumo da fase)
-- [ ] [TDD] `VoiceCommandIT`: o comando de voz registra `Voice command received` (`audioSizeBytes`,
+- [x] [TDD] `VoiceCommandIT`: o comando de voz registra `Voice command received` (`audioSizeBytes`,
       `audioContentType`), `Audio transcribed` (`transcriptionLength` = 26), `Assistant answered`
       (`answerLength`), `Speech synthesized` (`speechSizeBytes` = 4) e `Transaction persisted` (`transactionId`
       igual ao da transação gravada), todos com o `traceId` da requisição — eventos no `TransactionController` e
@@ -208,7 +208,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: removidos `logging.level.org.springframework.ai=DEBUG` e `spring.jpa.show-sql=true`; as sete opções de
+conteúdo do Spring AI ficam em `false` no `application.properties`. Eventos `INFO` com pares chave-valor no
+`TransactionController` (`Voice command received`, `Audio transcribed`, `Assistant answered`,
+`Speech synthesized`) e no `PersistTransactionUseCase` (`Transaction persisted`, com o UUID da transação).
+`VoiceCommandIT` ganhou dois testes (não vazamento e eventos com o `traceId` da requisição); o parse dos logs
+JSON foi extraído para `support/log/LogEvents`, usado também pelo `RequestCorrelationIT`.
+
+RED: o teste de não vazamento passou antes da remoção do `DEBUG` (previsto no plano). O `DEBUG` do Spring AI não
+chegou a escrever a transcrição nem a resposta nos testes, mas a remoção e as opções em `false` seguem como
+proteção para o ambiente real, onde o conteúdo pode aparecer.
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `integrationTest --tests VoiceCommandIT` → passa; os três
+`grep` (`show-sql`/`DEBUG`, `System.out/err`) → nenhuma linha; contagem das opções `=false` → `7`.
+
+Para uma sessão nova: o checkstyle limita métodos a 50 linhas, inclusive em testes (os helpers
+`givenExpenseCommand`, `recording` e `assertEvent` do `VoiceCommandIT` existem por isso).
 
 ## Fase 3: Documentação
 
