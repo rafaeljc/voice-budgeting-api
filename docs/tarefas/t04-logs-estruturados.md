@@ -237,7 +237,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       entrada pelo `traceparent`); `.claude/rules/ai-integration.md` (Não fazer: ligar as opções de observação que
       logam conteúdo); `CLAUDE.md` (Stack: Actuator e Micrometer Tracing com OpenTelemetry; Padrões: logs
       estruturados com pares chave-valor, sem conteúdo)
-- [ ] [verificação] `README.md`: seção de logs e rastreamento — formato ECS, `./gradlew bootRun | jq`,
+- [x] [verificação] `README.md`: seção de logs e rastreamento — formato ECS, `./gradlew bootRun | jq`,
       `X-Request-Id`, como configurar o endpoint OTLP (ex.: ADOT Collector ou CloudWatch Agent para o X-Ray)
 - [ ] [verificação] ADR `docs/adr/0002-observabilidade-e-correlacao.md` (a partir de `docs/adr/template.md`,
       `status: aceito`): contexto (OBS-01, SEG-06); opções (SDK do X-Ray, ID de correlação próprio,

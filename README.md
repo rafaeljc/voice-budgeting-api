@@ -33,6 +33,26 @@ set -a && source .env && set +a
 ./gradlew bootRun
 ```
 
+## Logs e rastreamento
+
+Os logs saem em JSON no formato ECS, em todos os ambientes. Cada linha de uma requisição traz o `traceId`, o mesmo
+valor que a resposta devolve no cabeçalho `X-Request-Id`: com ele, uma requisição é localizada nos logs. Um
+`traceparent` (W3C) recebido é continuado, e um `X-Request-Id` enviado pelo cliente é ignorado.
+
+Os logs nunca contêm transcrição, prompt, resposta do modelo, áudio nem dados de negócio, só IDs e metadados
+técnicos. Para ler no terminal:
+
+```bash
+./gradlew bootRun | jq 'select(.traceId != null) | {"@timestamp", message, traceId}'
+```
+
+Os traces não são exportados enquanto não houver um endpoint OTLP configurado. Para enviá-los a um coletor (por
+exemplo, ADOT Collector ou CloudWatch Agent, que os repassam ao X-Ray), defina a variável de ambiente:
+
+```bash
+export MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+```
+
 ## Testes
 
 ```bash
