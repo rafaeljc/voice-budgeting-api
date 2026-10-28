@@ -165,6 +165,8 @@ Novos tipos de consulta, recursos consultivos/analíticos, novas categorias, cor
 | FUT-12 | Demonstração em vídeo/GIF | Gravação do fluxo funcionando de ponta a ponta. | O README e os exemplos de requisição e áudio permitem executar e avaliar o fluxo. |
 | FUT-13 | Dashboard local | Painel que exibe métricas técnicas, de negócio e de consumo de IA. | O foco atual é evoluir a funcionalidade; as métricas já ficam expostas e podem ser consultadas sem um painel. |
 | FUT-14 | Avaliação da acurácia da IA | Conjunto de comandos de voz/texto com resultados esperados, medindo a acurácia da extração (valor, descrição, categoria, intenção). | O foco atual é evoluir a funcionalidade; a confirmação em duas etapas impede que erros de interpretação cheguem ao banco, e a taxa de cancelamentos (OBS-03) já indica a qualidade percebida da IA. |
+| FUT-15 | ID de interação gerado pelo cliente | Aceitar o cabeçalho `x-fapi-interaction-id` (Open Finance, Payments API 4.0.0), um UUID gerado pelo cliente e espelhado na resposta, correlacionando a requisição mesmo quando a resposta não chega (timeout). | O `traceId` devolvido em `X-Request-Id` já correlaciona logs, traces e suporte; o ID do cliente só acrescenta o caso de resposta perdida. |
+| FUT-16 | Backend de traces | Coletor local `grafana/otel-lgtm` no `compose.yml` (reconhecido pelo `spring-boot-docker-compose`) e X-Ray em produção via ADOT Collector ou CloudWatch Agent. | A aplicação já exporta por OTLP quando há endpoint configurado; o coletor é infraestrutura de ambiente, e sem ele a tarefa entrega o mínimo necessário (logs correlacionados). |
 
 ---
 

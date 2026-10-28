@@ -243,7 +243,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `status: aceito`): contexto (OBS-01, SEG-06); opções (SDK do X-Ray, ID de correlação próprio,
       OpenTelemetry com `traceId`; `X-Request-Id`, `x-fapi-interaction-id`, `traceresponse`; access log); decisão
       e consequências — conteúdo fora dos logs, sem access log, exportação OTLP neutra
-- [ ] [verificação] `docs/escopo.md`, Melhorias futuras: FUT-15 (`x-fapi-interaction-id`) e FUT-16 (backend de
+- [x] [verificação] `docs/escopo.md`, Melhorias futuras: FUT-15 (`x-fapi-interaction-id`) e FUT-16 (backend de
       traces: coletor local e X-Ray via ADOT), com o motivo de ficarem para depois
 - [ ] [verificação] Marcar a T04 em `docs/tarefas.md` (último commit)
 
