@@ -10,6 +10,7 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
 - Spring Web MVC, Spring Data JPA, MySQL 9.6 (`compose.yml`, iniciado pelo `spring-boot-docker-compose`)
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
+- Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`)
 - Lombok (`io.freefair.lombok`), Jackson 3 (`tools.jackson.*`)
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
 - Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
@@ -34,7 +35,7 @@ src/main/java/dio/budgeting/
     input/  output/
   infrastructure/
     http/                       # *Controller
-      request/  response/
+      request/  response/  filter/   # *Filter
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
 src/main/resources/
@@ -66,7 +67,8 @@ src/test/resources/ai/          # payloads da IA simulada, por provedor (ai/open
   com `@Mock` e `@InjectMocks`, não `mock(...)` e `new` manuais
 - Mapeamento manual: `Response.from(output)`, `request.toInput()`, `entity.toDomain()`
 - Invariantes validadas no construtor (compact constructor nos records)
-- Logger SLF4J declarado explicitamente (`LoggerFactory.getLogger`)
+- Logger SLF4J declarado explicitamente (`LoggerFactory.getLogger`); logs estruturados com pares chave-valor
+  (`log.atInfo().addKeyValue(...)`), só com IDs e metadados, nunca conteúdo ou dados de negócio
 - Opções dos modelos de IA em `application.properties`, nunca fixas no código
 - Comentários só para o porquê (decisão, restrição, caso não óbvio), nunca para o que o código faz
 

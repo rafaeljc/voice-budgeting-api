@@ -65,7 +65,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 ## Cabeçalhos
 
 - `Location` em toda resposta 201.
-- O ID de correlação da requisição é devolvido na resposta.
+- `X-Request-Id` em toda resposta, com o `traceId` da requisição (32 hex); um `X-Request-Id` enviado pelo cliente é
+  ignorado. A correlação de entrada é pelo `traceparent` (W3C).
 
 ## Controllers e DTOs
 

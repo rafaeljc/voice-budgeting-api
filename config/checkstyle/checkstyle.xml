@@ -41,7 +41,10 @@
         </module>
         <module name="MemberName"/>
         <module name="StaticVariableName"/>
-        <module name="ConstantName"/>
+        <module name="ConstantName">
+            <!-- SLF4J convention: the logger is a static final named "log" -->
+            <property name="format" value="^(log|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)$"/>
+        </module>
         <module name="LocalVariableName"/>
         <module name="LocalFinalVariableName"/>
         <module name="ParameterName"/>

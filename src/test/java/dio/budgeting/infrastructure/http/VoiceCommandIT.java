@@ -11,10 +11,15 @@ import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
+import dio.budgeting.support.log.LogEvents;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @IntegrationTest
 @AutoConfigureMockMvc
 @AutoConfigureAiStub
+@ExtendWith(OutputCaptureExtension.class)
 class VoiceCommandIT {
 
     private final MockMvc mockMvc;
@@ -38,20 +44,10 @@ class VoiceCommandIT {
     void should_persistTransactionAndReturnSpeech_when_commandRegistersExpense() throws Exception {
         // given
         var speech = new byte[] {1, 2, 3, 4};
-        aiStub.givenTranscription("gastei 80 reais no mercado");
-        aiStub.givenToolCall("persist-transaction", """
-                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
-                """);
-        aiStub.givenAnswer("Registrei 80 reais em mercado.");
-        aiStub.givenSpeech(speech);
-        var audio = new MockMultipartFile(
-                "file",
-                "recording-1.m4a",
-                "audio/mp4",
-                Files.readAllBytes(Path.of("src/test/resources/audio/recording-1.m4a")));
+        givenExpenseCommand(speech);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(audio));
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
 
         // then
         response.andExpect(status().isOk())
@@ -63,5 +59,70 @@ class VoiceCommandIT {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
                     assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
                 });
+    }
+
+    @Test
+    void should_notLogTranscriptionNorAnswer_when_commandIsProcessed(CapturedOutput output) throws Exception {
+        // given
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+
+        // when
+        mockMvc.perform(multipart("/transactions/ai").file(recording())).andExpect(status().isOk());
+
+        // then
+        assertThat(output.getAll())
+                .doesNotContain("gastei 80 reais no mercado")
+                .doesNotContain("Registrei 80 reais em mercado.");
+    }
+
+    @Test
+    void should_logFlowEventsWithTraceId_when_commandIsProcessed(CapturedOutput output) throws Exception {
+        // given
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+        var recording = recording();
+
+        // when
+        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording))
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Request-Id");
+
+        // then
+        var transactionId = transactionRepository
+                .findAllByCategory(Category.GROCERIES)
+                .getFirst()
+                .getId()
+                .uuid()
+                .toString();
+        assertEvent(output, requestId, "Voice command received", "audioSizeBytes", recording.getSize());
+        assertEvent(output, requestId, "Voice command received", "audioContentType", "audio/mp4");
+        assertEvent(output, requestId, "Audio transcribed", "transcriptionLength", 26);
+        assertEvent(output, requestId, "Assistant answered", "answerLength", 30);
+        assertEvent(output, requestId, "Speech synthesized", "speechSizeBytes", 4);
+        assertEvent(output, requestId, "Transaction persisted", "transactionId", transactionId);
+    }
+
+    private void givenExpenseCommand(byte[] speech) {
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("persist-transaction", """
+                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                """);
+        aiStub.givenAnswer("Registrei 80 reais em mercado.");
+        aiStub.givenSpeech(speech);
+    }
+
+    private static MockMultipartFile recording() throws IOException {
+        return new MockMultipartFile(
+                "file",
+                "recording-1.m4a",
+                "audio/mp4",
+                Files.readAllBytes(Path.of("src/test/resources/audio/recording-1.m4a")));
+    }
+
+    private static void assertEvent(
+            CapturedOutput output, String requestId, String message, String field, Object expected) {
+        var event = LogEvents.withMessage(output, message);
+        assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+        assertThat(event.path(field).asString()).isEqualTo(String.valueOf(expected));
     }
 }

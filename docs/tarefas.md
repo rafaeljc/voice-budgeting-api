@@ -12,7 +12,7 @@
 **Fase 2 — Correções urgentes**
 - [x] [T27 — Atualização das dependências vulneráveis](#t27)
 - [x] [T03 — Correção do valor monetário](#t03)
-- [ ] [T04 — Logs estruturados e proteção de dados nos logs](#t04)
+- [x] [T04 — Logs estruturados e proteção de dados nos logs](#t04)
 
 **Fase 3 — Base para evolução**
 - [ ] [T05 — Contrato de erro padronizado](#t05)
