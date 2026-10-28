@@ -86,16 +86,16 @@ modelo, tokens e dados pessoais cheguem aos logs (SEG-06).
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Toda resposta HTTP traz `X-Request-Id` com o `traceId` (32 hex), igual ao `traceId` das linhas de log da
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
+- [x] Toda resposta HTTP traz `X-Request-Id` com o `traceId` (32 hex), igual ao `traceId` das linhas de log da
       requisição, que saem em JSON ECS
-- [ ] Uma requisição com `traceparent` devolve no `X-Request-Id` o trace ID recebido
-- [ ] Um comando de voz gera os quatro eventos do fluxo e `Transaction persisted`, com `traceId`, e nenhuma linha
+- [x] Uma requisição com `traceparent` devolve no `X-Request-Id` o trace ID recebido
+- [x] Um comando de voz gera os quatro eventos do fluxo e `Transaction persisted`, com `traceId`, e nenhuma linha
       de log contém a transcrição ou a resposta do modelo
-- [ ] Nenhum `org.springframework.ai=DEBUG`, `show-sql` ou `System.out` na configuração e no código versionados;
+- [x] Nenhum `org.springframework.ai=DEBUG`, `show-sql` ou `System.out` na configuração e no código versionados;
       opções de conteúdo do Spring AI explicitamente em `false`
-- [ ] Nenhuma tentativa de exportar spans nos testes (sem endpoint OTLP)
-- [ ] ADR 0002 aceito; regras, `CLAUDE.md`, README e FUT-15/16 atualizados; checkbox da T04 marcado em
+- [x] Nenhuma tentativa de exportar spans nos testes (sem endpoint OTLP)
+- [x] ADR 0002 aceito; regras, `CLAUDE.md`, README e FUT-15/16 atualizados; checkbox da T04 marcado em
       `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -227,7 +227,7 @@ Para uma sessão nova: o checkstyle limita métodos a 50 linhas, inclusive em te
 
 ## Fase 3: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `.claude/rules/error-handling.md`, seção "Logs": o que nunca logar (conteúdo, dados de
       negócio, cabeçalhos, query string, valores rejeitados, mensagem crua de exceção), campos permitidos (IDs e
@@ -245,7 +245,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       e consequências — conteúdo fora dos logs, sem access log, exportação OTLP neutra
 - [x] [verificação] `docs/escopo.md`, Melhorias futuras: FUT-15 (`x-fapi-interaction-id`) e FUT-16 (backend de
       traces: coletor local e X-Ray via ADOT), com o motivo de ficarem para depois
-- [ ] [verificação] Marcar a T04 em `docs/tarefas.md` (último commit)
+- [x] [verificação] Marcar a T04 em `docs/tarefas.md` (último commit)
 
 ### Plano de verificação
 
@@ -257,8 +257,26 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: seção "Logs" em `error-handling.md` (o que nunca logar, campos permitidos, nível por exceção, opções do
+Spring AI desligadas); `X-Request-Id`/`traceparent` em `api-conventions.md`; opções de observação em `ai-integration.md`;
+Stack, Estrutura (`filter/`) e Padrões no `CLAUDE.md`; seção "Logs e rastreamento" no `README.md`; ADR 0002 aceito;
+FUT-15 e FUT-16 em `docs/escopo.md`; T04 marcada em `docs/tarefas.md`. As citações da LGPD (art. 5º, II e art. 6º, III)
+foram conferidas no texto da lei e a redação do ADR foi precisada: dado financeiro não é "sensível" pela LGPD; o
+risco é o texto livre revelar dado sensível.
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `grep "A definir na T04"` → nenhuma linha; `grep FUT-15|FUT-16` → duas
+linhas; `X-Request-Id` presente em `api-conventions.md`, `README.md` e no ADR.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A T04 entrega logs em JSON ECS com `traceId` em toda linha da requisição, devolvido ao cliente em `X-Request-Id`
+(`RequestIdFilter`, em `infrastructure/http/filter/`), com `traceparent` continuado e `X-Request-Id` do cliente
+ignorado. Transcrição, prompt, resposta do modelo e dados de negócio não chegam aos logs: `DEBUG` do Spring AI e
+`show-sql` foram removidos, as sete opções de conteúdo do Spring AI ficam em `false`, e o fluxo de voz registra só
+metadados (tamanhos, contagens, `transactionId`). Traces e métricas OTLP não são exportados sem endpoint.
+
+Decisões fora do plano original (registradas em Decisões): Checkstyle `ConstantName` aceita o logger `log`; pasta
+`filter/`; exportação OTLP de métricas desligada até a T22. O teste de não vazamento e os de `traceparent` e
+`X-Request-Id` do cliente passaram sem RED, porque o comportamento já existia.
+
+Sem plano de deploy: a tarefa não altera infraestrutura.
