@@ -227,9 +227,9 @@ Para uma sessão nova: o checkstyle limita métodos a 50 linhas, inclusive em te
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `.claude/rules/error-handling.md`, seção "Logs": o que nunca logar (conteúdo, dados de
+- [x] [verificação] `.claude/rules/error-handling.md`, seção "Logs": o que nunca logar (conteúdo, dados de
       negócio, cabeçalhos, query string, valores rejeitados, mensagem crua de exceção), campos permitidos (IDs e
       metadados técnicos, como pares chave-valor), nível por tipo de exceção (tabela das Decisões) e opções de
       conteúdo do Spring AI sempre desligadas
