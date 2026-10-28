@@ -82,14 +82,14 @@ textos em pt-BR sem detalhes internos e falhas da IA distinguidas entre transit�
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Todos os erros listados em "Dentro" respondem `application/problem+json` com `type`, `title` (pt-BR),
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
+- [x] Todos os erros listados em "Dentro" respondem `application/problem+json` com `type`, `title` (pt-BR),
       `status`, `detail` (pt-BR) e `instance`; os de validação trazem `errors` com `pointer` ou `parameter`
-- [ ] Nenhuma resposta de erro traz mensagem interna de exceção, regex ou stack trace
-- [ ] Falha transitória da IA → 503 `urn:problem-type:budgeting:assistant-unavailable` com `Retry-After` igual
+- [x] Nenhuma resposta de erro traz mensagem interna de exceção, regex ou stack trace
+- [x] Falha transitória da IA → 503 `urn:problem-type:budgeting:assistant-unavailable` com `Retry-After` igual
       ao configurado; falha definitiva → 500
-- [ ] Logs de erro seguem a tabela de `error-handling.md` (nível, mensagem fixa, só nomes de campos)
-- [ ] ADR 0003 aceito; `error-handling.md` sem o marcador "A definir na T05" e com a tabela de mapeamento;
+- [x] Logs de erro seguem a tabela de `error-handling.md` (nível, mensagem fixa, só nomes de campos)
+- [x] ADR 0003 aceito; `error-handling.md` sem o marcador "A definir na T05" e com a tabela de mapeamento;
       `CLAUDE.md` e a nota da T09 atualizados; checkbox da T05 marcado em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -255,7 +255,7 @@ Para uma sessão nova: resta a documentação (fase 3) — tabela de mapeamento 
 
 ## Fase 3: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `.claude/rules/error-handling.md`, seção "Mapeamento": tabela exceção → status → `type` →
       chave do `title` → nível de log, cobrindo todos os erros da tarefa; regra para acrescentar uma exceção nova
@@ -268,7 +268,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `CLAUDE.md` (Estrutura: `request/  response/  filter/  error/`); `docs/tarefas.md`, T09: nota
       de que o handler de `com.openai.errors.*` sai do `ApiExceptionHandler` quando o adaptador de IA lançar uma
       exceção neutra
-- [ ] [verificação] Marcar a T05 em `docs/tarefas.md` (último commit)
+- [x] [verificação] Marcar a T05 em `docs/tarefas.md` (último commit)
 
 ### Plano de verificação
 
@@ -280,8 +280,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Documentação do contrato: tabela "Mapeamento" em `.claude/rules/error-handling.md` (exceção → status → `type` →
+chave dos textos → log, mais o formato da extensão `errors` e os passos para acrescentar uma exceção); ADR
+`docs/adr/0003-contrato-de-erro.md` (aceito); `error/` na Estrutura do `CLAUDE.md`; nota na T09 de
+`docs/tarefas.md` sobre trocar o handler do SDK pela exceção neutra da porta; T05 marcada em `docs/tarefas.md`.
+
+Verificação: `./gradlew build` passa; sem "A definir na T05" em `error-handling.md`; `urn:problem-type:budgeting`
+aparece nos dois arquivos; `error/` aparece na Estrutura do `CLAUDE.md`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Todos os erros da API saem em Problem Details (RFC 9457), `application/problem+json`, pelo `ApiExceptionHandler`
+(`infrastructure/http/error/`): validação (`errors` com `pointer` ou `parameter`), JSON malformado, 404, 405, 413,
+415, 500 genérico e falhas da IA (transitória → 503 `assistant-unavailable` com `Retry-After` configurável;
+definitiva → 500). Textos em pt-BR com locale fixo, em `messages.properties`; nenhuma resposta traz mensagem
+interna, regex ou stack trace. Logs seguem `error-handling.md`. Cobertura: `ErrorResponseIT`, `UploadLimitIT` e
+casos de falha da IA no `VoiceCommandIT`, com `AiStub.givenTranscriptionFailure(AiFailure)`. ADR 0003 e a tabela de
+mapeamento documentam o contrato.
+
+Pendências conhecidas, já previstas: troca do handler do SDK pela exceção neutra (T09), erros de filtro e
+`/error` (T08), `Retry-After` dinâmico (T15), OpenAPI das respostas de erro (T07) e README (T07/T26).

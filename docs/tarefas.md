@@ -15,7 +15,7 @@
 - [x] [T04 — Logs estruturados e proteção de dados nos logs](#t04)
 
 **Fase 3 — Base para evolução**
-- [ ] [T05 — Contrato de erro padronizado](#t05)
+- [x] [T05 — Contrato de erro padronizado](#t05)
 - [ ] [T06 — Integridade da transação](#t06)
 - [ ] [T07 — Endpoints manuais no padrão REST](#t07)
 
