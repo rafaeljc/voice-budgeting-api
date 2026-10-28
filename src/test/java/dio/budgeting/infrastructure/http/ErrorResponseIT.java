@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -109,5 +110,46 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
                 .andExpect(jsonPath("$.errors[0].parameter").value("file"))
                 .andExpect(jsonPath("$.errors[0].detail").value("Campo obrigatório ausente."));
+    }
+
+    @Test
+    void should_returnBlankTypeProblemInPortuguese_when_routeDoesNotExist() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/nowhere"));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Recurso não encontrado"))
+                .andExpect(jsonPath("$.detail").value("O recurso solicitado não existe."))
+                .andExpect(jsonPath("$.instance").value("/nowhere"));
+    }
+
+    @Test
+    void should_returnBlankTypeProblemInPortuguese_when_methodIsNotSupported() throws Exception {
+        // when
+        var response = mockMvc.perform(delete("/transactions"));
+
+        // then
+        response.andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Método não permitido"))
+                .andExpect(jsonPath("$.detail").value("O método HTTP não é suportado para este recurso."));
+    }
+
+    @Test
+    void should_returnBlankTypeProblemInPortuguese_when_contentTypeIsNotSupported() throws Exception {
+        // when
+        var response = mockMvc.perform(
+                post("/transactions").contentType(MediaType.TEXT_PLAIN).content("x"));
+
+        // then
+        response.andExpect(status().isUnsupportedMediaType())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Tipo de mídia não suportado"))
+                .andExpect(jsonPath("$.detail").value("O tipo de mídia da requisição não é suportado."));
     }
 }

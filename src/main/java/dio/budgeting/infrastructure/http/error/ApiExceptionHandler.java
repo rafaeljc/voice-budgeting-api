@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http.error;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import tools.jackson.databind.DatabindException;
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
+    private static final URI BLANK_TYPE = URI.create("about:blank");
     private static final String ERRORS_PROPERTY = "errors";
     private static final String INVALID_VALUE_CODE = "problem.invalid-value";
     private static final String UNEXPECTED_ERROR_CODE = "problem.unexpected-error";
@@ -82,6 +84,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
         var response = super.handleExceptionInternal(ex, body, headers, statusCode, request);
+        // Spring leaves the type unset when no message code resolves it; the contract says about:blank explicitly
+        if (response.getBody() instanceof ProblemDetail problem && problem.getType() == null) {
+            problem.setType(BLANK_TYPE);
+        }
         if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (response.getBody() instanceof ProblemDetail problem) {

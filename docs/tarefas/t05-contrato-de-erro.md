@@ -162,7 +162,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `ErrorResponseIT`: `GET /transactions/FOO` → 400 `validation-error` com `errors`
       `[{parameter: "category", ...}]`; `POST /transactions/ai` sem a parte `file` → 400 `validation-error` com
       `parameter` `file`
-- [ ] [TDD] `ErrorResponseIT`: rota inexistente (404), método não suportado (405) e `Content-Type` não suportado
+- [x] [TDD] `ErrorResponseIT`: rota inexistente (404), método não suportado (405) e `Content-Type` não suportado
       (415) → `about:blank` com `title` e `detail` em pt-BR
 - [ ] [TDD] `UploadLimitIT` (novo, servidor real): upload acima do limite em `/transactions/ai` → 413
       `about:blank` em `application/problem+json` — expõe `webEnvironment` em `@IntegrationTest`
