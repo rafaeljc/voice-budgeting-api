@@ -19,7 +19,40 @@ paths:
 
 ## Mapeamento
 
-<!-- A definir na T05: tabela exceção → status → type/title. -->
+Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrastructure/http/error/`), com `type`,
+`title`, `status`, `detail` e `instance` (caminho da requisição, sem query string); sem `requestId` no corpo (o
+`X-Request-Id` do cabeçalho é a fonte). `title` e `detail` vêm de `messages.properties` (locale fixo `pt_BR`).
+
+| Exceção                                              | Status | `type`                                           | Chave dos textos                                            | Log                          |
+|------------------------------------------------------|--------|--------------------------------------------------|-------------------------------------------------------------|------------------------------|
+| `MethodArgumentNotValidException`                    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
+| `HttpMessageNotReadableException` (enum inválido)    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
+| `HttpMessageNotReadableException` (JSON malformado)  | 400    | `urn:problem-type:budgeting:malformed-request`   | `problem.malformed-request.*`                               | `INFO` `Request rejected`    |
+| `MethodArgumentTypeMismatchException`                | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
+| `MissingServletRequestPartException`                 | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
+| `NoResourceFoundException`                           | 404    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
+| `HttpRequestMethodNotSupportedException`             | 405    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
+| `HttpMediaTypeNotSupportedException`                 | 415    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
+| `MaxUploadSizeExceededException`                     | 413    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
+| `OpenAIException` transitória (IO, 429, 5xx)         | 503    | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After`      | `WARN` `AI provider unavailable` |
+| `OpenAIException` definitiva (demais status)         | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
+| Qualquer outra `Exception`                           | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
+
+- Extensão `errors` nos `validation-error`: lista de `{pointer, detail}` para campo do corpo (JSON Pointer, ex.:
+  `#/amount`) ou `{parameter, detail}` para caminho, query ou parte do multipart. JSON malformado não traz `errors`.
+- `type` em URN (`urn:problem-type:budgeting:<slug>`) só para erro com semântica própria; erro puramente HTTP usa
+  `about:blank`, com o `title` em pt-BR pelos códigos do Spring.
+- O `detail` do 500 é sempre genérico; a mensagem da exceção só vai para o log, como stack trace.
+- `Retry-After` do 503 vem de `budgeting.errors.assistant-unavailable-retry-after` (padrão `30s`).
+
+### Acrescentar uma exceção
+
+1. Mapeie a exceção no `ApiExceptionHandler` (sobrescreva o método do `ResponseEntityExceptionHandler` ou crie um
+   `@ExceptionHandler`); nunca monte corpo de erro no controller.
+2. Acrescente os textos em `messages.properties` (`title` e `detail` em pt-BR): chave `problem.<slug>.*` para tipo
+   próprio, ou os códigos `problemDetail.title.<FQN>` e `problemDetail.<FQN>` para a exceção do Spring.
+3. Se o erro tem semântica própria, crie o `type` em URN no `ProblemType`; senão, deixe `about:blank`.
+4. Acrescente uma linha a esta tabela e um teste no `ErrorResponseIT`.
 
 ## Logs
 

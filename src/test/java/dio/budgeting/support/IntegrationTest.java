@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 
@@ -24,4 +25,7 @@ import org.springframework.test.context.TestConstructor;
 @ImportTestcontainers(MySqlTestContainer.class)
 @Import(MySqlCleaner.class)
 @ExtendWith(ResetMySqlExtension.class)
-public @interface IntegrationTest {}
+public @interface IntegrationTest {
+    @AliasFor(annotation = SpringBootTest.class, attribute = "webEnvironment")
+    SpringBootTest.WebEnvironment webEnvironment() default SpringBootTest.WebEnvironment.MOCK;
+}

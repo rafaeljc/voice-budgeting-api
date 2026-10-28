@@ -10,5 +10,7 @@ public interface AiStub {
 
     void givenSpeech(byte[] audio);
 
+    void givenTranscriptionFailure(AiFailure failure);
+
     void reset();
 }

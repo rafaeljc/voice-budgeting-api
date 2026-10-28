@@ -3,12 +3,15 @@ package dio.budgeting.infrastructure.http;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
@@ -18,9 +21,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -100,6 +106,81 @@ class VoiceCommandIT {
         assertEvent(output, requestId, "Assistant answered", "answerLength", 30);
         assertEvent(output, requestId, "Speech synthesized", "speechSizeBytes", 4);
         assertEvent(output, requestId, "Transaction persisted", "transactionId", transactionId);
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = AiFailure.class,
+            names = {"CONNECTION_FAILURE", "RATE_LIMITED", "PROVIDER_ERROR"})
+    void should_returnServiceUnavailableWithRetryAfter_when_providerFailureIsTransient(AiFailure failure)
+            throws Exception {
+        // given
+        aiStub.givenTranscriptionFailure(failure);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(header().string("Retry-After", "30"))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:assistant-unavailable"))
+                .andExpect(jsonPath("$.title").value("Assistente indisponível"))
+                .andExpect(jsonPath("$.detail")
+                        .value("O assistente está temporariamente indisponível. Tente novamente em instantes."))
+                .andExpect(jsonPath("$.instance").value("/transactions/ai"));
+    }
+
+    @Test
+    void should_returnGenericInternalError_when_providerRejectsRequest() throws Exception {
+        // given
+        aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(header().doesNotExist("Retry-After"))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Erro interno"))
+                .andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado. Tente novamente mais tarde."));
+    }
+
+    @Test
+    void should_logProviderUnavailableAsWarning_when_providerFailsTransiently(CapturedOutput output) throws Exception {
+        // given
+        aiStub.givenTranscriptionFailure(AiFailure.RATE_LIMITED);
+
+        // when
+        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording()))
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Request-Id");
+
+        // then
+        var event = LogEvents.withMessage(output, "AI provider unavailable");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("WARN");
+        assertThat(event.path("status").asInt()).isEqualTo(503);
+        assertThat(event.path("providerStatus").asInt()).isEqualTo(429);
+        assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+        assertThat(event.has("error")).isFalse();
+    }
+
+    @Test
+    void should_logUnexpectedErrorWithStackTrace_when_providerFailsDefinitively(CapturedOutput output)
+            throws Exception {
+        // given
+        aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
+
+        // when
+        mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        var event = LogEvents.withMessage(output, "Unexpected error");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("ERROR");
+        assertThat(event.path("error").path("stack_trace").asString()).contains("UnauthorizedException");
     }
 
     private void givenExpenseCommand(byte[] speech) {

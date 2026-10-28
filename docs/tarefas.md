@@ -15,7 +15,7 @@
 - [x] [T04 — Logs estruturados e proteção de dados nos logs](#t04)
 
 **Fase 3 — Base para evolução**
-- [ ] [T05 — Contrato de erro padronizado](#t05)
+- [x] [T05 — Contrato de erro padronizado](#t05)
 - [ ] [T06 — Integridade da transação](#t06)
 - [ ] [T07 — Endpoints manuais no padrão REST](#t07)
 
@@ -187,6 +187,8 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 **Itens do escopo:**
 - FN-09 — Orquestração de IA fora do controller
 - DOC-04 — Diagramas (arquitetura e sequência do fluxo de voz)
+
+**Nota (T05):** o `ApiExceptionHandler` trata hoje as falhas da IA direto pelas exceções do SDK (`com.openai.errors.*`). Ao criar o adaptador de IA, ele deve lançar uma exceção neutra da porta (transitória x definitiva) e o handler do SDK sai do advice.
 
 <a id="t10"></a>
 ### T10 — Timeouts e retries
