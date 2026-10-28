@@ -255,9 +255,9 @@ Para uma sessão nova: resta a documentação (fase 3) — tabela de mapeamento 
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `.claude/rules/error-handling.md`, seção "Mapeamento": tabela exceção → status → `type` →
+- [x] [verificação] `.claude/rules/error-handling.md`, seção "Mapeamento": tabela exceção → status → `type` →
       chave do `title` → nível de log, cobrindo todos os erros da tarefa; regra para acrescentar uma exceção nova
       (entrada em `messages.properties`, linha na tabela, `type` em URN se tiver semântica própria); formato da
       extensão `errors`
