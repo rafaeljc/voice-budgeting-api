@@ -45,4 +45,39 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.errors[0].detail")
                         .value("O valor deve ter o formato 0.00, com ponto e duas casas decimais."));
     }
+
+    @Test
+    void should_returnValidationProblemWithPointer_when_categoryDoesNotExist() throws Exception {
+        // given
+        var body = """
+                {"description": "Mercado", "category": "FOO", "amount": "80.00", "currency": "BRL"}
+                """;
+
+        // when
+        var response = mockMvc.perform(
+                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].pointer").value("#/category"))
+                .andExpect(jsonPath("$.errors[0].detail").value("Valor inválido."));
+    }
+
+    @Test
+    void should_returnMalformedRequestProblemWithoutErrors_when_jsonIsMalformed() throws Exception {
+        // when
+        var response = mockMvc.perform(
+                post("/transactions").contentType(MediaType.APPLICATION_JSON).content("{\"description\": "));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:malformed-request"))
+                .andExpect(jsonPath("$.title").value("Requisição malformada"))
+                .andExpect(jsonPath("$.detail").value("O corpo da requisição não é um JSON válido."))
+                .andExpect(jsonPath("$.errors").doesNotExist());
+    }
 }

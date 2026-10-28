@@ -157,7 +157,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       pt-BR, `instance` `/transactions`, `errors` `[{pointer: "#/amount", detail: <mensagem própria>}]` sem a
       regex — implementa `ApiExceptionHandler`, `ProblemType`, `InvalidField`, `messages.properties`, locale fixo
       `pt_BR` e as mensagens do `@Pattern` (`amount` e `currency`)
-- [ ] [TDD] `ErrorResponseIT`: `category` inexistente no corpo → 400 `validation-error` com pointer
+- [x] [TDD] `ErrorResponseIT`: `category` inexistente no corpo → 400 `validation-error` com pointer
       `#/category`; JSON malformado → 400 `urn:problem-type:budgeting:malformed-request`, sem `errors`
 - [ ] [TDD] `ErrorResponseIT`: `GET /transactions/FOO` → 400 `validation-error` com `errors`
       `[{parameter: "category", ...}]`; `POST /transactions/ai` sem a parte `file` → 400 `validation-error` com
