@@ -166,7 +166,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (415) → `about:blank` com `title` e `detail` em pt-BR
 - [x] [TDD] `UploadLimitIT` (novo, servidor real): upload acima do limite em `/transactions/ai` → 413
       `about:blank` em `application/problem+json` — expõe `webEnvironment` em `@IntegrationTest`
-- [ ] [TDD] `ErrorResponseIT`: falha inesperada na porta `TransactionRepository` (`@MockitoBean`) → 500
+- [x] [TDD] `ErrorResponseIT`: falha inesperada na porta `TransactionRepository` (`@MockitoBean`) → 500
       `about:blank` com `detail` genérico, sem a mensagem da exceção no corpo
 - [ ] [TDD] `ErrorResponseIT` (logs): 4xx de validação gera `INFO` `Request rejected` com `status`,
       `problemType` e `invalidFields` (nomes), sem o valor rejeitado; 500 gera `ERROR` `Unexpected error` com stack

@@ -1,5 +1,8 @@
 package dio.budgeting.infrastructure.http;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -8,17 +11,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
 class ErrorResponseIT {
 
+    private static final String INTERNAL_MARKER = "internal-marker-db-down";
+
     private final MockMvc mockMvc;
+
+    @MockitoBean
+    private TransactionRepository transactionRepository;
 
     ErrorResponseIT(MockMvc mockMvc) {
         this.mockMvc = mockMvc;
@@ -151,5 +161,24 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Tipo de mídia não suportado"))
                 .andExpect(jsonPath("$.detail").value("O tipo de mídia da requisição não é suportado."));
+    }
+
+    @Test
+    void should_returnGenericProblem_when_unexpectedFailureOccurs() throws Exception {
+        // given
+        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+
+        // when
+        var response = mockMvc.perform(get("/transactions/GROCERIES"));
+
+        // then
+        var result = response.andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Erro interno"))
+                .andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado. Tente novamente mais tarde."))
+                .andExpect(jsonPath("$.instance").value("/transactions/GROCERIES"))
+                .andReturn();
+        assertThat(result.getResponse().getContentAsString()).doesNotContain(INTERNAL_MARKER);
     }
 }
