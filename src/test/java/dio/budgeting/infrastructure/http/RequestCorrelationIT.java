@@ -47,6 +47,32 @@ class RequestCorrelationIT {
         assertThat(event.path("resultCount").asInt()).isZero();
     }
 
+    @Test
+    void should_continueReceivedTrace_when_traceparentIsSent() throws Exception {
+        // given
+        var traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+
+        // when
+        var response = mockMvc.perform(
+                        get("/transactions/GROCERIES").header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
+                .andReturn()
+                .getResponse();
+
+        // then
+        assertThat(response.getHeader("X-Request-Id")).isEqualTo(traceId);
+    }
+
+    @Test
+    void should_ignoreClientRequestId_when_headerIsSent() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/transactions/GROCERIES").header("X-Request-Id", "client-chosen-id"))
+                .andReturn()
+                .getResponse();
+
+        // then
+        assertThat(response.getHeader("X-Request-Id")).matches(TRACE_ID_PATTERN);
+    }
+
     private List<JsonNode> logEvents(CapturedOutput output) {
         return Arrays.stream(output.getAll().split("\n"))
                 .filter(line -> line.startsWith("{"))

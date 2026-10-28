@@ -152,7 +152,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `X-Request-Id` (32 hex) e as linhas de log da requisição saem em JSON com o mesmo `traceId` — implementa o
       filtro do `X-Request-Id` em `infrastructure/http` e o evento `Transactions listed` (`resultCount`) em
       `ListTransactionsByCategoryUseCase`
-- [ ] [TDD] `RequestCorrelationIT`: requisição com `traceparent` válido devolve no `X-Request-Id` o trace ID
+- [x] [TDD] `RequestCorrelationIT`: requisição com `traceparent` válido devolve no `X-Request-Id` o trace ID
       recebido; `X-Request-Id` enviado pelo cliente é ignorado
 - [ ] [verificação] Confirmar amostragem (`traceId` no MDC) e ausência de exportação sem endpoint OTLP (ver
       "Contexto para uma sessão nova"); ajustar propriedades só se necessário
