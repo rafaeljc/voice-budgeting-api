@@ -74,6 +74,10 @@ modelo, tokens e dados pessoais cheguem aos logs (SEG-06).
   rejeitados, mensagem crua de exceção ou conteúdo do cliente (decisão do usuário: 4xx em `INFO` para atender o
   suporte por `X-Request-Id`)
 - ADR 0002 registra as decisões de observabilidade e correlação — consultadas pela T05, T09, T20 e T22
+- Checkstyle `ConstantName` ajustado para aceitar o logger `log` (static final, convenção do SLF4J), que o plano
+  prevê e o padrão original reprovava (decisão do usuário)
+- Pasta `infrastructure/http/filter/` para o `RequestIdFilter` (decisão do usuário); `CLAUDE.md` (Estrutura) é
+  atualizado na fase 3
 - Três fases: correlação, proteção de dados e eventos, documentação
 
 ## Definição de pronto
@@ -144,7 +148,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `spring-boot-starter-opentelemetry` e `spring-boot-starter-actuator` no `build.gradle`;
       `logging.structured.format.console=ecs` no `application.properties`
-- [ ] [TDD] `RequestCorrelationIT` (novo, `infrastructure/http`): `GET /transactions/GROCERIES` responde com
+- [x] [TDD] `RequestCorrelationIT` (novo, `infrastructure/http`): `GET /transactions/GROCERIES` responde com
       `X-Request-Id` (32 hex) e as linhas de log da requisição saem em JSON com o mesmo `traceId` — implementa o
       filtro do `X-Request-Id` em `infrastructure/http` e o evento `Transactions listed` (`resultCount`) em
       `ListTransactionsByCategoryUseCase`
