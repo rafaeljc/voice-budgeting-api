@@ -265,7 +265,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `status: aceito`): contexto (API-04); opções de `type` (`about:blank`, URL absoluta, URN, URI relativa), de
       idioma e de classificação das falhas da IA; decisão e consequências (troca do handler do SDK na T09, erros
       de filtro na T08, `Retry-After` fixo até a T15)
-- [ ] [verificação] `CLAUDE.md` (Estrutura: `request/  response/  filter/  error/`); `docs/tarefas.md`, T09: nota
+- [x] [verificação] `CLAUDE.md` (Estrutura: `request/  response/  filter/  error/`); `docs/tarefas.md`, T09: nota
       de que o handler de `com.openai.errors.*` sai do `ApiExceptionHandler` quando o adaptador de IA lançar uma
       exceção neutra
 - [ ] [verificação] Marcar a T05 em `docs/tarefas.md` (último commit)

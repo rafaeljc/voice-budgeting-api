@@ -35,7 +35,7 @@ src/main/java/dio/budgeting/
     input/  output/
   infrastructure/
     http/                       # *Controller
-      request/  response/  filter/   # *Filter
+      request/  response/  filter/  error/   # *Filter, *ExceptionHandler
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
 src/main/resources/

@@ -188,6 +188,8 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 - FN-09 — Orquestração de IA fora do controller
 - DOC-04 — Diagramas (arquitetura e sequência do fluxo de voz)
 
+**Nota (T05):** o `ApiExceptionHandler` trata hoje as falhas da IA direto pelas exceções do SDK (`com.openai.errors.*`). Ao criar o adaptador de IA, ele deve lançar uma exceção neutra da porta (transitória x definitiva) e o handler do SDK sai do advice.
+
 <a id="t10"></a>
 ### T10 — Timeouts e retries
 
