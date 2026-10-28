@@ -150,7 +150,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Erros HTTP
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `ErrorResponseIT` (novo, `infrastructure/http`): `POST /transactions` com `amount` inválido → 400
       `application/problem+json`, `type` `urn:problem-type:budgeting:validation-error`, `title` e `detail` em
@@ -168,7 +168,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `about:blank` em `application/problem+json` — expõe `webEnvironment` em `@IntegrationTest`
 - [x] [TDD] `ErrorResponseIT`: falha inesperada na porta `TransactionRepository` (`@MockitoBean`) → 500
       `about:blank` com `detail` genérico, sem a mensagem da exceção no corpo
-- [ ] [TDD] `ErrorResponseIT` (logs): 4xx de validação gera `INFO` `Request rejected` com `status`,
+- [x] [TDD] `ErrorResponseIT` (logs): 4xx de validação gera `INFO` `Request rejected` com `status`,
       `problemType` e `invalidFields` (nomes), sem o valor rejeitado; 500 gera `ERROR` `Unexpected error` com stack
       trace e o `traceId` da requisição
 
@@ -182,7 +182,32 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Todos os erros HTTP da tarefa saem em `application/problem+json` pelo `ApiExceptionHandler`
+(`infrastructure/http/error/`, estende `ResponseEntityExceptionHandler`): validação (corpo, enum inválido, caminho,
+parte `file`), JSON malformado, 404, 405, 415, 413 e 500 genérico. Locale fixo `pt_BR`
+(`spring.web.locale`/`spring.web.locale-resolver=fixed`), textos em `messages.properties`, mensagens próprias no
+`@Pattern` de `amount` e `currency`. Logs: 4xx em `INFO` `Request rejected` (`status`, `problemType`,
+`invalidFields`, que o ECS serializa como lista JSON); 5xx em `ERROR` `Unexpected error` com stack trace.
+
+Decisões de implementação (resultado igual ao plano):
+- Os erros com `type` próprio (`validation-error`, `malformed-request`) usam chaves `problem.<slug>.title|detail`
+  guiadas pelo enum `ProblemType`, e não os códigos `problemDetail.type.<FQN>`: o `HttpMessageNotReadableException`
+  produz os dois tipos (enum inválido x JSON malformado), então o `type` não pode depender só da classe da exceção.
+  Os erros puramente HTTP usam os códigos do Spring (`problemDetail.title.<FQN>`, `problemDetail.<FQN>`).
+- O Spring deixa `type` nulo (omitido do JSON) quando nenhum código o resolve; o advice o normaliza para
+  `about:blank` em `handleExceptionInternal`.
+- `InvalidField` é um record com `pointer` ou `parameter` (`@JsonInclude(NON_NULL)`).
+- `@IntegrationTest` ganhou `webEnvironment` (`@AliasFor`); o `UploadLimitIT` usa `java.net.http.HttpClient`
+  contra `RANDOM_PORT` (sem dependência nova). Arquivo de 1,2 MB retorna 413.
+- Vários testes passaram de primeira porque o handler genérico do ciclo 1 já cobria o caminho; só o ciclo dos
+  erros 404/405/415 teve RED real.
+
+Verificação: `./gradlew build` (sem `OPENAI_API_KEY`), `ErrorResponseIT` e `UploadLimitIT` passam; o `grep` só
+encontra o `@ResponseStatus(HttpStatus.CREATED)` do `TransactionController`.
+
+Para uma sessão nova: `ProblemType` ainda não tem `ASSISTANT_UNAVAILABLE` (entra na fase 2); o handler de
+exceção inesperada (`handleUnexpected`) é o ponto onde a falha definitiva da IA deve cair (500); o `Retry-After`
+e o handler de `com.openai.errors.OpenAIException` ainda não existem.
 
 ## Fase 2: Falhas da IA
 

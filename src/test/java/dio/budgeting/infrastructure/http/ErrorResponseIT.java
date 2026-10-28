@@ -13,7 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.log.LogEvents;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 class ErrorResponseIT {
 
     private static final String INTERNAL_MARKER = "internal-marker-db-down";
@@ -180,5 +185,46 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.instance").value("/transactions/GROCERIES"))
                 .andReturn();
         assertThat(result.getResponse().getContentAsString()).doesNotContain(INTERNAL_MARKER);
+    }
+
+    @Test
+    void should_logRejectedRequestWithFieldNamesOnly_when_validationFails(CapturedOutput output) throws Exception {
+        // given
+        var body = """
+                {"description": "Mercado", "category": "GROCERIES", "amount": "secret-value", "currency": "BRL"}
+                """;
+
+        // when
+        var response = mockMvc.perform(post("/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(400);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:validation-error");
+        assertThat(event.path("invalidFields")).singleElement().satisfies(field -> assertThat(field.asString())
+                .isEqualTo("#/amount"));
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+        assertThat(output.getAll()).doesNotContain("secret-value");
+    }
+
+    @Test
+    void should_logUnexpectedErrorWithStackTrace_when_unexpectedFailureOccurs(CapturedOutput output) throws Exception {
+        // given
+        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+
+        // when
+        var response =
+                mockMvc.perform(get("/transactions/GROCERIES")).andReturn().getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Unexpected error");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("ERROR");
+        assertThat(event.path("error").path("stack_trace").asString()).contains("RuntimeException");
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
     }
 }
