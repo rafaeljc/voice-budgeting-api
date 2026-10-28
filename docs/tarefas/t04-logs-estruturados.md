@@ -233,7 +233,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       negócio, cabeçalhos, query string, valores rejeitados, mensagem crua de exceção), campos permitidos (IDs e
       metadados técnicos, como pares chave-valor), nível por tipo de exceção (tabela das Decisões) e opções de
       conteúdo do Spring AI sempre desligadas
-- [ ] [verificação] `.claude/rules/api-conventions.md` (Cabeçalhos: `X-Request-Id` com o `traceId`; correlação de
+- [x] [verificação] `.claude/rules/api-conventions.md` (Cabeçalhos: `X-Request-Id` com o `traceId`; correlação de
       entrada pelo `traceparent`); `.claude/rules/ai-integration.md` (Não fazer: ligar as opções de observação que
       logam conteúdo); `CLAUDE.md` (Stack: Actuator e Micrometer Tracing com OpenTelemetry; Padrões: logs
       estruturados com pares chave-valor, sem conteúdo)

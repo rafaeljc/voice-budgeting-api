@@ -39,3 +39,5 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
 - Montar o `ChatClient` ou orquestrar etapas no controller.
 - Prompt fixo em código Java.
 - Logging do Spring AI em `DEBUG` versionado.
+- Ligar as opções de observação do Spring AI que logam conteúdo (`log-prompt`, `log-completion`, `log-transcript`,
+  `log-text`, `include-content`); transcrição, prompt e resposta nunca vão para o log.
