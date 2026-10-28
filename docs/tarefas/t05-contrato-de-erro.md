@@ -211,15 +211,15 @@ e o handler de `com.openai.errors.OpenAIException` ainda não existem.
 
 ## Fase 2: Falhas da IA
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandIT` (parametrizado): falha transitória na transcrição (`CONNECTION_FAILURE`,
       `RATE_LIMITED`, `PROVIDER_ERROR`) → 503 `application/problem+json`,
       `urn:problem-type:budgeting:assistant-unavailable`, `Retry-After: 30` — implementa
       `AiStub.givenTranscriptionFailure(AiFailure)` no `OpenAiWireMockStub`, o handler de
       `com.openai.errors.OpenAIException` e a propriedade `budgeting.errors.assistant-unavailable-retry-after`
-- [ ] [TDD] `VoiceCommandIT`: falha definitiva (`REQUEST_REJECTED`) → 500 `about:blank` com `detail` genérico
-- [ ] [TDD] `VoiceCommandIT` (logs): falha transitória gera `WARN` `AI provider unavailable` com `status` e
+- [x] [TDD] `VoiceCommandIT`: falha definitiva (`REQUEST_REJECTED`) → 500 `about:blank` com `detail` genérico
+- [x] [TDD] `VoiceCommandIT` (logs): falha transitória gera `WARN` `AI provider unavailable` com `status` e
       `providerStatus` (quando houver); definitiva gera `ERROR` `Unexpected error` com stack trace
 
 ### Plano de verificação
@@ -231,7 +231,27 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Falhas do provedor de IA tratadas no `ApiExceptionHandler` direto pelas exceções do SDK (`com.openai.errors.*`),
+que chegam ao advice sem embrulho do Spring AI (confirmado: `OpenAIIoException` no topo da pilha). Transitórias
+(`OpenAIIoException`, status 429 ou >= 500) → 503 `urn:problem-type:budgeting:assistant-unavailable` com
+`Retry-After` vindo de `budgeting.errors.assistant-unavailable-retry-after` (padrão `30s`, lido pelo record
+`ErrorProperties`); definitivas (demais status) → caem em `handleUnexpected` e saem como 500 `about:blank` genérico.
+Logs: transitória → `WARN` `AI provider unavailable` (`status`, `providerStatus` quando há status HTTP, sem stack
+trace); definitiva → `ERROR` `Unexpected error` com stack trace.
+
+Decisões de implementação:
+- A escolha do log fica em `handleExceptionInternal` (por tipo da exceção), para que o 503 transitório não saia
+  como `ERROR` pela regra geral de 5xx.
+- `ProblemType` ganhou `ASSISTANT_UNAVAILABLE`; textos em `problem.assistant-unavailable.*`.
+- `AiStub.givenTranscriptionFailure(AiFailure)`: `CONNECTION_FAILURE` (`CONNECTION_RESET_BY_PEER`), `RATE_LIMITED`
+  (429), `PROVIDER_ERROR` (500) e `REQUEST_REJECTED` (401) em `/v1/audio/transcriptions`.
+- Os itens de falha definitiva e de logs passaram de primeira, pois o handler do primeiro item já os cobria.
+
+Verificação: `./gradlew build` (sem `OPENAI_API_KEY`) e `VoiceCommandIT` passam; `com.openai` só aparece no
+`ApiExceptionHandler`; a propriedade do `Retry-After` tem uma linha no `application.properties`.
+
+Para uma sessão nova: resta a documentação (fase 3) — tabela de mapeamento em `error-handling.md`, ADR 0003,
+`CLAUDE.md`, nota da T09 e checkbox da T05.
 
 ## Fase 3: Documentação
 
