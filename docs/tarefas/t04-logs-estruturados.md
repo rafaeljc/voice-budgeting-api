@@ -78,6 +78,10 @@ modelo, tokens e dados pessoais cheguem aos logs (SEG-06).
   prevê e o padrão original reprovava (decisão do usuário)
 - Pasta `infrastructure/http/filter/` para o `RequestIdFilter` (decisão do usuário); `CLAUDE.md` (Estrutura) é
   atualizado na fase 3
+- Amostragem padrão (10%) mantida: o `traceId` entra no MDC também em spans não amostrados (confirmado pelo
+  `RequestCorrelationIT`). O starter também liga a exportação OTLP de métricas, que tentava publicar em
+  `localhost:4318`; desligada com `management.otlp.metrics.export.enabled=false` até a T22 (decisão do usuário).
+  A exportação de traces não tenta enviar nada sem endpoint
 - Três fases: correlação, proteção de dados e eventos, documentação
 
 ## Definição de pronto
@@ -144,7 +148,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Correlação e logs estruturados
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `spring-boot-starter-opentelemetry` e `spring-boot-starter-actuator` no `build.gradle`;
       `logging.structured.format.console=ecs` no `application.properties`
@@ -154,7 +158,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `ListTransactionsByCategoryUseCase`
 - [x] [TDD] `RequestCorrelationIT`: requisição com `traceparent` válido devolve no `X-Request-Id` o trace ID
       recebido; `X-Request-Id` enviado pelo cliente é ignorado
-- [ ] [verificação] Confirmar amostragem (`traceId` no MDC) e ausência de exportação sem endpoint OTLP (ver
+- [x] [verificação] Confirmar amostragem (`traceId` no MDC) e ausência de exportação sem endpoint OTLP (ver
       "Contexto para uma sessão nova"); ajustar propriedades só se necessário
 
 ### Plano de verificação
@@ -165,7 +169,20 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: starters do Actuator e do OpenTelemetry, logs em JSON ECS em todos os ambientes, `RequestIdFilter`
+(`infrastructure/http/filter/`) que devolve o `traceId` em `X-Request-Id`, evento `Transactions listed`
+(`resultCount`) e `RequestCorrelationIT` com três testes (correlação com os logs, `traceparent` continuado,
+`X-Request-Id` do cliente ignorado). Decisões: ver Decisões (Checkstyle aceita o logger `log`; pasta `filter/`;
+métricas OTLP desligadas). Os testes de `traceparent` e `X-Request-Id` do cliente passaram sem RED, pois o
+comportamento já vinha do filtro e do Micrometer. O `application.properties` foi organizado em seções com
+comentários (`# Logging`, `# AI: chat` etc.).
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `integrationTest --tests RequestCorrelationIT` → passa;
+`grep -il "failed to export" build/test-results/integrationTest/*.xml` → nenhum arquivo.
+
+Para uma sessão nova: nos logs ECS, `traceId` e os pares chave-valor (ex.: `resultCount`) são campos de topo do JSON.
+O `RequestCorrelationIT` tem o helper `logEvents` (parse das linhas JSON do `CapturedOutput`) que a fase 2 pode
+reaproveitar no `VoiceCommandIT`.
 
 ## Fase 2: Proteção de dados e eventos do fluxo de voz
 
