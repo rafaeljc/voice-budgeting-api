@@ -261,7 +261,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       chave do `title` → nível de log, cobrindo todos os erros da tarefa; regra para acrescentar uma exceção nova
       (entrada em `messages.properties`, linha na tabela, `type` em URN se tiver semântica própria); formato da
       extensão `errors`
-- [ ] [verificação] ADR `docs/adr/0003-contrato-de-erro.md` (a partir de `docs/adr/template.md`,
+- [x] [verificação] ADR `docs/adr/0003-contrato-de-erro.md` (a partir de `docs/adr/template.md`,
       `status: aceito`): contexto (API-04); opções de `type` (`about:blank`, URL absoluta, URN, URI relativa), de
       idioma e de classificação das falhas da IA; decisão e consequências (troca do handler do SDK na T09, erros
       de filtro na T08, `Retry-After` fixo até a T15)
