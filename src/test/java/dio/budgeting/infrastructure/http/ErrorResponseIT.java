@@ -1,5 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -79,5 +81,33 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.title").value("Requisição malformada"))
                 .andExpect(jsonPath("$.detail").value("O corpo da requisição não é um JSON válido."))
                 .andExpect(jsonPath("$.errors").doesNotExist());
+    }
+
+    @Test
+    void should_returnValidationProblemWithParameter_when_pathCategoryDoesNotExist() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/transactions/FOO"));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.instance").value("/transactions/FOO"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].parameter").value("category"))
+                .andExpect(jsonPath("$.errors[0].pointer").doesNotExist());
+    }
+
+    @Test
+    void should_returnValidationProblemWithParameter_when_audioFileIsMissing() throws Exception {
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai"));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors[0].parameter").value("file"))
+                .andExpect(jsonPath("$.errors[0].detail").value("Campo obrigatório ausente."));
     }
 }

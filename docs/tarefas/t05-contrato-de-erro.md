@@ -159,7 +159,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `pt_BR` e as mensagens do `@Pattern` (`amount` e `currency`)
 - [x] [TDD] `ErrorResponseIT`: `category` inexistente no corpo → 400 `validation-error` com pointer
       `#/category`; JSON malformado → 400 `urn:problem-type:budgeting:malformed-request`, sem `errors`
-- [ ] [TDD] `ErrorResponseIT`: `GET /transactions/FOO` → 400 `validation-error` com `errors`
+- [x] [TDD] `ErrorResponseIT`: `GET /transactions/FOO` → 400 `validation-error` com `errors`
       `[{parameter: "category", ...}]`; `POST /transactions/ai` sem a parte `file` → 400 `validation-error` com
       `parameter` `file`
 - [ ] [TDD] `ErrorResponseIT`: rota inexistente (404), método não suportado (405) e `Content-Type` não suportado
