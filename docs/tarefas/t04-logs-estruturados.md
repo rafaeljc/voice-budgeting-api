@@ -186,9 +186,9 @@ reaproveitar no `VoiceCommandIT`.
 
 ## Fase 2: Proteção de dados e eventos do fluxo de voz
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandIT`: nenhuma linha da saída capturada contém a transcrição nem a resposta do modelo —
+- [x] [TDD] `VoiceCommandIT`: nenhuma linha da saída capturada contém a transcrição nem a resposta do modelo —
       remove `logging.level.org.springframework.ai=DEBUG` e `spring.jpa.show-sql=true` e define em `false` as
       opções de conteúdo do Spring AI (se o teste não falhar no RED, registrar no resumo da fase)
 - [ ] [TDD] `VoiceCommandIT`: o comando de voz registra `Voice command received` (`audioSizeBytes`,

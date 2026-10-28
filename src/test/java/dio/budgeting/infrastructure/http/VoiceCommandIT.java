@@ -15,6 +15,9 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @IntegrationTest
 @AutoConfigureMockMvc
 @AutoConfigureAiStub
+@ExtendWith(OutputCaptureExtension.class)
 class VoiceCommandIT {
 
     private final MockMvc mockMvc;
@@ -63,5 +67,29 @@ class VoiceCommandIT {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
                     assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
                 });
+    }
+
+    @Test
+    void should_notLogTranscriptionNorAnswer_when_commandIsProcessed(CapturedOutput output) throws Exception {
+        // given
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("persist-transaction", """
+                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                """);
+        aiStub.givenAnswer("Registrei 80 reais em mercado.");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+        var audio = new MockMultipartFile(
+                "file",
+                "recording-1.m4a",
+                "audio/mp4",
+                Files.readAllBytes(Path.of("src/test/resources/audio/recording-1.m4a")));
+
+        // when
+        mockMvc.perform(multipart("/transactions/ai").file(audio)).andExpect(status().isOk());
+
+        // then
+        assertThat(output.getAll())
+                .doesNotContain("gastei 80 reais no mercado")
+                .doesNotContain("Registrei 80 reais em mercado.");
     }
 }
