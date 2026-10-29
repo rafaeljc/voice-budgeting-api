@@ -224,6 +224,21 @@ class VoiceCommandIT {
         assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
     }
 
+    @Test
+    void should_returnInvalidCommandProblemWithoutLoggingValue_when_toolCategoryDoesNotExist(CapturedOutput output)
+            throws Exception {
+        // given
+        givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
+        assertThat(output.getAll()).doesNotContain("FOO");
+    }
+
     static Stream<String> invalidToolArguments() {
         return Stream.of(
                 toolArguments("\"\"", "80.00", "\"GROCERIES\""),
