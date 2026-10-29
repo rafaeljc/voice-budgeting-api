@@ -239,6 +239,29 @@ class VoiceCommandIT {
         assertThat(output.getAll()).doesNotContain("FOO");
     }
 
+    @Test
+    void should_logRejectedRequestWithInvalidFields_when_toolArgumentsAreInvalid(CapturedOutput output)
+            throws Exception {
+        // given
+        givenPersistCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
+
+        // when
+        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording()))
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Request-Id");
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(422);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:invalid-command");
+        assertThat(event.path("invalidFields").values())
+                .extracting(node -> node.asString())
+                .containsExactly("amount");
+        assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+    }
+
     static Stream<String> invalidToolArguments() {
         return Stream.of(
                 toolArguments("\"\"", "80.00", "\"GROCERIES\""),

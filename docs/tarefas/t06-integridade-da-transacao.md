@@ -260,7 +260,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `amount` `0` e categoria ausente → 422 `invalid-command`; nada gravado
 - [x] [TDD] `VoiceCommandIT`: categoria inexistente (`"FOO"`) → 422 `invalid-command`; a saída do log não contém
       `FOO` — implementa o handler de `DatabindException` e o nível `ERROR` do `MethodToolCallback`
-- [ ] [TDD] `VoiceCommandIT` (logs): a recusa gera `INFO` `Request rejected` com `status` 422, `problemType`
+- [x] [TDD] `VoiceCommandIT` (logs): a recusa gera `INFO` `Request rejected` com `status` 422, `problemType`
       `urn:problem-type:budgeting:invalid-command` e `invalidFields` `["amount"]`, com o `traceId` da requisição
 - [ ] [TDD] `VoiceCommandIT`: falha inesperada dentro da tool (`@MockitoBean TransactionRepository` lançando
       `RuntimeException`) → 500 `about:blank` genérico, sem o texto da exceção no corpo — confirma o `alwaysThrow`
