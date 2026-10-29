@@ -18,6 +18,15 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
 - Nome de tool em kebab-case (`persist-transaction`).
 - `@ToolParam` informa unidade e formato do valor (ex.: valor em reais com 2 casas decimais).
 - Opções dos modelos (modelo, temperatura, voz, idioma) em `application.properties`.
+- As tools ficam em `infrastructure/ai/tool/` (adaptador de entrada); os argumentos são um `record` em
+  `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
+  adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave
+  do JSON enviada pelo modelo.
+- Argumentos inválidos da tool (inclusive categoria inexistente) → 422 `invalid-command` sem resposta do modelo e sem
+  voz (ver `error-handling.md`). Falhas de tool nunca voltam ao modelo como texto: o
+  `ToolExecutionExceptionProcessor` relança, e qualquer outra falha vira 500.
+- `MethodToolCallback` em `ERROR` no `application.properties`: o `WARN` de conversão traz o valor recusado no stack
+  trace.
 
 ## Regras de produto
 
