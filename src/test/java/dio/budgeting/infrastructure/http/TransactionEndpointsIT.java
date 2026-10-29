@@ -6,8 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,6 +55,31 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$[0].category").value("GROCERIES"))
                 .andExpect(jsonPath("$[0].amount").value("80.00"))
                 .andExpect(jsonPath("$[0].currency").value("BRL"));
+    }
+
+    @Test
+    void should_returnSameCreatedAtInUtc_when_creatingAndListing() throws Exception {
+        // given
+        var body = """
+                {"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}
+                """;
+        var before = Instant.now();
+
+        // when
+        var created = mockMvc.perform(post("/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+        var after = Instant.now();
+
+        // then
+        var createdAt = JsonPath.<String>read(created.getResponse().getContentAsString(), "$.createdAt");
+        assertThat(createdAt).endsWith("Z");
+        assertThat(Instant.parse(createdAt)).isBetween(before.truncatedTo(ChronoUnit.MILLIS), after);
+        mockMvc.perform(get("/transactions/GROCERIES"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].createdAt").value(createdAt));
     }
 
     @ParameterizedTest

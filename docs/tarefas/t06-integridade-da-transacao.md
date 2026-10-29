@@ -163,14 +163,14 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Data e hora da transação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `PersistTransactionUseCaseTest`: com `@Mock Clock` devolvendo um instante fixo, a transação salva tem
       `createdAt` igual a esse instante e o `TransactionOutput` o devolve — implementa o `Clock` no use case,
       `createdAt` no `Transaction` (construtor de criação e reidratação) e no `TransactionOutput`
 - [x] [TDD] `TransactionTest` (novo, `domain`): `createdAt` com nanossegundos é truncado em milissegundos na
       criação
-- [ ] [TDD] `TransactionEndpointsIT`: `POST /transactions` devolve `createdAt` ISO 8601 em UTC, entre o instante
+- [x] [TDD] `TransactionEndpointsIT`: `POST /transactions` devolve `createdAt` ISO 8601 em UTC, entre o instante
       antes e o depois da requisição, e o `GET /transactions/{category}` devolve o mesmo `createdAt` — implementa
       `ClockConfiguration` (`infrastructure/config/`), `created_at` `NOT NULL` no `TransactionEntity` e
       `createdAt` no `TransactionResponse`
@@ -184,7 +184,16 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `Transaction` ganhou `createdAt` (`Instant`), truncado em milissegundos no construtor de criação; o
+  `PersistTransactionUseCase` recebe o `Clock` e usa `Instant.now(clock)`; `ClockConfiguration`
+  (`infrastructure/config/`) expõe `Clock.systemUTC()`.
+- `TransactionEntity` tem `created_at` `NOT NULL`; `TransactionOutput` e `TransactionResponse` devolvem `createdAt`.
+- O ciclo do `TransactionEndpointsIT` nasceu verde: a implementação já havia entrado no primeiro ciclo (o `Clock` e
+  a coluna eram necessários para compilar). O teste de ida e volta passou sem ajuste de fuso.
+- Verificação: `./gradlew build` sem `OPENAI_API_KEY` → `BUILD SUCCESSFUL`; `TransactionTest` e
+  `TransactionEndpointsIT` passam; `grep "Instant.now()" src/main/java` → nenhuma linha.
+- Para a próxima sessão: o construtor de criação do `Transaction` ainda não valida nada (Fase 2); `MySqlCleanerIT`
+  foi ajustado ao novo construtor da entidade.
 
 ## Fase 2: Regras na fronteira HTTP e invariantes do domínio
 
