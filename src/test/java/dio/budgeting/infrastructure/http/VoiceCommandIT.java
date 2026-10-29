@@ -1,6 +1,10 @@
 package dio.budgeting.infrastructure.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -20,6 +24,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,6 +35,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
@@ -260,6 +266,31 @@ class VoiceCommandIT {
                 .extracting(node -> node.asString())
                 .containsExactly("amount");
         assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+    }
+
+    @Nested
+    class WhenToolFailsUnexpectedly {
+        private static final String INTERNAL_MARKER = "internal-marker-db-down";
+
+        @MockitoBean
+        private TransactionRepository failingRepository;
+
+        @Test
+        void should_returnGenericInternalError_when_toolFailsUnexpectedly() throws Exception {
+            // given
+            when(failingRepository.save(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+            givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
+
+            // when
+            var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+            // then
+            response.andExpect(status().isInternalServerError())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                    .andExpect(jsonPath("$.type").value("about:blank"))
+                    .andExpect(jsonPath("$.title").value("Erro interno"))
+                    .andExpect(content().string(not(containsString(INTERNAL_MARKER))));
+        }
     }
 
     static Stream<String> invalidToolArguments() {
