@@ -1,5 +1,6 @@
 package dio.budgeting.domain;
 
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -10,11 +11,13 @@ public class Transaction {
     private String description;
     private Money amount;
     private Category category;
+    private Instant createdAt;
 
-    public Transaction(String description, Money amount, Category category) {
+    public Transaction(String description, Money amount, Category category, Instant createdAt) {
         this.id = new TransactionId();
         this.description = description;
         this.amount = amount;
         this.category = category;
+        this.createdAt = createdAt;
     }
 }

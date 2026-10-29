@@ -163,9 +163,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Data e hora da transação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `PersistTransactionUseCaseTest`: com `@Mock Clock` devolvendo um instante fixo, a transação salva tem
+- [x] [TDD] `PersistTransactionUseCaseTest`: com `@Mock Clock` devolvendo um instante fixo, a transação salva tem
       `createdAt` igual a esse instante e o `TransactionOutput` o devolve — implementa o `Clock` no use case,
       `createdAt` no `Transaction` (construtor de criação e reidratação) e no `TransactionOutput`
 - [ ] [TDD] `TransactionTest` (novo, `domain`): `createdAt` com nanossegundos é truncado em milissegundos na
