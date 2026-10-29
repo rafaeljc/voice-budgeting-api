@@ -195,7 +195,7 @@ class VoiceCommandIT {
     void should_returnInvalidCommandProblem_when_toolAmountIsNegative() throws Exception {
         // given
         givenPersistCommand("""
-                {"request": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
+                {"arguments": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
                 """);
 
         // when
@@ -300,12 +300,12 @@ class VoiceCommandIT {
                 toolArguments("\"Mercado\"", "80.005", "\"GROCERIES\""),
                 toolArguments("\"Mercado\"", "0", "\"GROCERIES\""),
                 """
-                {"request": {"description": "Mercado", "amount": 80.00}}
+                {"arguments": {"description": "Mercado", "amount": 80.00}}
                 """);
     }
 
     private static String toolArguments(String description, String amount, String category) {
-        return "{\"request\": {\"description\": %s, \"amount\": %s, \"category\": %s}}"
+        return "{\"arguments\": {\"description\": %s, \"amount\": %s, \"category\": %s}}"
                 .formatted(description, amount, category);
     }
 
@@ -319,7 +319,7 @@ class VoiceCommandIT {
     private void givenExpenseCommand(byte[] speech) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("persist-transaction", """
-                {"request": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(speech);

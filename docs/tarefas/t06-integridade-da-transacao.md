@@ -25,7 +25,7 @@ como rede de proteção (FN-06).
   `amount` e `currency`) → 400 `validation-error` com `errors`/`pointer` e mensagens próprias em pt-BR
 - fronteira da IA: adaptador `infrastructure/ai/tool/TransactionTools` (`@Component`, `@Validated`) com as tools
   `persist-transaction` e `list-transactions-by-category`
-  - `PersistTransactionToolRequest` (record em `infrastructure/ai/tool/request/`) com `@ToolParam` e as mesmas regras:
+  - `PersistTransactionToolArguments` (record em `infrastructure/ai/tool/argument/`) com `@ToolParam` e as mesmas regras:
     `@NotBlank`/`@Size(max = 255)` em `description`, `@NotNull`/`@Positive`/`@Digits(integer = 16, fraction = 2)`
     em `amount`, `@NotNull` em `category`; `toInput()` converte para `PersistTransactionInput`
   - os use cases e o `PersistTransactionInput` perdem `@Tool` e `@ToolParam` (Spring AI fora de `application`);
@@ -97,12 +97,13 @@ como rede de proteção (FN-06).
   quando o texto é malformado, duplicando o erro de formato; o `@Pattern` de formato passa a aceitar o sinal, e o
   de positividade recusa só zero e negativos já bem formados, então cada entrada inválida gera um único erro e
   `-10.00` diz "maior que zero" em vez de erro de formato (decisão do usuário)
-- DTO da tool nomeado `PersistTransactionToolRequest` e em `infrastructure/ai/tool/request/` — `Input` é
-  reservado à camada `application`, e a infraestrutura separa os DTOs por papel, como `http/request`; `ai/tool/` é o
-  lado de entrada (o modelo aciona a aplicação, como o HTTP) e deixa `ai/` livre para os adaptadores de saída da
-  T09 (decisão do usuário)
-- Parâmetro da tool `persist-transaction` chamado `request` (era `input`), como no controller; o JSON do modelo vira
-  `{"request": {...}}` (decisão do usuário)
+- DTO da tool nomeado `PersistTransactionToolArguments` e em `infrastructure/ai/tool/argument/` — `Input` é
+  reservado à camada `application`; `Request` sugere HTTP, e o modelo faz uma chamada de função com *argumentos*
+  (vocabulário do protocolo); a infraestrutura separa os DTOs por papel, como `http/request`; `ai/tool/` é o lado
+  de entrada (o modelo aciona a aplicação, como o HTTP) e deixa `ai/` livre para os adaptadores de saída da T09
+  (decisão do usuário)
+- Parâmetro da tool `persist-transaction` chamado `arguments` (era `input`); o JSON do modelo vira
+  `{"arguments": {...}}` (decisão do usuário)
 - A tool devolve ao modelo o `TransactionOutput` da aplicação, sem DTO próprio — comportamento anterior à T06;
   avaliar um `...ToolResponse` na T09
 - Sem ADR — decisões consideradas padrão, sem trade-offs significativos (decisão do usuário)
@@ -155,9 +156,9 @@ Contexto para uma sessão nova:
   de olhar a causa — por isso as exceções de validação precisam chegar cruas. `ResponseEntityExceptionHandler` não
   trata `ConstraintViolationException` (só `HandlerMethodValidationException`, do controller).
 - `invalidFields` no log: último nó do `propertyPath` da `ConstraintViolation`; na `DatabindException`, o último
-  `propertyName` do `getPath()` (o advice já tem `jsonPath`). O primeiro nó do caminho é o parâmetro (`request`).
-- `AiStub.givenToolCall("persist-transaction", "{\"request\": {...}}")`: o nome do parâmetro do método da tool
-  é a chave do JSON; os payloads dos testes existentes passam de `input` para `request`. Com 422, o modelo não é chamado de novo e a voz não é gerada; stubs de
+  `propertyName` do `getPath()` (o advice já tem `jsonPath`). O primeiro nó do caminho é o parâmetro (`arguments`).
+- `AiStub.givenToolCall("persist-transaction", "{\"arguments\": {...}}")`: o nome do parâmetro do método da tool
+  é a chave do JSON; os payloads dos testes existentes passam de `input` para `arguments`. Com 422, o modelo não é chamado de novo e a voz não é gerada; stubs de
   resposta e voz ociosos não quebram o WireMock.
 - `@Positive` em `String`: o Hibernate Validator aceita `CharSequence`; se não aceitar, usar
   `@DecimalMin(value = "0.00", inclusive = false)`. `"abc"` em `amount` pode gerar dois itens em `errors`
@@ -242,17 +243,17 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
   `TransactionEndpointsIT` passam; o `grep` de `messages.properties` lista as 4 mensagens novas, mais a
   `transaction.amount.invalid` já existente.
 - Para a próxima sessão: o `ErrorResponseIT` não mudou; a Fase 3 deve reutilizar as mesmas regras na tool
-  (`@Digits(integer = 16, fraction = 2)` no `PersistTransactionToolRequest`).
+  (`@Digits(integer = 16, fraction = 2)` no `PersistTransactionToolArguments`).
 
 ## Fase 3: Fronteira da IA
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandIT`: tool `persist-transaction` com `amount` `-10` → 422 `application/problem+json`,
       `type` `urn:problem-type:budgeting:invalid-command`, `title` "Comando não processado", `detail` "Não foi
       possível processar o comando com os dados entendidos. Envie um novo comando de voz.", sem `errors`; nada
-      gravado — implementa `TransactionTools` (`infrastructure/ai/tool/`) e `PersistTransactionToolRequest`
-      (`infrastructure/ai/tool/request/`), remove
+      gravado — implementa `TransactionTools` (`infrastructure/ai/tool/`) e `PersistTransactionToolArguments`
+      (`infrastructure/ai/tool/argument/`), remove
       `@Tool`/`@ToolParam` de `application`, `defaultTools(transactionTools)` no controller, o bean
       `ToolExecutionExceptionProcessor`, `ProblemType.INVALID_COMMAND`, `problem.invalid-command.*` e o handler de
       `ConstraintViolationException`
@@ -276,7 +277,24 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `infrastructure/ai/tool/`: `TransactionTools` (`@Component`, `@Validated`) com as tools `persist-transaction` e
+  `list-transactions-by-category`, `PersistTransactionToolArguments` (`argument/`; Bean Validation + `@ToolParam`,
+  `toInput()`) e `ToolExecutionConfiguration` (`ToolExecutionExceptionProcessor` com `alwaysThrow(true)` e
+  `rethrowExceptions(ConstraintViolationException, DatabindException)`). Os use cases e o `PersistTransactionInput`
+  não têm mais anotações do Spring AI; o controller usa `defaultTools(transactionTools)`.
+- `ApiExceptionHandler`: `ConstraintViolationException` e `DatabindException` → 422 `invalid-command` sem `errors`;
+  log `INFO` `Request rejected` com `invalidFields` (nomes dos campos, sem valores). `MethodToolCallback` em `ERROR`
+  no `application.properties`.
+- Decisões da fase (em Decisões): DTO da tool é `PersistTransactionToolArguments` em `ai/tool/argument/` (não
+  `...Input`/`...Request`); parâmetro da tool é `arguments`, e o JSON do modelo é `{"arguments": {...}}`; a tool
+  ainda devolve o `TransactionOutput` ao modelo (avaliar `...ToolResponse` na T09).
+- Os itens 2, 3, 4 e 5 nasceram verdes (o item 1 já implementava o mecanismo). Conferido por mutação: sem o nível
+  `ERROR` do `MethodToolCallback`, o teste da categoria `FOO` falha. A mutação do `alwaysThrow` não foi feita.
+  O teste do item 5 está em uma classe `@Nested` por causa do `@MockitoBean`.
+- Verificação: `./gradlew build` sem `OPENAI_API_KEY` → `BUILD SUCCESSFUL`; `VoiceCommandIT` passa, inclusive o
+  caminho feliz; os dois `grep` de `org.springframework.ai` → nenhuma linha.
+- Para a próxima sessão: a Fase 4 é só documentação (regras, `CLAUDE.md`, `docs/tarefas.md`); citar a estrutura
+  `infrastructure/ai/tool/` e o 422 `invalid-command`.
 
 ## Fase 4: Documentação
 

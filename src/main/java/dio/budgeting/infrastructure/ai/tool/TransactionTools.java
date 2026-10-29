@@ -4,7 +4,7 @@ import dio.budgeting.application.ListTransactionsByCategoryUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.Category;
-import dio.budgeting.infrastructure.ai.tool.request.PersistTransactionToolRequest;
+import dio.budgeting.infrastructure.ai.tool.argument.PersistTransactionToolArguments;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.ai.tool.annotation.Tool;
@@ -26,8 +26,8 @@ public class TransactionTools {
     }
 
     @Tool(name = "persist-transaction", description = "Persiste uma nova transação financeira")
-    public TransactionOutput persistTransaction(@Valid PersistTransactionToolRequest request) {
-        return persistTransactionUseCase.execute(request.toInput());
+    public TransactionOutput persistTransaction(@Valid PersistTransactionToolArguments arguments) {
+        return persistTransactionUseCase.execute(arguments.toInput());
     }
 
     @Tool(name = "list-transactions-by-category", description = "Lista transações financeiras por categoria")
