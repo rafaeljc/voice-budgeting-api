@@ -306,7 +306,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `.claude/rules/error-handling.md`: linhas de `ConstraintViolationException` e
       `DatabindException` (argumentos de tool) → 422 `invalid-command` na tabela "Mapeamento"; `@Validated` só nos
       adaptadores de tool
-- [ ] [verificação] `.claude/rules/architecture.md`: validação na fronteira, invariantes do domínio como rede de
+- [x] [verificação] `.claude/rules/architecture.md`: validação na fronteira, invariantes do domínio como rede de
       proteção; adaptador de tools em `infrastructure/ai/tool` em "Portas e adaptadores"
 - [ ] [verificação] `.claude/rules/ai-integration.md`: argumentos das tools validados no adaptador (`@Validated`);
       recusa → 422 sem resposta do modelo; falhas de tool nunca voltam ao modelo como texto
