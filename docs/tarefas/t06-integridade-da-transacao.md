@@ -112,15 +112,15 @@ como rede de proteção (FN-06).
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Toda transação criada tem `createdAt` UTC em milissegundos, igual na criação e na listagem
-- [ ] `POST /transactions` com descrição ausente, vazia ou com mais de 255 caracteres, categoria ausente ou valor
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT` e JaCoCo), sem `OPENAI_API_KEY`
+- [x] Toda transação criada tem `createdAt` UTC em milissegundos, igual na criação e na listagem
+- [x] `POST /transactions` com descrição ausente, vazia ou com mais de 255 caracteres, categoria ausente ou valor
       `0.00` → 400 `validation-error` com o `pointer` do campo; nada gravado
-- [ ] Comando de voz com argumentos inválidos na tool (valor não positivo, descrição vazia ou longa, valor com mais
+- [x] Comando de voz com argumentos inválidos na tool (valor não positivo, descrição vazia ou longa, valor com mais
       de 2 casas, categoria ausente ou inexistente) → 422 `invalid-command`; nada gravado; log `Request rejected`
       com `invalidFields`, sem o valor recusado
-- [ ] Nenhuma anotação do Spring AI em `application`; tools em `infrastructure/ai/tool/TransactionTools`
-- [ ] Regras, `CLAUDE.md` e notas da T09 e T16 atualizadas; checkbox da T06 marcado em `docs/tarefas.md` no
+- [x] Nenhuma anotação do Spring AI em `application`; tools em `infrastructure/ai/tool/TransactionTools`
+- [x] Regras, `CLAUDE.md` e notas da T09 e T16 atualizadas; checkbox da T06 marcado em `docs/tarefas.md` no
       último commit
 
 ## Para futuros agentes
@@ -298,7 +298,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 4: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `.claude/rules/api-conventions.md`: toda validação de dado externo acontece na fronteira em
       que ele entra (substitui "regras de negócio ficam na aplicação"); critério 400 (requisição inválida por si)
@@ -312,7 +312,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       recusa → 422 sem resposta do modelo; falhas de tool nunca voltam ao modelo como texto
 - [x] [verificação] `CLAUDE.md` (Estrutura: `infrastructure/ai/tool/` e `infrastructure/config/`); `docs/tarefas.md`:
       nota na T09 (tools já em `infrastructure/ai/tool` desde a T06) e na T16 (áudio estático do 422 `invalid-command`)
-- [ ] [verificação] Marcar a T06 em `docs/tarefas.md` (último commit)
+- [x] [verificação] Marcar a T06 em `docs/tarefas.md` (último commit)
 
 ### Plano de verificação
 
@@ -325,8 +325,27 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Atualizados `api-conventions.md` (validação na fronteira; 400 x 422), `error-handling.md` (linhas de
+  `ConstraintViolationException` e `DatabindException`, nota do `invalid-command` e do `@Validated`),
+  `architecture.md` (adaptadores de entrada e seção Validação), `ai-integration.md` (tools, argumentos, 422 e
+  `MethodToolCallback`) e `CLAUDE.md` (Estrutura: `ai/tool/`, `ai/tool/argument/`, `config/`).
+- Notas da T09 e da T16 em `docs/tarefas.md`; checkbox da T06 marcado.
+- Correção do resumo da Fase 3: a mutação do `alwaysThrow` foi feita depois (`alwaysThrow(false)` faz o teste do
+  item 5 falhar).
+- Verificação: `./gradlew build` sem `OPENAI_API_KEY` → `BUILD SUCCESSFUL`; os três `grep` do plano retornam as
+  linhas esperadas.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+- `createdAt` (`Instant`, UTC, milissegundos) definido pelo servidor com `Instant.now(clock)` e devolvido na criação
+  e na listagem; coluna `created_at` `NOT NULL`.
+- Regras de negócio da transação (valor > 0 até o teto do `Money`, descrição de até 255 caracteres sem espaços nas
+  pontas, categoria obrigatória) validadas na fronteira — Bean Validation no `TransactionRequest` (400) e nos
+  argumentos da tool (422 `invalid-command`) — com invariantes no domínio como rede de proteção.
+- As tools saíram da camada `application` para `infrastructure/ai/tool/` (`TransactionTools`,
+  `PersistTransactionToolArguments`, `ToolExecutionConfiguration`); falhas de tool não voltam ao modelo como texto.
+- Decisões da execução: positividade por `@Pattern` no `TransactionRequest`; DTO da tool é `...ToolArguments` em
+  `ai/tool/argument/`, parâmetro `arguments`; a tool ainda devolve o `TransactionOutput` (avaliar `ToolResponse` na
+  T09).
+- Para o PR: título `feat: registra data e hora e valida transações na fronteira`; citar que o banco local precisa
+  ser recriado (`docker compose down -v`) por causa da coluna `created_at` `NOT NULL`.
