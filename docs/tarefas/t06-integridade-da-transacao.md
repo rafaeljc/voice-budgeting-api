@@ -289,7 +289,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
   `...Input`/`...Request`); parâmetro da tool é `arguments`, e o JSON do modelo é `{"arguments": {...}}`; a tool
   ainda devolve o `TransactionOutput` ao modelo (avaliar `...ToolResponse` na T09).
 - Os itens 2, 3, 4 e 5 nasceram verdes (o item 1 já implementava o mecanismo). Conferido por mutação: sem o nível
-  `ERROR` do `MethodToolCallback`, o teste da categoria `FOO` falha. A mutação do `alwaysThrow` não foi feita.
+  `ERROR` do `MethodToolCallback`, o teste da categoria `FOO` falha. Com `alwaysThrow(false)`, o teste do item 5 falha.
   O teste do item 5 está em uma classe `@Nested` por causa do `@MockitoBean`.
 - Verificação: `./gradlew build` sem `OPENAI_API_KEY` → `BUILD SUCCESSFUL`; `VoiceCommandIT` passa, inclusive o
   caminho feliz; os dois `grep` de `org.springframework.ai` → nenhuma linha.
@@ -298,9 +298,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 4: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `.claude/rules/api-conventions.md`: toda validação de dado externo acontece na fronteira em
+- [x] [verificação] `.claude/rules/api-conventions.md`: toda validação de dado externo acontece na fronteira em
       que ele entra (substitui "regras de negócio ficam na aplicação"); critério 400 (requisição inválida por si)
       x 422 (requisição válida, conteúdo interpretado ou estado impede a operação) na tabela de status
 - [ ] [verificação] `.claude/rules/error-handling.md`: linhas de `ConstraintViolationException` e
