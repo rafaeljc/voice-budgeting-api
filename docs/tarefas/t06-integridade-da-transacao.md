@@ -197,9 +197,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Regras na fronteira HTTP e invariantes do domínio
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionTest`: a criação lança `IllegalArgumentException` com descrição nula, vazia, só espaços ou
+- [x] [TDD] `TransactionTest`: a criação lança `IllegalArgumentException` com descrição nula, vazia, só espaços ou
       com mais de 255 caracteres depois do `strip`; valor nulo, zero ou negativo; categoria nula; `createdAt` nulo
 - [ ] [TDD] `TransactionTest`: a criação remove os espaços nas pontas da descrição (`"  Mercado "` → `"Mercado"`),
       e 255 caracteres depois do `strip` são aceitos
