@@ -303,7 +303,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `.claude/rules/api-conventions.md`: toda validação de dado externo acontece na fronteira em
       que ele entra (substitui "regras de negócio ficam na aplicação"); critério 400 (requisição inválida por si)
       x 422 (requisição válida, conteúdo interpretado ou estado impede a operação) na tabela de status
-- [ ] [verificação] `.claude/rules/error-handling.md`: linhas de `ConstraintViolationException` e
+- [x] [verificação] `.claude/rules/error-handling.md`: linhas de `ConstraintViolationException` e
       `DatabindException` (argumentos de tool) → 422 `invalid-command` na tabela "Mapeamento"; `@Validated` só nos
       adaptadores de tool
 - [ ] [verificação] `.claude/rules/architecture.md`: validação na fronteira, invariantes do domínio como rede de
