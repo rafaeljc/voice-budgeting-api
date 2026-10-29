@@ -256,7 +256,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `@Tool`/`@ToolParam` de `application`, `defaultTools(transactionTools)` no controller, o bean
       `ToolExecutionExceptionProcessor`, `ProblemType.INVALID_COMMAND`, `problem.invalid-command.*` e o handler de
       `ConstraintViolationException`
-- [ ] [TDD] `VoiceCommandIT` (parametrizado): descrição vazia, descrição com 256 caracteres, `amount` `80.005`,
+- [x] [TDD] `VoiceCommandIT` (parametrizado): descrição vazia, descrição com 256 caracteres, `amount` `80.005`,
       `amount` `0` e categoria ausente → 422 `invalid-command`; nada gravado
 - [ ] [TDD] `VoiceCommandIT`: categoria inexistente (`"FOO"`) → 422 `invalid-command`; a saída do log não contém
       `FOO` — implementa o handler de `DatabindException` e o nível `ERROR` do `MethodToolCallback`

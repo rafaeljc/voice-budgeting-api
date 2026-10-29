@@ -19,10 +19,12 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -205,6 +207,37 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.instance").value("/transactions/ai"))
                 .andExpect(jsonPath("$.errors").doesNotExist());
         assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidToolArguments")
+    void should_returnInvalidCommandProblem_when_toolArgumentsAreInvalid(String arguments) throws Exception {
+        // given
+        givenPersistCommand(arguments);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
+        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+    }
+
+    static Stream<String> invalidToolArguments() {
+        return Stream.of(
+                toolArguments("\"\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"" + "a".repeat(256) + "\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"Mercado\"", "80.005", "\"GROCERIES\""),
+                toolArguments("\"Mercado\"", "0", "\"GROCERIES\""),
+                """
+                {"request": {"description": "Mercado", "amount": 80.00}}
+                """);
+    }
+
+    private static String toolArguments(String description, String amount, String category) {
+        return "{\"request\": {\"description\": %s, \"amount\": %s, \"category\": %s}}"
+                .formatted(description, amount, category);
     }
 
     private void givenPersistCommand(String argumentsJson) {
