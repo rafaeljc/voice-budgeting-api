@@ -36,6 +36,10 @@ src/main/java/dio/budgeting/
   infrastructure/
     http/                       # *Controller
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
+    ai/
+      tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
+        argument/               # *ToolArguments
+    config/                     # *Configuration (ex.: Clock)
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
 src/main/resources/

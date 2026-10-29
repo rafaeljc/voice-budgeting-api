@@ -310,7 +310,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       proteção; adaptador de tools em `infrastructure/ai/tool` em "Portas e adaptadores"
 - [x] [verificação] `.claude/rules/ai-integration.md`: argumentos das tools validados no adaptador (`@Validated`);
       recusa → 422 sem resposta do modelo; falhas de tool nunca voltam ao modelo como texto
-- [ ] [verificação] `CLAUDE.md` (Estrutura: `infrastructure/ai/tool/` e `infrastructure/config/`); `docs/tarefas.md`:
+- [x] [verificação] `CLAUDE.md` (Estrutura: `infrastructure/ai/tool/` e `infrastructure/config/`); `docs/tarefas.md`:
       nota na T09 (tools já em `infrastructure/ai/tool` desde a T06) e na T16 (áudio estático do 422 `invalid-command`)
 - [ ] [verificação] Marcar a T06 em `docs/tarefas.md` (último commit)
 
