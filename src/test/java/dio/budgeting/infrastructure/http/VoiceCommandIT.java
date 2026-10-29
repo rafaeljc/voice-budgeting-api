@@ -183,10 +183,41 @@ class VoiceCommandIT {
         assertThat(event.path("error").path("stack_trace").asString()).contains("UnauthorizedException");
     }
 
+    @Test
+    void should_returnInvalidCommandProblem_when_toolAmountIsNegative() throws Exception {
+        // given
+        givenPersistCommand("""
+                {"request": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
+                """);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"))
+                .andExpect(jsonPath("$.title").value("Comando não processado"))
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.detail")
+                        .value("Não foi possível processar o comando com os dados entendidos."
+                                + " Envie um novo comando de voz."))
+                .andExpect(jsonPath("$.instance").value("/transactions/ai"))
+                .andExpect(jsonPath("$.errors").doesNotExist());
+        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+    }
+
+    private void givenPersistCommand(String argumentsJson) {
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("persist-transaction", argumentsJson);
+        aiStub.givenAnswer("Registrei 80 reais em mercado.");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+    }
+
     private void givenExpenseCommand(byte[] speech) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("persist-transaction", """
-                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                {"request": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(speech);

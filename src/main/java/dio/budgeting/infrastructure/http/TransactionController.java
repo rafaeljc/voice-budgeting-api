@@ -3,6 +3,7 @@ package dio.budgeting.infrastructure.http;
 import dio.budgeting.application.ListTransactionsByCategoryUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.domain.Category;
+import dio.budgeting.infrastructure.ai.tool.TransactionTools;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
 import dio.budgeting.infrastructure.http.response.TransactionResponse;
 import jakarta.validation.Valid;
@@ -48,6 +49,7 @@ public class TransactionController {
             PersistTransactionUseCase persistTransactionUseCase,
             ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase,
             TranscriptionModel transcriptionModel,
+            TransactionTools transactionTools,
             @Value("classpath:prompts/system-message.st") Resource systemPrompt,
             ChatClient.Builder chatClientBuilder,
             TextToSpeechModel textToSpeechModel)
@@ -57,7 +59,7 @@ public class TransactionController {
         this.transcriptionModel = transcriptionModel;
         this.chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt.getContentAsString(Charset.defaultCharset()))
-                .defaultTools(persistTransactionUseCase, listTransactionsByCategoryUseCase)
+                .defaultTools(transactionTools)
                 .build();
         this.textToSpeechModel = textToSpeechModel;
     }

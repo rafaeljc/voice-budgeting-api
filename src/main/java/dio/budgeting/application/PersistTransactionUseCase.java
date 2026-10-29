@@ -8,7 +8,6 @@ import java.time.Clock;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,7 +22,6 @@ public class PersistTransactionUseCase {
         this.clock = clock;
     }
 
-    @Tool(name = "persist-transaction", description = "Persiste uma nova transação financeira")
     public TransactionOutput execute(PersistTransactionInput input) {
         var transaction = transactionRepository.save(
                 new Transaction(input.description(), input.toMoney(), input.category(), Instant.now(clock)));
