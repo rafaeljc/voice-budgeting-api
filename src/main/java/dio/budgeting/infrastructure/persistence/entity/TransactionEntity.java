@@ -10,6 +10,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class TransactionEntity {
     @Id
     private UUID id;
 
+    @Column(length = Transaction.DESCRIPTION_MAX_LENGTH)
     private String description;
 
     @Column(precision = 18, scale = 2)
@@ -31,15 +33,20 @@ public class TransactionEntity {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    @Column(nullable = false)
+    private Instant createdAt;
+
     public static TransactionEntity from(Transaction transaction) {
         return new TransactionEntity(
                 transaction.getId().uuid(),
                 transaction.getDescription(),
                 transaction.getAmount().value(),
-                transaction.getCategory());
+                transaction.getCategory(),
+                transaction.getCreatedAt());
     }
 
     public Transaction toDomain() {
-        return new Transaction(new TransactionId(this.id), this.description, new Money(this.amount), this.category);
+        return new Transaction(
+                new TransactionId(this.id), this.description, new Money(this.amount), this.category, this.createdAt);
     }
 }

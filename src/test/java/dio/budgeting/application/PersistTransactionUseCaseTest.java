@@ -12,6 +12,8 @@ import dio.budgeting.domain.Money;
 import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionRepository;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,9 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PersistTransactionUseCaseTest {
+    private static final Instant NOW = Instant.parse("2026-03-01T12:30:45.123Z");
 
     @Mock
     private TransactionRepository repository;
+
+    @Mock
+    private Clock clock;
 
     @InjectMocks
     private PersistTransactionUseCase useCase;
@@ -33,6 +39,7 @@ class PersistTransactionUseCaseTest {
         // given
         var input = new PersistTransactionInput("Mercado", new BigDecimal("80"), Category.GROCERIES);
         when(repository.save(any(Transaction.class))).then(returnsFirstArg());
+        when(clock.instant()).thenReturn(NOW);
 
         // when
         var output = useCase.execute(input);
@@ -43,6 +50,8 @@ class PersistTransactionUseCaseTest {
         assertThat(saved.getValue().getDescription()).isEqualTo("Mercado");
         assertThat(saved.getValue().getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
         assertThat(saved.getValue().getCategory()).isEqualTo(Category.GROCERIES);
+        assertThat(saved.getValue().getCreatedAt()).isEqualTo(NOW);
+        assertThat(output.createdAt()).isEqualTo(NOW);
         assertThat(output.id()).isEqualTo(saved.getValue().getId().uuid().toString());
     }
 }

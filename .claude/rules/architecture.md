@@ -29,6 +29,16 @@ infrastructure/persistence/repository/TransactionEntityRepository # Spring Data 
 infrastructure/persistence/entity/TransactionEntity            # entidade JPA
 ```
 
+Adaptadores de entrada (o mundo externo aciona a aplicação) ficam na mesma camada, cada um com seus DTOs:
+
+```
+infrastructure/http/TransactionController                      # adaptador HTTP; DTOs em http/request|response
+infrastructure/ai/tool/TransactionTools                        # adaptador de tools de IA; DTOs em ai/tool/argument
+```
+
+O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
+`@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
+
 Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e `XEntity.from(domain)`.
 
 ## Modelagem
@@ -38,6 +48,14 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 - Entidades de domínio: classe com dois construtores — criação (gera o ID) e reidratação (todos os campos).
 - Value objects: `record` com invariantes no construtor compacto (`IllegalArgumentException`).
 - Use cases: uma classe por caso de uso, um único método público `execute(...)`, recebe `Input` e devolve `Output`.
+
+## Validação
+
+- Todo dado externo é validado na fronteira em que entra — Bean Validation no `Request` do controller ou nos
+  argumentos da tool (`@Validated` + `@Valid` no adaptador). O use case recebe dado válido.
+- As invariantes do domínio (construtor de criação e value objects, `IllegalArgumentException`) são a rede de
+  proteção: uma entrada nova que esqueça a validação falha alto (500) em vez de gravar dado inválido. O construtor
+  de reidratação não valida.
 
 ## Transações de banco (`@Transactional`)
 

@@ -16,7 +16,7 @@
 
 **Fase 3 — Base para evolução**
 - [x] [T05 — Contrato de erro padronizado](#t05)
-- [ ] [T06 — Integridade da transação](#t06)
+- [x] [T06 — Integridade da transação](#t06)
 - [ ] [T07 — Endpoints manuais no padrão REST](#t07)
 
 **Fase 4 — Identidade**
@@ -190,6 +190,8 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 
 **Nota (T05):** o `ApiExceptionHandler` trata hoje as falhas da IA direto pelas exceções do SDK (`com.openai.errors.*`). Ao criar o adaptador de IA, ele deve lançar uma exceção neutra da porta (transitória x definitiva) e o handler do SDK sai do advice.
 
+**Nota (T06):** as tools (`@Tool`/`@ToolParam`) já estão em `infrastructure/ai/tool/` desde a T06, fora da camada de aplicação, com os argumentos validados no adaptador; a T09 só move a orquestração (transcrição, `ChatClient`, voz). O `ApiExceptionHandler` também trata `ConstraintViolationException` e `DatabindException` (422 `invalid-command`) e a tool ainda devolve o `TransactionOutput` ao modelo (avaliar um `ToolResponse`).
+
 <a id="t10"></a>
 ### T10 — Timeouts e retries
 
@@ -273,6 +275,8 @@ Definir a resposta para cada cenário de falha: texto quando a geração de voz 
 **Itens do escopo:**
 - RES-05 — Degradação controlada
 - QA-03 — Testes de falha (parcial)
+
+**Nota (T06):** o 422 `invalid-command` (argumentos inválidos da tool) não gera voz hoje e responde só com Problem Details; servir uma mensagem falada como áudio estático.
 
 <a id="t17"></a>
 ### T17 — Idempotência no envio de áudio

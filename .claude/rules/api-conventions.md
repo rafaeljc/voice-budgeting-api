@@ -32,18 +32,20 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 
 | Status | Quando                                                     |
 |--------|------------------------------------------------------------|
-| 400    | requisição malformada ou que falha na validação de formato |
+| 400    | requisição inválida por si só: malformada ou que falha na validação |
 | 401    | não autenticado                                            |
 | 404    | recurso inexistente ou de outro usuário                    |
 | 409    | conflito com o estado atual do recurso                     |
 | 413    | corpo acima do tamanho máximo                              |
 | 415    | tipo de mídia não aceito                                   |
-| 422    | entrada bem formada que viola regra de negócio             |
+| 422    | requisição válida, mas o conteúdo interpretado (ex.: argumentos da tool de IA) ou o estado do servidor impede a operação |
 | 429    | limite de requisições atingido                             |
 | 500    | erro inesperado                                            |
 | 503    | dependência externa indisponível                           |
 
 - Erros de validação identificam cada campo inválido.
+- 400 e 422 não se resolvem reenviando a mesma requisição; o que muda é a causa: no 400 o erro está na requisição,
+  no 422 está no conteúdo interpretado ou no estado do servidor.
 - 429 e 503 informam quando tentar de novo (`Retry-After`).
 
 ## Representação
@@ -73,7 +75,9 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - Controller sem lógica: converte a requisição, chama um único use case, converte a resposta.
 - `record` com sufixo `Request` / `Response`, só em `infrastructure/http/request|response`.
 - `request.toInput()` e `Response.from(output)`; o controller não monta entidades de domínio.
-- Validação de formato com Bean Validation; regras de negócio ficam na aplicação.
+- Toda validação de dado externo acontece na fronteira em que ele entra: no HTTP, Bean Validation no `Request`
+  (formato e regras de negócio); o use case recebe dado válido. O domínio só mantém as invariantes como rede de
+  proteção.
 - Todo endpoint documenta em OpenAPI as respostas de sucesso e de erro, com descrições em pt-BR.
 
 ## Não fazer

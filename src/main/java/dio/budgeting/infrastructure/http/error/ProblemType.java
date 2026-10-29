@@ -5,7 +5,8 @@ import java.net.URI;
 enum ProblemType {
     VALIDATION_ERROR("validation-error"),
     MALFORMED_REQUEST("malformed-request"),
-    ASSISTANT_UNAVAILABLE("assistant-unavailable");
+    ASSISTANT_UNAVAILABLE("assistant-unavailable"),
+    INVALID_COMMAND("invalid-command");
 
     private static final String URN_PREFIX = "urn:problem-type:budgeting:";
 

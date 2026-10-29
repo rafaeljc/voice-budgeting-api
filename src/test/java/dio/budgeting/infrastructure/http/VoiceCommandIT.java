@@ -1,6 +1,10 @@
 package dio.budgeting.infrastructure.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -19,15 +23,19 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
@@ -183,10 +191,135 @@ class VoiceCommandIT {
         assertThat(event.path("error").path("stack_trace").asString()).contains("UnauthorizedException");
     }
 
+    @Test
+    void should_returnInvalidCommandProblem_when_toolAmountIsNegative() throws Exception {
+        // given
+        givenPersistCommand("""
+                {"arguments": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
+                """);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"))
+                .andExpect(jsonPath("$.title").value("Comando não processado"))
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.detail")
+                        .value("Não foi possível processar o comando com os dados entendidos."
+                                + " Envie um novo comando de voz."))
+                .andExpect(jsonPath("$.instance").value("/transactions/ai"))
+                .andExpect(jsonPath("$.errors").doesNotExist());
+        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidToolArguments")
+    void should_returnInvalidCommandProblem_when_toolArgumentsAreInvalid(String arguments) throws Exception {
+        // given
+        givenPersistCommand(arguments);
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
+        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+    }
+
+    @Test
+    void should_returnInvalidCommandProblemWithoutLoggingValue_when_toolCategoryDoesNotExist(CapturedOutput output)
+            throws Exception {
+        // given
+        givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
+
+        // when
+        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
+        assertThat(output.getAll()).doesNotContain("FOO");
+    }
+
+    @Test
+    void should_logRejectedRequestWithInvalidFields_when_toolArgumentsAreInvalid(CapturedOutput output)
+            throws Exception {
+        // given
+        givenPersistCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
+
+        // when
+        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording()))
+                .andReturn()
+                .getResponse()
+                .getHeader("X-Request-Id");
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(422);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:invalid-command");
+        assertThat(event.path("invalidFields").values())
+                .extracting(node -> node.asString())
+                .containsExactly("amount");
+        assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+    }
+
+    @Nested
+    class WhenToolFailsUnexpectedly {
+        private static final String INTERNAL_MARKER = "internal-marker-db-down";
+
+        @MockitoBean
+        private TransactionRepository failingRepository;
+
+        @Test
+        void should_returnGenericInternalError_when_toolFailsUnexpectedly() throws Exception {
+            // given
+            when(failingRepository.save(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+            givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
+
+            // when
+            var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+
+            // then
+            response.andExpect(status().isInternalServerError())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                    .andExpect(jsonPath("$.type").value("about:blank"))
+                    .andExpect(jsonPath("$.title").value("Erro interno"))
+                    .andExpect(content().string(not(containsString(INTERNAL_MARKER))));
+        }
+    }
+
+    static Stream<String> invalidToolArguments() {
+        return Stream.of(
+                toolArguments("\"\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"" + "a".repeat(256) + "\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"Mercado\"", "80.005", "\"GROCERIES\""),
+                toolArguments("\"Mercado\"", "0", "\"GROCERIES\""),
+                """
+                {"arguments": {"description": "Mercado", "amount": 80.00}}
+                """);
+    }
+
+    private static String toolArguments(String description, String amount, String category) {
+        return "{\"arguments\": {\"description\": %s, \"amount\": %s, \"category\": %s}}"
+                .formatted(description, amount, category);
+    }
+
+    private void givenPersistCommand(String argumentsJson) {
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("persist-transaction", argumentsJson);
+        aiStub.givenAnswer("Registrei 80 reais em mercado.");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+    }
+
     private void givenExpenseCommand(byte[] speech) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("persist-transaction", """
-                {"input": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(speech);

@@ -6,11 +6,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -54,6 +58,31 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$[0].currency").value("BRL"));
     }
 
+    @Test
+    void should_returnSameCreatedAtInUtc_when_creatingAndListing() throws Exception {
+        // given
+        var body = """
+                {"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}
+                """;
+        var before = Instant.now();
+
+        // when
+        var created = mockMvc.perform(post("/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+        var after = Instant.now();
+
+        // then
+        var createdAt = JsonPath.<String>read(created.getResponse().getContentAsString(), "$.createdAt");
+        assertThat(createdAt).endsWith("Z");
+        assertThat(Instant.parse(createdAt)).isBetween(before.truncatedTo(ChronoUnit.MILLIS), after);
+        mockMvc.perform(get("/transactions/GROCERIES"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].createdAt").value(createdAt));
+    }
+
     @ParameterizedTest
     @MethodSource("invalidBodies")
     void should_returnBadRequestAndSaveNothing_when_amountOrCurrencyIsInvalid(String body) throws Exception {
@@ -64,6 +93,50 @@ class TransactionEndpointsIT {
         // then
         response.andExpect(status().isBadRequest());
         assertThat(repository.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidFields")
+    void should_returnValidationErrorAndSaveNothing_when_fieldViolatesBusinessRule(
+            String body, String pointer, String detail) throws Exception {
+        // when
+        var response = mockMvc.perform(
+                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].pointer").value(pointer))
+                .andExpect(jsonPath("$.errors[0].detail").value(detail));
+        assertThat(repository.count()).isZero();
+    }
+
+    static Stream<Arguments> invalidFields() {
+        var required = "A descrição é obrigatória.";
+        return Stream.of(
+                Arguments.of(bodyOf(null, "\"GROCERIES\"", "\"80.00\""), "#/description", required),
+                Arguments.of(bodyOf("\"\"", "\"GROCERIES\"", "\"80.00\""), "#/description", required),
+                Arguments.of(bodyOf("\"   \"", "\"GROCERIES\"", "\"80.00\""), "#/description", required),
+                Arguments.of(
+                        bodyOf("\"" + "a".repeat(256) + "\"", "\"GROCERIES\"", "\"80.00\""),
+                        "#/description",
+                        "A descrição deve ter no máximo 255 caracteres."),
+                Arguments.of(bodyOf("\"Mercado\"", null, "\"80.00\""), "#/category", "A categoria é obrigatória."),
+                Arguments.of(
+                        bodyOf("\"Mercado\"", "\"GROCERIES\"", "\"0.00\""),
+                        "#/amount",
+                        "O valor deve ser maior que zero."),
+                Arguments.of(
+                        bodyOf("\"Mercado\"", "\"GROCERIES\"", "\"-10.00\""),
+                        "#/amount",
+                        "O valor deve ser maior que zero."));
+    }
+
+    private static String bodyOf(String description, String category, String amount) {
+        var descriptionField = description == null ? "" : "\"description\": " + description + ", ";
+        var categoryField = category == null ? "" : "\"category\": " + category + ", ";
+        return "{" + descriptionField + categoryField + "\"amount\": " + amount + ", \"currency\": \"BRL\"}";
     }
 
     static Stream<String> invalidBodies() {
