@@ -24,6 +24,7 @@ public class TransactionEntity {
     @Id
     private UUID id;
 
+    @Column(length = Transaction.DESCRIPTION_MAX_LENGTH)
     private String description;
 
     @Column(precision = 18, scale = 2)

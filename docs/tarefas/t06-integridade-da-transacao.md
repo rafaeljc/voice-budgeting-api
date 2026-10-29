@@ -93,6 +93,10 @@ como rede de proteção (FN-06).
   conversão do Spring AI (antes do método) com `DatabindException`, também mapeada para 422
 - Mensagens de validação próprias só no `TransactionRequest` — o 422 não tem `errors`; na tool as anotações só
   recusam e dão os nomes dos campos ao log
+- Valor positivo na requisição por segundo `@Pattern`, e não `@Positive` — `@Positive` em `String` também falha
+  quando o texto é malformado, duplicando o erro de formato; o `@Pattern` de formato passa a aceitar o sinal, e o
+  de positividade recusa só zero e negativos já bem formados, então cada entrada inválida gera um único erro e
+  `-10.00` diz "maior que zero" em vez de erro de formato (decisão do usuário)
 - Sem ADR — decisões consideradas padrão, sem trade-offs significativos (decisão do usuário)
 - Banco local recriado (`docker compose down -v`); sem dados a preservar nem deploy (decisão do usuário)
 - Quatro fases: data e hora; regras na fronteira HTTP e invariantes; fronteira da IA; documentação
@@ -197,13 +201,13 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Regras na fronteira HTTP e invariantes do domínio
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionTest`: a criação lança `IllegalArgumentException` com descrição nula, vazia, só espaços ou
       com mais de 255 caracteres depois do `strip`; valor nulo, zero ou negativo; categoria nula; `createdAt` nulo
 - [x] [TDD] `TransactionTest`: a criação remove os espaços nas pontas da descrição (`"  Mercado "` → `"Mercado"`),
       e 255 caracteres depois do `strip` são aceitos
-- [ ] [TDD] `TransactionEndpointsIT` (parametrizado): descrição ausente, vazia, só espaços ou com 256 caracteres;
+- [x] [TDD] `TransactionEndpointsIT` (parametrizado): descrição ausente, vazia, só espaços ou com 256 caracteres;
       categoria ausente; `amount` `"0.00"` → 400 `validation-error` com `errors` `[{pointer, detail}]` do campo
       (`#/description`, `#/category`, `#/amount`) e `detail` próprio em pt-BR; nada gravado — implementa as
       anotações no `TransactionRequest`, as mensagens em `messages.properties` e `@Column(length = 255)` no
@@ -219,7 +223,18 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- O construtor de criação do `Transaction` valida descrição (presente, até 255 caracteres depois do `strip`), valor
+  maior que zero, categoria e `createdAt`, com `IllegalArgumentException`, e grava a descrição sem espaços nas
+  pontas; `Transaction.DESCRIPTION_MAX_LENGTH` é a fonte do 255 (usada também em `@Size` e `@Column`).
+- `TransactionRequest`: `@NotBlank` e `@Size` na descrição, `@NotNull` na categoria e dois `@Pattern` no `amount`
+  (formato com sinal opcional; positividade). Mensagens pt-BR em `messages.properties`.
+- Decisão registrada: positividade por `@Pattern` em vez de `@Positive`, para um único erro por entrada e
+  `-10.00` com "maior que zero" (ver Decisões).
+- Verificação: `./gradlew build` sem `OPENAI_API_KEY` → `BUILD SUCCESSFUL`; `TransactionTest` e
+  `TransactionEndpointsIT` passam; o `grep` de `messages.properties` lista as 4 mensagens novas, mais a
+  `transaction.amount.invalid` já existente.
+- Para a próxima sessão: o `ErrorResponseIT` não mudou; a Fase 3 deve reutilizar as mesmas regras na tool
+  (`@Digits(integer = 16, fraction = 2)` no `PersistTransactionToolInput`).
 
 ## Fase 3: Fronteira da IA
 
