@@ -168,7 +168,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `PersistTransactionUseCaseTest`: com `@Mock Clock` devolvendo um instante fixo, a transação salva tem
       `createdAt` igual a esse instante e o `TransactionOutput` o devolve — implementa o `Clock` no use case,
       `createdAt` no `Transaction` (construtor de criação e reidratação) e no `TransactionOutput`
-- [ ] [TDD] `TransactionTest` (novo, `domain`): `createdAt` com nanossegundos é truncado em milissegundos na
+- [x] [TDD] `TransactionTest` (novo, `domain`): `createdAt` com nanossegundos é truncado em milissegundos na
       criação
 - [ ] [TDD] `TransactionEndpointsIT`: `POST /transactions` devolve `createdAt` ISO 8601 em UTC, entre o instante
       antes e o depois da requisição, e o `GET /transactions/{category}` devolve o mesmo `createdAt` — implementa

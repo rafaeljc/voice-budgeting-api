@@ -1,6 +1,7 @@
 package dio.budgeting.domain;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -18,6 +19,6 @@ public class Transaction {
         this.description = description;
         this.amount = amount;
         this.category = category;
-        this.createdAt = createdAt;
+        this.createdAt = createdAt.truncatedTo(ChronoUnit.MILLIS);
     }
 }
