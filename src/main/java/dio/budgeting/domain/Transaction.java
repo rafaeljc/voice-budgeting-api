@@ -19,7 +19,7 @@ public class Transaction {
     public Transaction(String description, Money amount, Category category, Instant createdAt) {
         requireValid(description, amount, category, createdAt);
         this.id = new TransactionId();
-        this.description = description;
+        this.description = description.strip();
         this.amount = amount;
         this.category = category;
         this.createdAt = createdAt.truncatedTo(ChronoUnit.MILLIS);

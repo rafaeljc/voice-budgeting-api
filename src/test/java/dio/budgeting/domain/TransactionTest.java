@@ -27,6 +27,27 @@ class TransactionTest {
         assertThat(transaction.getCreatedAt()).isEqualTo(Instant.parse("2026-03-01T12:30:45.123Z"));
     }
 
+    @Test
+    void should_stripDescription_when_created() {
+        // when
+        var transaction = new Transaction("  Mercado ", AMOUNT, Category.GROCERIES, NOW);
+
+        // then
+        assertThat(transaction.getDescription()).isEqualTo("Mercado");
+    }
+
+    @Test
+    void should_acceptDescriptionWith255Characters_when_countedAfterStrip() {
+        // given
+        var description = "a".repeat(255);
+
+        // when
+        var transaction = new Transaction(" " + description + " ", AMOUNT, Category.GROCERIES, NOW);
+
+        // then
+        assertThat(transaction.getDescription()).isEqualTo(description);
+    }
+
     @ParameterizedTest
     @MethodSource("invalidCreations")
     void should_throwIllegalArgument_when_creatingInvalidTransaction(

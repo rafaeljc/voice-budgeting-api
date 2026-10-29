@@ -201,7 +201,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionTest`: a criação lança `IllegalArgumentException` com descrição nula, vazia, só espaços ou
       com mais de 255 caracteres depois do `strip`; valor nulo, zero ou negativo; categoria nula; `createdAt` nulo
-- [ ] [TDD] `TransactionTest`: a criação remove os espaços nas pontas da descrição (`"  Mercado "` → `"Mercado"`),
+- [x] [TDD] `TransactionTest`: a criação remove os espaços nas pontas da descrição (`"  Mercado "` → `"Mercado"`),
       e 255 caracteres depois do `strip` são aceitos
 - [ ] [TDD] `TransactionEndpointsIT` (parametrizado): descrição ausente, vazia, só espaços ou com 256 caracteres;
       categoria ausente; `amount` `"0.00"` → 400 `validation-error` com `errors` `[{pointer, detail}]` do campo
