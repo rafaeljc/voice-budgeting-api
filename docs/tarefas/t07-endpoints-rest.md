@@ -235,7 +235,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Consulta por ID
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionIdTest` (novo): `parse` devolve o ID para UUID válido e vazio para texto malformado, vazio
       ou nulo
@@ -259,7 +259,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       handler
 - [x] [TDD] `ErrorResponseIT`: o 404 gera `INFO` `Request rejected` com `status` 404 e o `problemType`, com o
       `traceId` da requisição
-- [ ] [verificação] `@Transactional` no `PersistTransactionUseCase` (sem comportamento observável a testar)
+- [x] [verificação] `@Transactional` no `PersistTransactionUseCase` (sem comportamento observável a testar)
 
 ### Plano de verificação
 
@@ -271,7 +271,29 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- **Feito:** `GET /api/v1/transactions/{id}` (200, e 404 `transaction-not-found` para UUID inexistente ou ID
+  malformado) com `TransactionId.parse`, `GetTransactionUseCase`, `TransactionNotFoundException` e `findById` na
+  porta. A listagem paginada foi antecipada para esta fase (ver Decisões): `GET /api/v1/transactions` com
+  `content` + `page`, filtro `category`, ordenação padrão `createdAt,desc` com desempate por `id`, e o
+  `GET /{category}` antigo removido. `@Transactional` nos use cases. `docs/openapi.yaml` com os caminhos
+  documentados até aqui (`POST`, `GET` da lista, `GET` por ID e o 404).
+- **Decisões:** `TransactionFilter` é uma lista de critérios (`sealed interface TransactionCriterion`, hoje
+  `CategoryIs`); adaptador JPA com `Specification` (`TransactionSpecifications`); dois índices
+  `(category, created_at, id)` e `(created_at, id)`; `ParameterNumber` do Checkstyle suprimido para
+  `*Controller.java` (construtores de controller crescem com a API).
+- **Para a próxima sessão:**
+  - A Fase 3 já tem pronto: tipos de paginação, `ListTransactionsUseCase`, `ListTransactionsRequest` (padrões e
+    limites de `page`/`size`, `@Pattern` do `sort`), `TransactionPageResponse` e a distinção corpo × query no
+    `ApiExceptionHandler` (`parameter` em vez de `pointer`). Falta cobrir com `*IT` o que o plano lista (filtro,
+    página 2, ordenações, desempate, limites, erros 400 parametrizados com log).
+  - `document(...)` mascara `id`, `createdAt`, `Location` e `instance` com `replacePattern`/`modifyHeaders` para a
+    especificação ser determinística; reaproveite `UUID_PATTERN`, `TIMESTAMP_PATTERN` e `INSTANCE_PATTERN` do
+    `TransactionEndpointsIT`.
+  - `ListTransactionsByCategoryUseCase` e o `findAllByCategory` da porta continuam em uso pela tool de IA.
+  - O `getTransaction` recebe o ID como `String` de propósito (ID inválido = 404, não 400).
+- **Verificação:** `./gradlew build` → `BUILD SUCCESSFUL` (sem `OPENAI_API_KEY`); `GetTransactionUseCaseTest`
+  passa; `transaction-not-found` aparece em `docs/openapi.yaml` e em `messages.properties`; `@Transactional` em
+  `PersistTransactionUseCase`, `GetTransactionUseCase` e `ListTransactionsUseCase`.
 
 ## Fase 3: Listagem paginada e ordenada
 
