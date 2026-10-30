@@ -303,7 +303,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       segunda página com os metadados certos
 - [x] [TDD] `TransactionEndpointsIT` (parametrizado): `sort=amount,asc`, `amount,desc`, `createdAt,asc` ordenam
       como pedido; mesmo `createdAt` desempata por `id`
-- [ ] [TDD] `TransactionEndpointsIT` (parametrizado): `size=500` → `page.size` 100; `size=0` → 20; `page=-1` → 0
+- [x] [TDD] `TransactionEndpointsIT` (parametrizado): `size=500` → `page.size` 100; `size=0` → 20; `page=-1` → 0
 - [ ] [TDD] `ErrorResponseIT` (parametrizado): `category=FOO`, `sort=description,asc`, `sort=amount`,
       `size=abc` → 400 `validation-error` com `errors[0].parameter` (`category`, `sort`, `size`) e sem `pointer`,
       documentado; log `Request rejected` com `invalidFields` pelo nome do parâmetro — implementa a distinção corpo

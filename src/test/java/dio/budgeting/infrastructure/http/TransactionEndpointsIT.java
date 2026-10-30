@@ -328,6 +328,18 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.content[1].description").value(expectedSecond));
     }
 
+    @ParameterizedTest
+    @CsvSource({"size, 500, size, 100", "size, 0, size, 20", "page, -1, number, 0"})
+    void should_adjustOutOfRangeValues_when_pageOrSizeIsOutOfRange(
+            String parameter, String value, String metadata, int applied) throws Exception {
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param(parameter, value));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.page." + metadata).value(applied));
+    }
+
     private void save(String description, Category category, String amount, String createdAt) {
         repository.save(new TransactionEntity(
                 UUID.randomUUID(), description, new BigDecimal(amount), category, Instant.parse(createdAt)));
