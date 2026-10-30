@@ -354,7 +354,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 4: Voz na especificação, Swagger UI e exemplos
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Remover o REST Docs e o `docs/openapi.yaml` gerado (`f9f7d10`)
 - [x] [verificação] Springdoc adicionado (`3e72ecd`) e descartado: ver Decisões
@@ -375,7 +375,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `/v3/api-docs`, Swagger UI (`http://localhost:8080/swagger-ui.html`), exemplos em
       `docs/exemplos/transacoes.http` e um `curl` mínimo
 
-- [ ] [verificação] README: seção "API" aponta o contrato `docs/openapi.yaml` e o Swagger UI do compose
+- [x] [verificação] README: seção "API" aponta o contrato `docs/openapi.yaml` e o Swagger UI do compose
       (`docker compose up swagger-ui` → `http://localhost:8081`)
 
 ### Plano de verificação
@@ -390,7 +390,24 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- **Feito:** o Spring REST Docs (`f9f7d10`) e o springdoc (`15d6973`) foram adotados e removidos: o primeiro não
+  representa o multipart nem o áudio binário; o segundo, sem anotações, quebra o multipart ao achatar os
+  parâmetros da listagem e perde o `201`/`Location` e os erros. O contrato ficou em `docs/openapi.yaml`
+  (contract-first, 3.0.3), com os quatro endpoints, respostas de sucesso e de erro (Problem Details, `errors` com
+  `pointer`/`parameter`, `Retry-After`) e descrições em pt-BR. Swagger UI no `compose.yml` (porta 8081, somente
+  leitura). `docs/exemplos/transacoes.http` com 9 requisições e a seção "API" do README.
+- **Decisões:** contract-first (ver Decisões); sem teste para a documentação.
+- **Para a próxima sessão:**
+  - O contrato não é gerado nem conferido pelo build: ele acompanha o código só por revisão de PR. Quem muda um
+    endpoint, um status ou um erro atualiza `docs/openapi.yaml` no mesmo PR.
+  - O Redocly (`docker run --rm -v "$PWD/docs:/spec:ro" redocly/cli lint /spec/openapi.yaml`) valida a estrutura;
+    restam `security-defined` (a autenticação chega na T08), licença e servidor `localhost`.
+  - O `bootRun` sobe o `swagger-ui` junto com o MySQL (o serviço não tem healthcheck e o Boot não espera por ele).
+  - `docker compose` exige o `.env` por causa do `MYSQL_*` do serviço `database`, mesmo para `up swagger-ui`.
+- **Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`; `grep -rn springdoc build.gradle src` → nenhuma linha;
+  `grep -c "^  /api/v1" docs/openapi.yaml` → 3; `docker compose config --services` → `database` e `swagger-ui`;
+  `docker compose up -d swagger-ui` + `curl localhost:8081/` → 200 com a página do Swagger UI; `bootRun` com
+  `OPENAI_API_KEY=dummy` sobe com os dois serviços (API 200 em `/api/v1/transactions`, UI 200); 9 exemplos.
 
 ## Fase 5: Regras e notas
 

@@ -35,8 +35,8 @@ set -a && source .env && set +a
 
 ## API
 
-Base `/api/v1`. A especificação OpenAPI é gerada pela aplicação: com a API no ar, o Swagger UI fica em
-`http://localhost:8080/swagger-ui.html` e o JSON em `http://localhost:8080/v3/api-docs`.
+Base `/api/v1`. O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml) e é revisado a cada PR. Para navegar por ele, suba o Swagger UI (somente leitura, não chama a API): `docker compose up swagger-ui` e abra
+`http://localhost:8081`.
 
 | Método | Caminho                      | Descrição                                                          |
 |--------|------------------------------|--------------------------------------------------------------------|
