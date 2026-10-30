@@ -3,6 +3,8 @@ package dio.budgeting.infrastructure.http;
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.modifyHeaders;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
@@ -240,6 +242,49 @@ class TransactionEndpointsIT {
                         fieldWithPath("page.totalElements").description("Total de transações que atendem ao filtro."),
                         fieldWithPath("page.totalPages").description("Total de páginas."))
                 .build();
+    }
+
+    @Test
+    void should_returnOnlyThatCategory_when_filteringByCategory() throws Exception {
+        // given
+        save("Mercado", Category.GROCERIES, "10.00", "2026-03-01T10:00:00Z");
+        save("Feira", Category.GROCERIES, "10.00", "2026-03-02T10:00:00Z");
+        save("Remédio", Category.PHARMA, "10.00", "2026-03-03T10:00:00Z");
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "GROCERIES"));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[*].category").value(everyItem(is("GROCERIES"))))
+                .andExpect(jsonPath("$.page.totalElements").value(2));
+    }
+
+    @Test
+    void should_returnSecondPage_when_pageAndSizeAreGiven() throws Exception {
+        // given
+        for (var day = 1; day <= 5; day++) {
+            save("Compra " + day, Category.GROCERIES, "10.00", "2026-03-0" + day + "T10:00:00Z");
+        }
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("page", "1").param("size", "2"));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].description").value("Compra 3"))
+                .andExpect(jsonPath("$.content[1].description").value("Compra 2"))
+                .andExpect(jsonPath("$.page.size").value(2))
+                .andExpect(jsonPath("$.page.number").value(1))
+                .andExpect(jsonPath("$.page.totalElements").value(5))
+                .andExpect(jsonPath("$.page.totalPages").value(3));
+    }
+
+    private void save(String description, Category category, String amount, String createdAt) {
+        repository.save(new TransactionEntity(
+                UUID.randomUUID(), description, new BigDecimal(amount), category, Instant.parse(createdAt)));
     }
 
     private void saveAt(String description, String createdAt) {
