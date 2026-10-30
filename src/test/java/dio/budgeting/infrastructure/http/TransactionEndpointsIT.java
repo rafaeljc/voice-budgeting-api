@@ -130,42 +130,7 @@ class TransactionEndpointsIT {
                         preprocessResponse(
                                 replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
                                 replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z")),
-                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
-                                .tag("Transações")
-                                .summary("Lista as transações")
-                                .description(
-                                        "Lista as transações de forma paginada, da mais recente para a mais antiga.")
-                                .queryParameters(
-                                        parameterWithName("category")
-                                                .description("Filtra pela categoria da transação.")
-                                                .optional(),
-                                        parameterWithName("page")
-                                                .description("Número da página, a partir de 0; padrão 0.")
-                                                .optional(),
-                                        parameterWithName("size")
-                                                .description("Itens por página, de 1 a 100; padrão 20.")
-                                                .optional(),
-                                        parameterWithName("sort")
-                                                .description(
-                                                        "Ordenação no formato `campo,direção`, com campo `createdAt` ou `amount` e direção `asc` ou `desc`; padrão `createdAt,desc`.")
-                                                .optional())
-                                .responseFields(
-                                        fieldWithPath("content[]").description("Transações da página."),
-                                        fieldWithPath("content[].id").description("Identificador da transação."),
-                                        fieldWithPath("content[].description").description("Descrição da transação."),
-                                        fieldWithPath("content[].category").description("Categoria da transação."),
-                                        fieldWithPath("content[].amount")
-                                                .description("Valor, em texto, com duas casas decimais."),
-                                        fieldWithPath("content[].currency").description("Moeda da transação."),
-                                        fieldWithPath("content[].createdAt")
-                                                .description("Data e hora do registro, em UTC (ISO 8601)."),
-                                        fieldWithPath("page").description("Metadados da paginação."),
-                                        fieldWithPath("page.size").description("Itens por página aplicado."),
-                                        fieldWithPath("page.number").description("Número da página, a partir de 0."),
-                                        fieldWithPath("page.totalElements")
-                                                .description("Total de transações que atendem ao filtro."),
-                                        fieldWithPath("page.totalPages").description("Total de páginas."))
-                                .build())));
+                        ResourceDocumentation.resource(listDocumentation())));
     }
 
     @Test
@@ -240,6 +205,41 @@ class TransactionEndpointsIT {
 
     static Stream<String> unknownIds() {
         return Stream.of(UUID.randomUUID().toString(), "abc");
+    }
+
+    private static ResourceSnippetParameters listDocumentation() {
+        return ResourceSnippetParameters.builder()
+                .tag("Transações")
+                .summary("Lista as transações")
+                .description("Lista as transações de forma paginada, da mais recente para a mais antiga.")
+                .queryParameters(
+                        parameterWithName("category")
+                                .description("Filtra pela categoria da transação.")
+                                .optional(),
+                        parameterWithName("page")
+                                .description("Número da página, a partir de 0; padrão 0.")
+                                .optional(),
+                        parameterWithName("size")
+                                .description("Itens por página, de 1 a 100; padrão 20.")
+                                .optional(),
+                        parameterWithName("sort")
+                                .description(
+                                        "Ordenação no formato `campo,direção`, com campo `createdAt` ou `amount` e direção `asc` ou `desc`; padrão `createdAt,desc`.")
+                                .optional())
+                .responseFields(
+                        fieldWithPath("content[]").description("Transações da página."),
+                        fieldWithPath("content[].id").description("Identificador da transação."),
+                        fieldWithPath("content[].description").description("Descrição da transação."),
+                        fieldWithPath("content[].category").description("Categoria da transação."),
+                        fieldWithPath("content[].amount").description("Valor, em texto, com duas casas decimais."),
+                        fieldWithPath("content[].currency").description("Moeda da transação."),
+                        fieldWithPath("content[].createdAt").description("Data e hora do registro, em UTC (ISO 8601)."),
+                        fieldWithPath("page").description("Metadados da paginação."),
+                        fieldWithPath("page.size").description("Itens por página aplicado."),
+                        fieldWithPath("page.number").description("Número da página, a partir de 0."),
+                        fieldWithPath("page.totalElements").description("Total de transações que atendem ao filtro."),
+                        fieldWithPath("page.totalPages").description("Total de páginas."))
+                .build();
     }
 
     private void saveAt(String description, String createdAt) {

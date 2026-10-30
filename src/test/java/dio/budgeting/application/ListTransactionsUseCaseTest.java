@@ -32,7 +32,7 @@ class ListTransactionsUseCaseTest {
     private ListTransactionsUseCase useCase;
 
     @Test
-    void should_passFilterSortAndPageToRepository_and_returnMappedPage() {
+    void should_passCriteriaToRepositoryAndMapPage_when_executed() {
         // given
         var filter = TransactionFilter.of(new CategoryIs(Category.GROCERIES));
         var sort = new TransactionSort(TransactionSort.Field.AMOUNT, TransactionSort.Direction.ASC);
