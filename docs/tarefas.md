@@ -175,6 +175,8 @@ Proteger os endpoints com autenticação por token, usando usuários de demonstr
 - SEG-01 — Identidade mínima
 - SEG-02 — Isolamento de dados por usuário
 
+**Nota (T07):** a transação de outro usuário responde 404 `transaction-not-found`, o mesmo corpo de um ID inexistente.
+
 ## Fase 5 — Fluxo de voz confiável
 
 <a id="t09"></a>
@@ -229,6 +231,8 @@ Fazer com que comandos de registro gerem uma proposta persistida, que o cliente 
 - DOC-04 — Diagramas (estados da proposta)
 - DOC-06 — Exemplos de requisição e áudio (fluxo de voz)
 
+**Nota (T07):** ao remodelar o fluxo de voz como recursos, atualizar `docs/openapi.yaml` (hoje `POST /api/v1/transactions/ai`), os exemplos em `docs/exemplos/transacoes.http` e a seção "API" do README.
+
 <a id="t13"></a>
 ### T13 — Ciclo de vida da proposta
 
@@ -250,6 +254,8 @@ Padronizar as respostas do assistente (frases fixas, formato único de valores e
 **Itens do escopo:**
 - FN-08 — Respostas mais claras
 - FN-07 — Proteções da IA (guardrails)
+
+**Nota (T07):** trocar a tool `list-transactions-by-category` por uma agregação (`COUNT`/`SUM`) feita no banco, em outro use case: é a forma melhor de responder à consulta por voz que já existe, não uma consulta nova. A listagem paginada da T07 não serve à voz, e a tool atual lista tudo de uma categoria sem limite.
 
 ## Fase 6 — Resiliência e recuperação de falhas
 

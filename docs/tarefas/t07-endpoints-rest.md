@@ -423,7 +423,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`
 - [x] [verificação] `CLAUDE.md`: Swagger UI (`docker compose up swagger-ui`); Estrutura com `docs/openapi.yaml`
       e `docs/exemplos/`
-- [ ] [verificação] `docs/tarefas.md`: nota na T14 (trocar a tool `list-transactions-by-category` por agregação
+- [x] [verificação] `docs/tarefas.md`: nota na T14 (trocar a tool `list-transactions-by-category` por agregação
       `COUNT`/`SUM` no banco, como forma melhor da consulta existente — decisão do usuário), na T12 (atualizar a
       especificação e os exemplos do fluxo de voz) e na T08 (404 `transaction-not-found` para transação de outro
       usuário)
