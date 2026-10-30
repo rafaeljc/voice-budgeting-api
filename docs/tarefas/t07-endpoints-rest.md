@@ -411,9 +411,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 5: Regras e notas
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `.claude/rules/api-conventions.md`: listagem paginada com `content` + `page` (exceção ao "sem
+- [x] [verificação] `.claude/rules/api-conventions.md`: listagem paginada com `content` + `page` (exceção ao "sem
       envelope"); `page`/`size` (padrão 20, máximo 100, ajuste em silêncio); `sort` restrito por lista com
       desempate por `id`; ID malformado = 404 do recurso; contrato OpenAPI escrito à mão em `docs/openapi.yaml`
       (contract-first), atualizado no mesmo PR que muda o endpoint, descrições em pt-BR

@@ -14,6 +14,7 @@ Regras que os endpoints HTTP seguem. O contrato publicado é documentado em Open
 - Sem verbos no caminho; transição de estado é um sub-recurso com substantivo (`/{id}/confirmation`, não `/{id}/confirm`).
 - Filtros, paginação e ordenação como query params, nunca como segmento do caminho.
 - Recurso de outro usuário responde 404, como se não existisse.
+- Identificador malformado é recurso inexistente: o mesmo 404 do ID que não existe, nunca 400.
 
 ## Métodos
 
@@ -50,7 +51,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 
 ## Representação
 
-- JSON com campos em camelCase; o recurso é o corpo, sem envelope.
+- JSON com campos em camelCase; o recurso é o corpo, sem envelope. A exceção são as listagens paginadas
+  (`content` + `page`, ver abaixo).
 - IDs como string; enums como string em `UPPER_SNAKE_CASE`.
 - Data e hora em ISO 8601 com fuso (UTC); data sem hora em `yyyy-MM-dd`.
 - Valor monetário como string decimal `^\d{1,16}\.\d{2}$` mais `currency` (`BRL`), lado a lado; nunca em ponto
@@ -61,7 +63,12 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 ## Listagens
 
 - Sempre paginadas, com tamanho máximo de página.
-- Ordenação padrão explícita e estável.
+- Corpo `{content: [...], page: {size, number, totalElements, totalPages}}`; `page.size` e `page.number` mostram o
+  valor aplicado.
+- `page` a partir de 0 (padrão 0); `size` padrão 20, máximo 100. Valor numérico fora da faixa é ajustado em
+  silêncio (`size` > 100 vira 100, `size` < 1 vira 20, `page` < 0 vira 0); valor não numérico é 400.
+- Ordenação padrão explícita e estável: `sort=campo,direção`, restrito a uma lista de campos do contrato (nunca
+  nomes da entidade), com desempate por `id` na mesma direção. Campo ou direção fora da lista é 400.
 - Períodos com início inclusivo e fim exclusivo.
 
 ## Cabeçalhos
@@ -78,7 +85,10 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - Toda validação de dado externo acontece na fronteira em que ele entra: no HTTP, Bean Validation no `Request`
   (formato e regras de negócio); o use case recebe dado válido. O domínio só mantém as invariantes como rede de
   proteção.
-- Todo endpoint documenta em OpenAPI as respostas de sucesso e de erro, com descrições em pt-BR.
+- O contrato OpenAPI é escrito antes do código (contract-first) em `docs/openapi.yaml`, e o PR que muda um
+  endpoint, um status ou um erro atualiza o arquivo. Todo endpoint documenta as respostas de sucesso e de erro, com
+  descrições em pt-BR. O Swagger UI do `compose.yml` (`docker compose up swagger-ui`, porta 8081) só consulta o
+  contrato.
 
 ## Não fazer
 
