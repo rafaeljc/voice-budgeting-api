@@ -1,0 +1,427 @@
+openapi: 3.0.3
+info:
+  title: Budgeting API
+  version: v1
+  description: |
+    API de orçamento por voz: registra e consulta transações financeiras.
+
+    Todo erro usa Problem Details (RFC 9457) com `application/problem+json`. Toda resposta traz o cabeçalho
+    `X-Request-Id`, com o identificador de rastreamento da requisição.
+servers:
+  - url: http://localhost:8080
+    description: Execução local
+tags:
+  - name: Transações
+    description: Cadastro e consulta de transações.
+  - name: Voz
+    description: Comandos de voz.
+paths:
+  /api/v1/transactions:
+    post:
+      tags: [Transações]
+      operationId: createTransaction
+      summary: Cria uma transação
+      description: Registra uma transação financeira e devolve o recurso criado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              description: Mercado
+              category: GROCERIES
+              amount: '80.00'
+              currency: BRL
+      responses:
+        '201':
+          description: Transação criada.
+          headers:
+            Location:
+              description: URL absoluta da transação criada.
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/api/v1/transactions/6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: |
+            Corpo inválido. Campo que viola uma regra de negócio ou valor de tipo errado
+            (`validation-error`, com `errors[].pointer`) ou JSON malformado (`malformed-request`, sem `errors`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              examples:
+                validationError:
+                  summary: Campo inválido
+                  value:
+                    type: urn:problem-type:budgeting:validation-error
+                    title: Dados inválidos
+                    status: 400
+                    detail: Um ou mais campos são inválidos.
+                    instance: /api/v1/transactions
+                    errors:
+                      - pointer: '#/amount'
+                        detail: O valor deve ser maior que zero.
+                malformedRequest:
+                  summary: JSON malformado
+                  value:
+                    type: urn:problem-type:budgeting:malformed-request
+                    title: Requisição malformada
+                    status: 400
+                    detail: O corpo da requisição não é um JSON válido.
+                    instance: /api/v1/transactions
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    get:
+      tags: [Transações]
+      operationId: listTransactions
+      summary: Lista as transações
+      description: |
+        Lista as transações de forma paginada. Sem `sort`, da mais recente para a mais antiga. Transações com o
+        mesmo valor de ordenação são desempatadas pelo `id`, na mesma direção, para que as páginas não repitam
+        nem percam itens.
+      parameters:
+        - name: category
+          in: query
+          description: Filtra pela categoria da transação. Sem ele, devolve todas as categorias.
+          schema:
+            $ref: '#/components/schemas/Category'
+        - name: page
+          in: query
+          description: Número da página, a partir de 0. Valor negativo é ajustado para 0.
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: |
+            Itens por página, de 1 a 100. Valor menor que 1 é ajustado para 20 e maior que 100, para 100;
+            `page.size` na resposta mostra o valor aplicado.
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: |
+            Ordenação no formato `campo,direção`, com campo `createdAt` ou `amount` e direção `asc` ou `desc`.
+          schema:
+            type: string
+            pattern: '^(createdAt|amount),(asc|desc)$'
+            default: createdAt,desc
+            example: amount,desc
+      responses:
+        '200':
+          description: Página de transações.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionPage'
+        '400':
+          description: |
+            Parâmetro de consulta inválido: `category` inexistente, `sort` fora do padrão ou `page`/`size` não
+            numérico. Cada item de `errors` traz `parameter`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: urn:problem-type:budgeting:validation-error
+                title: Dados inválidos
+                status: 400
+                detail: Um ou mais campos são inválidos.
+                instance: /api/v1/transactions
+                errors:
+                  - parameter: sort
+                    detail: A ordenação deve seguir o padrão "campo,direção" (por exemplo "amount,desc"), com campo createdAt ou amount e direção asc ou desc.
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/transactions/{id}:
+    get:
+      tags: [Transações]
+      operationId: getTransaction
+      summary: Consulta uma transação
+      description: |
+        Devolve a transação com o identificador informado. Um identificador malformado responde igual a um
+        inexistente (404).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da transação.
+          schema:
+            type: string
+            example: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+      responses:
+        '200':
+          description: A transação.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          description: Transação inexistente ou identificador malformado.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:transaction-not-found
+                title: Transação não encontrada
+                status: 404
+                detail: A transação solicitada não existe.
+                instance: /api/v1/transactions/00000000-0000-4000-8000-000000000000
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/transactions/ai:
+    post:
+      tags: [Voz]
+      operationId: sendVoiceCommand
+      summary: Envia um comando de voz
+      description: |
+        Transcreve o áudio, interpreta o comando e responde falado. Consultas respondem direto; o registro de
+        uma transação só é feito depois da confirmação do usuário.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Gravação do comando de voz, de até 1 MB.
+      responses:
+        '200':
+          description: Resposta falada ao comando.
+          headers:
+            Content-Disposition:
+              description: Nome sugerido para o arquivo de áudio.
+              schema:
+                type: string
+                example: attachment; filename="audio.mp3"
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parte `file` ausente (`validation-error`, com `errors[].parameter`).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: urn:problem-type:budgeting:validation-error
+                title: Dados inválidos
+                status: 400
+                detail: Um ou mais campos são inválidos.
+                instance: /api/v1/transactions/ai
+                errors:
+                  - parameter: file
+                    detail: Campo obrigatório ausente.
+        '413':
+          description: Arquivo acima do tamanho máximo permitido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: about:blank
+                title: Arquivo muito grande
+                status: 413
+                detail: O arquivo enviado excede o tamanho máximo permitido.
+                instance: /api/v1/transactions/ai
+        '422':
+          description: |
+            O áudio foi entendido, mas o comando não pôde ser processado com os dados interpretados (valor não
+            positivo, descrição vazia ou longa, categoria inexistente). Envie um novo comando de voz.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:invalid-command
+                title: Comando não processado
+                status: 422
+                detail: Não foi possível processar o comando com os dados entendidos. Envie um novo comando de voz.
+                instance: /api/v1/transactions/ai
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          description: O assistente está temporariamente indisponível. Tente novamente depois do `Retry-After`.
+          headers:
+            Retry-After:
+              description: Segundos até a próxima tentativa.
+              schema:
+                type: integer
+                example: 30
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:assistant-unavailable
+                title: Assistente indisponível
+                status: 503
+                detail: O assistente está temporariamente indisponível. Tente novamente em instantes.
+                instance: /api/v1/transactions/ai
+components:
+  responses:
+    UnsupportedMediaType:
+      description: Tipo de mídia da requisição não suportado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Tipo de mídia não suportado
+            status: 415
+            detail: O tipo de mídia da requisição não é suportado.
+            instance: /api/v1/transactions
+    InternalError:
+      description: Erro inesperado. O detalhe é sempre genérico.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Erro interno
+            status: 500
+            detail: Ocorreu um erro inesperado. Tente novamente mais tarde.
+            instance: /api/v1/transactions
+  schemas:
+    Category:
+      type: string
+      description: Categoria da transação.
+      enum: [GROCERIES, PHARMA, AUTO]
+    TransactionRequest:
+      type: object
+      required: [description, category, amount, currency]
+      properties:
+        description:
+          type: string
+          maxLength: 255
+          description: Descrição da transação, de 1 a 255 caracteres.
+        category:
+          $ref: '#/components/schemas/Category'
+        amount:
+          type: string
+          pattern: '^\d{1,16}\.\d{2}$'
+          description: Valor positivo em texto, com ponto e duas casas decimais.
+          example: '80.00'
+        currency:
+          type: string
+          enum: [BRL]
+          description: Moeda; apenas `BRL`.
+    TransactionResponse:
+      type: object
+      required: [id, category, description, amount, currency, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador da transação.
+        category:
+          $ref: '#/components/schemas/Category'
+        description:
+          type: string
+          description: Descrição da transação.
+        amount:
+          type: string
+          pattern: '^\d{1,16}\.\d{2}$'
+          description: Valor em texto, com ponto e duas casas decimais.
+          example: '80.00'
+        currency:
+          type: string
+          enum: [BRL]
+          description: Moeda da transação.
+        createdAt:
+          type: string
+          format: date-time
+          description: Data e hora do registro, em UTC (ISO 8601).
+    TransactionPage:
+      type: object
+      required: [content, page]
+      properties:
+        content:
+          type: array
+          description: Transações da página.
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+        page:
+          $ref: '#/components/schemas/PageMetadata'
+    PageMetadata:
+      type: object
+      required: [size, number, totalElements, totalPages]
+      properties:
+        size:
+          type: integer
+          description: Itens por página aplicado.
+        number:
+          type: integer
+          description: Número da página, a partir de 0.
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de transações que atendem ao filtro.
+        totalPages:
+          type: integer
+          description: Total de páginas.
+    Problem:
+      type: object
+      description: Problem Details (RFC 9457).
+      required: [type, title, status, detail, instance]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: Tipo do problema; `about:blank` para erros puramente HTTP.
+        title:
+          type: string
+          description: Resumo do problema.
+        status:
+          type: integer
+          description: Status HTTP.
+        detail:
+          type: string
+          description: Explicação do problema, em português.
+        instance:
+          type: string
+          description: Caminho da requisição, sem a query string.
+    ValidationProblem:
+      description: Problema de validação, com a lista dos campos ou parâmetros inválidos.
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          properties:
+            errors:
+              type: array
+              description: Campos ou parâmetros inválidos; ausente em JSON malformado.
+              items:
+                $ref: '#/components/schemas/InvalidField'
+    InvalidField:
+      type: object
+      required: [detail]
+      properties:
+        pointer:
+          type: string
+          description: JSON Pointer do campo inválido do corpo (por exemplo `#/amount`).
+          example: '#/amount'
+        parameter:
+          type: string
+          description: Nome do parâmetro de consulta ou parte de formulário inválido.
+          example: sort
+        detail:
+          type: string
+          description: Motivo pelo qual o valor é inválido.
