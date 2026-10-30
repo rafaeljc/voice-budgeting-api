@@ -44,7 +44,7 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   (`f9f7d10`)
 - exemplos: `docs/exemplos/transacoes.http` (HTTP Client do IntelliJ / REST Client do VS Code) e seção de API no
   README com `curl` mínimo
-- documentação: `api-conventions.md`, `architecture.md`, `testing.md`, `error-handling.md`, `CLAUDE.md`, README;
+- documentação: `api-conventions.md`, `architecture.md`, `error-handling.md`, `CLAUDE.md`, README;
   notas da T08, T12 e T14 em `docs/tarefas.md`
 
 **Fora:**
@@ -119,6 +119,8 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   usuário). Substitui as decisões "OpenAPI gerada pelos testes", "`docs/openapi.yaml`
   versionado e conferido pelo build", "Swagger UI no compose, só leitura" e "`document(...)` no `*IT`"
   (decisão do usuário)
+- Sem teste para a documentação — a especificação é só uma conveniência de consulta e não um comportamento da
+  aplicação; `testing.md` não pede teste de configuração nem de comportamento de framework (decisão do usuário)
 - Cinco fases: versão e base da documentação; consulta por ID; listagem paginada; voz, Swagger UI e exemplos; regras
   e notas
 
@@ -349,12 +351,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Remover o REST Docs e o `docs/openapi.yaml` gerado (`f9f7d10`)
-- [ ] [verificação] Build: `springdoc-openapi-starter-webmvc-ui` 3.2.0; `OpenApiConfiguration` em
+- [x] [verificação] Build: `springdoc-openapi-starter-webmvc-ui` 3.2.0; `OpenApiConfiguration` em
       `infrastructure/config` (título "Budgeting API", versão `v1`, descrição em pt-BR); caminhos em
       `application.properties`
-- [ ] [TDD] `OpenApiIT` (novo): `GET /v3/api-docs` → 200 com os caminhos `/api/v1/transactions`,
-      `/api/v1/transactions/{id}` e `/api/v1/transactions/ai`; `GET /swagger-ui.html` redireciona para a UI —
-      implementa a dependência e a configuração
 - [ ] [verificação] Revisar a especificação gerada no Swagger UI (parâmetros de query, `{id}`, multipart com
       `file`, `audio/mpeg`, schemas); sem anotações — lacunas (respostas de erro, descrições em pt-BR) ficam como
       limitação conhecida, registrada no resumo da fase
@@ -386,8 +385,6 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       sem anotações no controller
 - [ ] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
-- [ ] [verificação] `.claude/rules/testing.md`: `OpenApiIT` garante que a especificação é gerada com os
-      caminhos esperados
 - [ ] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`
 - [ ] [verificação] `CLAUDE.md`: stack com springdoc e Swagger UI (`/swagger-ui.html`); Estrutura com
