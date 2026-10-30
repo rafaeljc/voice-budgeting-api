@@ -417,7 +417,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       envelope"); `page`/`size` (padrão 20, máximo 100, ajuste em silêncio); `sort` restrito por lista com
       desempate por `id`; ID malformado = 404 do recurso; contrato OpenAPI escrito à mão em `docs/openapi.yaml`
       (contract-first), atualizado no mesmo PR que muda o endpoint, descrições em pt-BR
-- [ ] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
+- [x] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
 - [ ] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`

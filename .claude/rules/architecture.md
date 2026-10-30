@@ -48,6 +48,14 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 - Entidades de domínio: classe com dois construtores — criação (gera o ID) e reidratação (todos os campos).
 - Value objects: `record` com invariantes no construtor compacto (`IllegalArgumentException`).
 - Use cases: uma classe por caso de uso, um único método público `execute(...)`, recebe `Input` e devolve `Output`.
+- Exceções de negócio (`TransactionNotFoundException`) ficam em `domain/`, são unchecked e não importam Spring.
+- Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,
+  `PageResult<T>` (com `totalPages()` e `map`), `TransactionSort` (campos e direções fechados) e
+  `TransactionFilter`, uma lista de `TransactionCriterion` (`sealed interface`, hoje `CategoryIs`). `Pageable` e
+  `Page` do Spring Data nunca aparecem em `domain` nem em `application`: o adaptador JPA os traduz (`PageRequest`,
+  `Sort` com desempate por `id`, `Specification` por critério).
+- Critério de filtro novo é um `record` em `TransactionCriterion` e um `case` no `switch` do adaptador; o
+  compilador acusa o `case` que faltar, e nenhum chamador muda.
 
 ## Validação
 
