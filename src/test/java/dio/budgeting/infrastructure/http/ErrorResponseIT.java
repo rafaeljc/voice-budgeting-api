@@ -1,10 +1,12 @@
 package dio.budgeting.infrastructure.http;
 
+import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -13,12 +15,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epages.restdocs.apispec.ResourceDocumentation;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -28,6 +37,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
 @ExtendWith(OutputCaptureExtension.class)
 class ErrorResponseIT {
 
@@ -102,10 +112,12 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.errors").doesNotExist());
     }
 
-    @Test
-    void should_returnValidationProblemWithParameter_when_queryCategoryDoesNotExist() throws Exception {
+    @ParameterizedTest
+    @MethodSource("invalidQueryParameters")
+    void should_returnValidationProblemWithParameter_when_queryParameterIsInvalid(
+            String parameter, String value, String detail) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "FOO"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param(parameter, value));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -113,8 +125,54 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
                 .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andExpect(jsonPath("$.errors.length()").value(1))
-                .andExpect(jsonPath("$.errors[0].parameter").value("category"))
-                .andExpect(jsonPath("$.errors[0].pointer").doesNotExist());
+                .andExpect(jsonPath("$.errors[0].parameter").value(parameter))
+                .andExpect(jsonPath("$.errors[0].detail").value(detail))
+                .andExpect(jsonPath("$.errors[0].pointer").doesNotExist())
+                .andDo(document(
+                        "list-transactions-invalid-parameter",
+                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
+                                .tag("Transações")
+                                .summary("Lista as transações")
+                                .responseFields(
+                                        fieldWithPath("type").description("Tipo do problema."),
+                                        fieldWithPath("title").description("Resumo do problema."),
+                                        fieldWithPath("status").description("Status HTTP."),
+                                        fieldWithPath("detail").description("Explicação do problema."),
+                                        fieldWithPath("instance").description("Caminho da requisição."),
+                                        fieldWithPath("errors[]").description("Parâmetros inválidos."),
+                                        fieldWithPath("errors[].parameter")
+                                                .description("Nome do parâmetro de consulta inválido."),
+                                        fieldWithPath("errors[].detail")
+                                                .description("Motivo pelo qual o parâmetro é inválido."))
+                                .build())));
+    }
+
+    static Stream<Arguments> invalidQueryParameters() {
+        var invalidValue = "Valor inválido.";
+        var invalidSort =
+                "A ordenação deve seguir o padrão \"campo,direção\" (por exemplo \"amount,desc\"), com campo createdAt ou amount e direção asc ou desc.";
+        return Stream.of(
+                Arguments.of("category", "FOO", invalidValue),
+                Arguments.of("sort", "description,asc", invalidSort),
+                Arguments.of("sort", "amount", invalidSort),
+                Arguments.of("size", "abc", invalidValue));
+    }
+
+    @Test
+    void should_logRejectedRequestWithParameterNameOnly_when_queryParameterIsInvalid(CapturedOutput output)
+            throws Exception {
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("size", "secret-value"))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("status").asInt()).isEqualTo(400);
+        assertThat(event.path("invalidFields")).singleElement().satisfies(field -> assertThat(field.asString())
+                .isEqualTo("size"));
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+        assertThat(output.getAll()).doesNotContain("secret-value");
     }
 
     @Test

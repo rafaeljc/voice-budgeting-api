@@ -297,14 +297,14 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Listagem paginada e ordenada
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionEndpointsIT`: `?category=GROCERIES` traz só as da categoria; `?page=1&size=2` traz a
       segunda página com os metadados certos
 - [x] [TDD] `TransactionEndpointsIT` (parametrizado): `sort=amount,asc`, `amount,desc`, `createdAt,asc` ordenam
       como pedido; mesmo `createdAt` desempata por `id`
 - [x] [TDD] `TransactionEndpointsIT` (parametrizado): `size=500` → `page.size` 100; `size=0` → 20; `page=-1` → 0
-- [ ] [TDD] `ErrorResponseIT` (parametrizado): `category=FOO`, `sort=description,asc`, `sort=amount`,
+- [x] [TDD] `ErrorResponseIT` (parametrizado): `category=FOO`, `sort=description,asc`, `sort=amount`,
       `size=abc` → 400 `validation-error` com `errors[0].parameter` (`category`, `sort`, `size`) e sem `pointer`,
       documentado; log `Request rejected` com `invalidFields` pelo nome do parâmetro — implementa a distinção corpo
       x query no `ApiExceptionHandler` e `transaction.sort.invalid` em `messages.properties`
@@ -320,7 +320,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- **Feito:** a implementação da listagem veio na Fase 2 (antecipada); esta fase a cobriu com `*IT`: filtro
+  `category`, página 2 com metadados, ordenação (`amount,asc|desc`, `createdAt,asc`), desempate por `id`, ajuste
+  silencioso de `size`/`page` fora da faixa e os 400 `validation-error` com `errors[].parameter` (sem `pointer`)
+  para `category=FOO`, `sort=description,asc`, `sort=amount` e `size=abc`, com log `Request rejected` trazendo só o
+  nome do parâmetro. O 400 de parâmetro está documentado em `docs/openapi.yaml`.
+- **Decisões:** nenhuma nova. O teste de desempate foi validado removendo o `id` do `Sort`: o caso
+  `createdAt,desc` falha, então o teste protege o comportamento.
+- **Para a próxima sessão:**
+  - A Fase 4 documenta o `POST /api/v1/transactions/ai` (voz) nos `VoiceCommandIT`/`UploadLimitIT`/
+    `ErrorResponseIT`, adiciona o Swagger UI ao `compose.yml`, os exemplos `.http` e a seção de API do README.
+  - `@AutoConfigureRestDocs` já está no `TransactionEndpointsIT` e no `ErrorResponseIT`; os demais `*IT` precisam
+    dele para chamar `document(...)`.
+  - Há três `document(...)` do `ErrorResponseIT` e do `TransactionEndpointsIT` com o mesmo identificador por
+    parâmetro de `@ParameterizedTest`; o último caso executado vence no exemplo da especificação.
+- **Verificação:** `./gradlew build` → `BUILD SUCCESSFUL` (sem `OPENAI_API_KEY`); `TransactionEndpointsIT` passa;
+  `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha; `docs/openapi.yaml` traz os
+  quatro parâmetros (`category`, `page`, `size`, `sort`) e nenhum `/transactions/{category}`.
 
 ## Fase 4: Voz na especificação, Swagger UI e exemplos
 
