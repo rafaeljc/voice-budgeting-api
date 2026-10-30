@@ -365,7 +365,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `file` binário; 200 `audio/mpeg`; 400, 413, 422 `invalid-command`, 503 `assistant-unavailable` com
       `Retry-After`); 500 genérico em todos; schemas reutilizáveis em `components` (incluindo o Problem Details
       e a lista `errors` com `pointer`/`parameter`); descrições em pt-BR; validar a sintaxe do contrato
-- [ ] [verificação] `compose.yml`: serviço `swagger-ui` (`swaggerapi/swagger-ui:v5.34.0`, `8081:8080`,
+- [x] [verificação] `compose.yml`: serviço `swagger-ui` (`swaggerapi/swagger-ui:v5.34.0`, `8081:8080`,
       `SWAGGER_JSON=/spec/openapi.yaml`, volume `./docs/openapi.yaml:/spec/openapi.yaml:ro`,
       `SUPPORTED_SUBMIT_METHODS: "[]"`)
 - [x] [verificação] `docs/exemplos/transacoes.http`: `@baseUrl`; criar (guardando o `id`), consultar por ID,

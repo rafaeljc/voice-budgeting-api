@@ -16,5 +16,16 @@ services:
       timeout: 5s
       retries: 5
 
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.34.0
+    environment:
+      SWAGGER_JSON: /spec/openapi.yaml
+      # Read-only: the API has no CORS, so "Try it out" would not work from the browser
+      SUPPORTED_SUBMIT_METHODS: "[]"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./docs/openapi.yaml:/spec/openapi.yaml:ro
+
 volumes:
   transaction_data:
