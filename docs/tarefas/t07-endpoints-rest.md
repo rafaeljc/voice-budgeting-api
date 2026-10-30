@@ -419,7 +419,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (contract-first), atualizado no mesmo PR que muda o endpoint, descrições em pt-BR
 - [x] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
-- [ ] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
+- [x] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`
 - [ ] [verificação] `CLAUDE.md`: Swagger UI (`docker compose up swagger-ui`); Estrutura com `docs/openapi.yaml`
       e `docs/exemplos/`
