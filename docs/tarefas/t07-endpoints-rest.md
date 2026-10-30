@@ -177,7 +177,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       tarefa `openapi3` (YAML, título "Budgeting API", versão `v1`, saída em `build/api-spec/`) alimentada pelos
       snippets do `integrationTest` — prova de compatibilidade com o Boot 4 documentando o `POST` existente no
       `TransactionEndpointsIT`; se falhar, parar e consultar o usuário
-- [ ] [TDD] `TransactionEndpointsIT`, `ErrorResponseIT`, `VoiceCommandIT`, `UploadLimitIT`, `RequestCorrelationIT`
+- [x] [TDD] `TransactionEndpointsIT`, `ErrorResponseIT`, `VoiceCommandIT`, `UploadLimitIT`, `RequestCorrelationIT`
       com as URLs `/api/v1/...` (inclusive `instance`) — implementa `@RequestMapping("/api/v1/transactions")`
 - [ ] [TDD] `VoiceCommandIT`: resposta do comando de voz com `Content-Type` `audio/mpeg` — implementa o `produces`
 - [ ] [TDD] `TransactionEndpointsIT`: `POST` → 201 com `Location` terminando em `/api/v1/transactions/{id}` (o `id`

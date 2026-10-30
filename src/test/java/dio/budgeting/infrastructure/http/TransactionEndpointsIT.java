@@ -1,6 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,7 +44,7 @@ class TransactionEndpointsIT {
         var body = """
                 {"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}
                 """;
-        mockMvc.perform(post("/transactions")
+        mockMvc.perform(post(TRANSACTIONS_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andDo(document(
@@ -57,7 +58,7 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.currency").value("BRL"));
 
         // when
-        var response = mockMvc.perform(get("/transactions/GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"));
 
         // then
         response.andExpect(status().isOk())
@@ -78,7 +79,7 @@ class TransactionEndpointsIT {
         var before = Instant.now();
 
         // when
-        var created = mockMvc.perform(post("/transactions")
+        var created = mockMvc.perform(post(TRANSACTIONS_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -89,7 +90,7 @@ class TransactionEndpointsIT {
         var createdAt = JsonPath.<String>read(created.getResponse().getContentAsString(), "$.createdAt");
         assertThat(createdAt).endsWith("Z");
         assertThat(Instant.parse(createdAt)).isBetween(before.truncatedTo(ChronoUnit.MILLIS), after);
-        mockMvc.perform(get("/transactions/GROCERIES"))
+        mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].createdAt").value(createdAt));
     }
@@ -99,7 +100,7 @@ class TransactionEndpointsIT {
     void should_returnBadRequestAndSaveNothing_when_amountOrCurrencyIsInvalid(String body) throws Exception {
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
 
         // then
         response.andExpect(status().isBadRequest());
@@ -112,7 +113,7 @@ class TransactionEndpointsIT {
             String body, String pointer, String detail) throws Exception {
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
 
         // then
         response.andExpect(status().isBadRequest())

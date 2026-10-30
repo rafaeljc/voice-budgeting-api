@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dio.budgeting.support.IntegrationTest;
@@ -28,7 +29,7 @@ class UploadLimitIT {
     @Test
     void should_returnPayloadTooLargeProblem_when_uploadExceedsLimit() throws Exception {
         // given
-        var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/transactions/ai"))
+        var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + VOICE_COMMAND_PATH))
                 .header("Content-Type", "multipart/form-data; boundary=" + BOUNDARY)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(multipartWithFileOf(OVERSIZED_FILE_BYTES)))
                 .build();
@@ -44,7 +45,7 @@ class UploadLimitIT {
         assertThat(problem.path("type").asString()).isEqualTo("about:blank");
         assertThat(problem.path("title").asString()).isEqualTo("Arquivo muito grande");
         assertThat(problem.path("status").asInt()).isEqualTo(413);
-        assertThat(problem.path("instance").asString()).isEqualTo("/transactions/ai");
+        assertThat(problem.path("instance").asString()).isEqualTo(VOICE_COMMAND_PATH);
     }
 
     private static byte[] multipartWithFileOf(int size) {
