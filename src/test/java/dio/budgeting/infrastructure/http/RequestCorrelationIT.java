@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -28,8 +29,7 @@ class RequestCorrelationIT {
     @Test
     void should_returnTraceIdAsRequestIdAndLogItInJson_when_requestIsMade(CapturedOutput output) throws Exception {
         // when
-        var response =
-                mockMvc.perform(get("/transactions/GROCERIES")).andReturn().getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
 
         // then
         var requestId = response.getHeader("X-Request-Id");
@@ -46,7 +46,7 @@ class RequestCorrelationIT {
 
         // when
         var response = mockMvc.perform(
-                        get("/transactions/GROCERIES").header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
+                        get(TRANSACTIONS_PATH).header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
                 .andReturn()
                 .getResponse();
 
@@ -57,7 +57,7 @@ class RequestCorrelationIT {
     @Test
     void should_ignoreClientRequestId_when_headerIsSent() throws Exception {
         // when
-        var response = mockMvc.perform(get("/transactions/GROCERIES").header("X-Request-Id", "client-chosen-id"))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header("X-Request-Id", "client-chosen-id"))
                 .andReturn()
                 .getResponse();
 

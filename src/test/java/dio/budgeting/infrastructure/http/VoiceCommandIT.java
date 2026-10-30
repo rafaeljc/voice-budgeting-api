@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -61,11 +62,11 @@ class VoiceCommandIT {
         givenExpenseCommand(speech);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isOk())
-                .andExpect(content().contentType("audio/mp3"))
+                .andExpect(content().contentType("audio/mpeg"))
                 .andExpect(content().bytes(speech));
         assertThat(transactionRepository.findAllByCategory(Category.GROCERIES))
                 .singleElement()
@@ -81,7 +82,7 @@ class VoiceCommandIT {
         givenExpenseCommand(new byte[] {1, 2, 3, 4});
 
         // when
-        mockMvc.perform(multipart("/transactions/ai").file(recording())).andExpect(status().isOk());
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording())).andExpect(status().isOk());
 
         // then
         assertThat(output.getAll())
@@ -96,7 +97,7 @@ class VoiceCommandIT {
         var recording = recording();
 
         // when
-        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
@@ -126,7 +127,7 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(failure);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isServiceUnavailable())
@@ -136,7 +137,7 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.title").value("Assistente indisponível"))
                 .andExpect(jsonPath("$.detail")
                         .value("O assistente está temporariamente indisponível. Tente novamente em instantes."))
-                .andExpect(jsonPath("$.instance").value("/transactions/ai"));
+                .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH));
     }
 
     @Test
@@ -145,7 +146,7 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isInternalServerError())
@@ -162,7 +163,7 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.RATE_LIMITED);
 
         // when
-        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording()))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
@@ -183,7 +184,7 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
 
         // when
-        mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         var event = LogEvents.withMessage(output, "Unexpected error");
@@ -199,7 +200,7 @@ class VoiceCommandIT {
                 """);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
@@ -210,7 +211,7 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.detail")
                         .value("Não foi possível processar o comando com os dados entendidos."
                                 + " Envie um novo comando de voz."))
-                .andExpect(jsonPath("$.instance").value("/transactions/ai"))
+                .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH))
                 .andExpect(jsonPath("$.errors").doesNotExist());
         assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
     }
@@ -222,7 +223,7 @@ class VoiceCommandIT {
         givenPersistCommand(arguments);
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
@@ -237,7 +238,7 @@ class VoiceCommandIT {
         givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
 
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
@@ -252,7 +253,7 @@ class VoiceCommandIT {
         givenPersistCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
 
         // when
-        var requestId = mockMvc.perform(multipart("/transactions/ai").file(recording()))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
@@ -282,7 +283,7 @@ class VoiceCommandIT {
             givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
 
             // when
-            var response = mockMvc.perform(multipart("/transactions/ai").file(recording()));
+            var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
 
             // then
             response.andExpect(status().isInternalServerError())

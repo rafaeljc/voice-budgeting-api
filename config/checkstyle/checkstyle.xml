@@ -68,6 +68,7 @@
             <property name="max" value="50"/>
         </module>
         <module name="ParameterNumber">
+            <property name="id" value="ParameterNumber"/>
             <property name="max" value="7"/>
         </module>
     </module>

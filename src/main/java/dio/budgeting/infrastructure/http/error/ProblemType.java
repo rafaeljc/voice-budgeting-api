@@ -6,7 +6,8 @@ enum ProblemType {
     VALIDATION_ERROR("validation-error"),
     MALFORMED_REQUEST("malformed-request"),
     ASSISTANT_UNAVAILABLE("assistant-unavailable"),
-    INVALID_COMMAND("invalid-command");
+    INVALID_COMMAND("invalid-command"),
+    TRANSACTION_NOT_FOUND("transaction-not-found");
 
     private static final String URN_PREFIX = "urn:problem-type:budgeting:";
 

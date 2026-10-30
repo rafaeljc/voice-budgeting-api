@@ -6,4 +6,6 @@
     <suppress id="MainMethodName" files="[\\/]src[\\/]test[\\/]"/>
     <suppress id="TestMethodName" files="[\\/]src[\\/]main[\\/]"/>
     <suppress id="NoFieldInjection" files="[\\/]src[\\/]test[\\/]"/>
+    <!-- Controllers wire one collaborator per use case, so their constructors grow with the API -->
+    <suppress id="ParameterNumber" files="[\\/]infrastructure[\\/]http[\\/][^\\/]*Controller\.java"/>
 </suppressions>

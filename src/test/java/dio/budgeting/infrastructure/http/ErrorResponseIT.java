@@ -1,5 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
+import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
+import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -14,8 +16,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
+import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -48,7 +55,7 @@ class ErrorResponseIT {
 
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -57,7 +64,7 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.title").value("Dados inválidos"))
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.detail").value("Um ou mais campos são inválidos."))
-                .andExpect(jsonPath("$.instance").value("/transactions"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andExpect(jsonPath("$.errors.length()").value(1))
                 .andExpect(jsonPath("$.errors[0].pointer").value("#/amount"))
                 .andExpect(jsonPath("$.errors[0].detail")
@@ -73,7 +80,7 @@ class ErrorResponseIT {
 
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.APPLICATION_JSON).content(body));
+                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -88,7 +95,7 @@ class ErrorResponseIT {
     void should_returnMalformedRequestProblemWithoutErrors_when_jsonIsMalformed() throws Exception {
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.APPLICATION_JSON).content("{\"description\": "));
+                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content("{\"description\": "));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -99,25 +106,56 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.errors").doesNotExist());
     }
 
-    @Test
-    void should_returnValidationProblemWithParameter_when_pathCategoryDoesNotExist() throws Exception {
+    @ParameterizedTest
+    @MethodSource("invalidQueryParameters")
+    void should_returnValidationProblemWithParameter_when_queryParameterIsInvalid(
+            String parameter, String value, String detail) throws Exception {
         // when
-        var response = mockMvc.perform(get("/transactions/FOO"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param(parameter, value));
 
         // then
         response.andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
-                .andExpect(jsonPath("$.instance").value("/transactions/FOO"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andExpect(jsonPath("$.errors.length()").value(1))
-                .andExpect(jsonPath("$.errors[0].parameter").value("category"))
+                .andExpect(jsonPath("$.errors[0].parameter").value(parameter))
+                .andExpect(jsonPath("$.errors[0].detail").value(detail))
                 .andExpect(jsonPath("$.errors[0].pointer").doesNotExist());
+    }
+
+    static Stream<Arguments> invalidQueryParameters() {
+        var invalidValue = "Valor inválido.";
+        var invalidSort =
+                "A ordenação deve seguir o padrão \"campo,direção\" (por exemplo \"amount,desc\"), com campo createdAt ou amount e direção asc ou desc.";
+        return Stream.of(
+                Arguments.of("category", "FOO", invalidValue),
+                Arguments.of("sort", "description,asc", invalidSort),
+                Arguments.of("sort", "amount", invalidSort),
+                Arguments.of("size", "abc", invalidValue));
+    }
+
+    @Test
+    void should_logRejectedRequestWithParameterNameOnly_when_queryParameterIsInvalid(CapturedOutput output)
+            throws Exception {
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("size", "secret-value"))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("status").asInt()).isEqualTo(400);
+        assertThat(event.path("invalidFields")).singleElement().satisfies(field -> assertThat(field.asString())
+                .isEqualTo("size"));
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+        assertThat(output.getAll()).doesNotContain("secret-value");
     }
 
     @Test
     void should_returnValidationProblemWithParameter_when_audioFileIsMissing() throws Exception {
         // when
-        var response = mockMvc.perform(multipart("/transactions/ai"));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -144,7 +182,7 @@ class ErrorResponseIT {
     @Test
     void should_returnBlankTypeProblemInPortuguese_when_methodIsNotSupported() throws Exception {
         // when
-        var response = mockMvc.perform(delete("/transactions"));
+        var response = mockMvc.perform(delete(TRANSACTIONS_PATH));
 
         // then
         response.andExpect(status().isMethodNotAllowed())
@@ -158,7 +196,7 @@ class ErrorResponseIT {
     void should_returnBlankTypeProblemInPortuguese_when_contentTypeIsNotSupported() throws Exception {
         // when
         var response = mockMvc.perform(
-                post("/transactions").contentType(MediaType.TEXT_PLAIN).content("x"));
+                post(TRANSACTIONS_PATH).contentType(MediaType.TEXT_PLAIN).content("x"));
 
         // then
         response.andExpect(status().isUnsupportedMediaType())
@@ -171,10 +209,10 @@ class ErrorResponseIT {
     @Test
     void should_returnGenericProblem_when_unexpectedFailureOccurs() throws Exception {
         // given
-        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response = mockMvc.perform(get("/transactions/GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH));
 
         // then
         var result = response.andExpect(status().isInternalServerError())
@@ -182,7 +220,7 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Erro interno"))
                 .andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado. Tente novamente mais tarde."))
-                .andExpect(jsonPath("$.instance").value("/transactions/GROCERIES"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andReturn();
         assertThat(result.getResponse().getContentAsString()).doesNotContain(INTERNAL_MARKER);
     }
@@ -195,7 +233,7 @@ class ErrorResponseIT {
                 """;
 
         // when
-        var response = mockMvc.perform(post("/transactions")
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andReturn()
@@ -213,13 +251,27 @@ class ErrorResponseIT {
     }
 
     @Test
+    void should_logRejectedRequestWithProblemType_when_transactionIsNotFound(CapturedOutput output) throws Exception {
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/" + UUID.randomUUID()))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(404);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:transaction-not-found");
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+    }
+
+    @Test
     void should_logUnexpectedErrorWithStackTrace_when_unexpectedFailureOccurs(CapturedOutput output) throws Exception {
         // given
-        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response =
-                mockMvc.perform(get("/transactions/GROCERIES")).andReturn().getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
 
         // then
         var event = LogEvents.withMessage(output, "Unexpected error");

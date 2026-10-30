@@ -25,6 +25,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 
 | Exceção                                              | Status | `type`                                           | Chave dos textos                                            | Log                          |
 |------------------------------------------------------|--------|--------------------------------------------------|-------------------------------------------------------------|------------------------------|
+| `TransactionNotFoundException` (ID inexistente ou malformado) | 404 | `urn:problem-type:budgeting:transaction-not-found` | `problem.transaction-not-found.*` | `INFO` `Request rejected`    |
 | `MethodArgumentNotValidException`                    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
 | `HttpMessageNotReadableException` (enum inválido)    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
 | `HttpMessageNotReadableException` (JSON malformado)  | 400    | `urn:problem-type:budgeting:malformed-request`   | `problem.malformed-request.*`                               | `INFO` `Request rejected`    |
@@ -42,6 +43,11 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 
 - Extensão `errors` nos `validation-error`: lista de `{pointer, detail}` para campo do corpo (JSON Pointer, ex.:
   `#/amount`) ou `{parameter, detail}` para caminho, query ou parte do multipart. JSON malformado não traz `errors`.
+- Um record de query params com `@Valid` (sem `@RequestBody`, como `ListTransactionsRequest`) chega ao handler como
+  `MethodArgumentNotValidException` igual ao corpo; o handler olha o `@RequestBody` do parâmetro para escolher
+  `pointer` (corpo) ou `parameter` (query). Falha de conversão (`category=FOO`, `size=abc`) vira o texto
+  `problem.invalid-value`, sem repetir o valor rejeitado.
+- A mensagem de `TransactionNotFoundException` não vai ao corpo nem ao log; o 404 é o mesmo para o ID malformado.
 - `invalid-command` (422): o modelo enviou argumentos inválidos à tool (valor não positivo, descrição vazia ou
   longa, valor com mais de 2 casas, categoria ausente ou inexistente). Sem `errors`; `title` e `detail` fixos. Não há
   segunda chamada ao modelo nem síntese de voz. As exceções chegam sem invólucro porque o
