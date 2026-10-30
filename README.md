@@ -33,6 +33,28 @@ set -a && source .env && set +a
 ./gradlew bootRun
 ```
 
+## API
+
+Base `/api/v1`. A especificação OpenAPI é gerada pela aplicação: com a API no ar, o Swagger UI fica em
+`http://localhost:8080/swagger-ui.html` e o JSON em `http://localhost:8080/v3/api-docs`.
+
+| Método | Caminho                      | Descrição                                                          |
+|--------|------------------------------|--------------------------------------------------------------------|
+| `POST` | `/transactions`              | Cria uma transação (201 + `Location`)                              |
+| `GET`  | `/transactions`              | Lista paginada; filtros `category`, `page`, `size`, `sort`         |
+| `GET`  | `/transactions/{id}`         | Consulta uma transação (404 se não existir)                        |
+| `POST` | `/transactions/ai`           | Comando de voz: envia o áudio (`file`) e recebe a resposta em MP3  |
+
+Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http). Com `curl`:
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/transactions \
+  -H 'Content-Type: application/json' \
+  -d '{"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}'
+
+curl 'http://localhost:8080/api/v1/transactions?category=GROCERIES&sort=amount,desc'
+```
+
 ## Logs e rastreamento
 
 Os logs saem em JSON no formato ECS, em todos os ambientes. Cada linha de uma requisição traz o `traceId`, o mesmo

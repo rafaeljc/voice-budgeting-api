@@ -360,7 +360,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/exemplos/transacoes.http`: `@baseUrl`; criar (guardando o `id`), consultar por ID,
       listar sem filtro, com `category`, com `page`/`size`, com `sort=amount,desc`; erros 400 de validação, 404 de
       ID inexistente e 400 de `sort` inválido
-- [ ] [verificação] README: seção "API" — base `/api/v1`, tabela dos endpoints, especificação em
+- [x] [verificação] README: seção "API" — base `/api/v1`, tabela dos endpoints, especificação em
       `/v3/api-docs`, Swagger UI (`http://localhost:8080/swagger-ui.html`), exemplos em
       `docs/exemplos/transacoes.http` e um `curl` mínimo
 
