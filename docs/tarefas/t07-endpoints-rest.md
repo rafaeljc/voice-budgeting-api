@@ -358,7 +358,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Remover o REST Docs e o `docs/openapi.yaml` gerado (`f9f7d10`)
 - [x] [verificação] Springdoc adicionado (`3e72ecd`) e descartado: ver Decisões
-- [ ] [verificação] Remover o springdoc: dependência, `OpenApiConfiguration` e propriedades `springdoc.*`
+- [x] [verificação] Remover o springdoc: dependência, `OpenApiConfiguration` e propriedades `springdoc.*`
 - [ ] [verificação] `docs/openapi.yaml` à mão (contract-first, 3.0.3): `POST /api/v1/transactions` (201 com
       `Location`; 400, 415), `GET /api/v1/transactions` (parâmetros `category`, `page`, `size`, `sort`; 400),
       `GET /api/v1/transactions/{id}` (200; 404) e `POST /api/v1/transactions/ai` (`multipart/form-data` com
