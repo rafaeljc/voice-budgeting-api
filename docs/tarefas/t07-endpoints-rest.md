@@ -253,7 +253,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `Sort` com desempate) e o índice; remove o `GET /{category}`
 - [x] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions/{id}` de uma transação criada → 200 com o recurso,
       documentado — implementa o endpoint e o `findById` no adaptador JPA
-- [ ] [TDD] `TransactionEndpointsIT` (parametrizado): UUID inexistente e ID malformado (`abc`) → 404
+- [x] [TDD] `TransactionEndpointsIT` (parametrizado): UUID inexistente e ID malformado (`abc`) → 404
       `application/problem+json`, `type` `urn:problem-type:budgeting:transaction-not-found`, `title` e `detail` em
       pt-BR, documentado — implementa `ProblemType.TRANSACTION_NOT_FOUND`, `problem.transaction-not-found.*` e o
       handler

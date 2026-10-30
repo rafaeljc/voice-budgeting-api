@@ -3,6 +3,7 @@ package dio.budgeting.infrastructure.http.error;
 import com.openai.errors.OpenAIException;
 import com.openai.errors.OpenAIIoException;
 import com.openai.errors.OpenAIServiceException;
+import dio.budgeting.domain.TransactionNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
@@ -100,6 +101,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         var status = HttpStatus.UNPROCESSABLE_CONTENT;
         return handleExceptionInternal(
                 ex, problem(ProblemType.INVALID_COMMAND, status, null), new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    ResponseEntity<Object> handleTransactionNotFound(TransactionNotFoundException ex, WebRequest request) {
+        var status = HttpStatus.NOT_FOUND;
+        return handleExceptionInternal(
+                ex, problem(ProblemType.TRANSACTION_NOT_FOUND, status, null), new HttpHeaders(), status, request);
     }
 
     @ExceptionHandler(OpenAIException.class)

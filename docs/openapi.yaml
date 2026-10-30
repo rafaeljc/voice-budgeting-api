@@ -121,6 +121,18 @@ paths:
                     :\"GROCERIES\",\"description\":\"Mercado\",\"amount\":\"80.00\"\
                     ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
                     }"
+        "404":
+          description: "404"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/api-v1-transactions-id-1312430295"
+              examples:
+                get-transaction-not-found:
+                  value: "{\"detail\":\"A transação solicitada não existe.\",\"instance\"\
+                    :\"/api/v1/transactions/{id}\",\"status\":404,\"title\":\"Transaç\
+                    ão não encontrada\",\"type\":\"urn:problem-type:budgeting:transaction-not-found\"\
+                    }"
 components:
   schemas:
     api-v1-transactions1106890157:
@@ -229,3 +241,27 @@ components:
         category:
           type: string
           description: Categoria da transação.
+    api-v1-transactions-id-1312430295:
+      required:
+      - detail
+      - instance
+      - status
+      - title
+      - type
+      type: object
+      properties:
+        instance:
+          type: string
+          description: Caminho da requisição.
+        detail:
+          type: string
+          description: Explicação do problema.
+        title:
+          type: string
+          description: Resumo do problema.
+        type:
+          type: string
+          description: Tipo do problema.
+        status:
+          type: number
+          description: Status HTTP.

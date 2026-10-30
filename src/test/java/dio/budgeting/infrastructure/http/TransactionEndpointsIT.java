@@ -11,6 +11,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWit
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +46,7 @@ class TransactionEndpointsIT {
 
     private static final Pattern UUID_PATTERN =
             Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final Pattern INSTANCE_PATTERN = Pattern.compile("\"instance\":\"[^\"]*\"");
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z");
 
     private final MockMvc mockMvc;
@@ -204,6 +206,40 @@ class TransactionEndpointsIT {
                                         fieldWithPath("createdAt")
                                                 .description("Data e hora do registro, em UTC (ISO 8601)."))
                                 .build())));
+    }
+
+    @ParameterizedTest
+    @MethodSource("unknownIds")
+    void should_returnNotFoundProblem_when_idIsUnknownOrMalformed(String id) throws Exception {
+        // when
+        var response = mockMvc.perform(RestDocumentationRequestBuilders.get(TRANSACTIONS_PATH + "/{id}", id));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-not-found"))
+                .andExpect(jsonPath("$.title").value("Transação não encontrada"))
+                .andExpect(jsonPath("$.detail").value("A transação solicitada não existe."))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/" + id))
+                .andDo(document(
+                        "get-transaction-not-found",
+                        preprocessResponse(
+                                replacePattern(INSTANCE_PATTERN, "\"instance\":\"" + TRANSACTIONS_PATH + "/{id}\"")),
+                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
+                                .tag("Transações")
+                                .summary("Consulta uma transação")
+                                .pathParameters(parameterWithName("id").description("Identificador da transação."))
+                                .responseFields(
+                                        fieldWithPath("type").description("Tipo do problema."),
+                                        fieldWithPath("title").description("Resumo do problema."),
+                                        fieldWithPath("status").description("Status HTTP."),
+                                        fieldWithPath("detail").description("Explicação do problema."),
+                                        fieldWithPath("instance").description("Caminho da requisição."))
+                                .build())));
+    }
+
+    static Stream<String> unknownIds() {
+        return Stream.of(UUID.randomUUID().toString(), "abc");
     }
 
     private void saveAt(String description, String createdAt) {
