@@ -38,11 +38,10 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   `Page<TransactionEntity> findAllByCategory(Category, Pageable)`; índice `(category, created_at, id)` via
   `@Table(indexes = ...)`
 - endpoint de voz: só o prefixo (`POST /api/v1/transactions/ai`) e `produces = "audio/mpeg"`; comportamento igual
-- OpenAPI gerada pelos testes: Spring REST Docs + `restdocs-api-spec` (`com.epages`, 0.20.x) nos `*IT` existentes
-  (manuais, voz e erros); `docs/openapi.yaml` versionado; `updateOpenApi` (copia o gerado) e `verifyOpenApi`
-  (falha se diverge; ligado ao `check`)
-- Swagger UI no `compose.yml` (`swaggerapi/swagger-ui:v5.34.0`, porta 8081, `SWAGGER_JSON` lendo
-  `docs/openapi.yaml`, `SUPPORTED_SUBMIT_METHODS: "[]"` — só leitura)
+- OpenAPI gerada pelo springdoc (`springdoc-openapi-starter-webmvc-ui` 3.2.0) a partir do código, com Swagger UI
+  em `/swagger-ui.html` e especificação em `/v3/api-docs`, sem anotações de OpenAPI no controller (só o que
+  o springdoc infere do código). O Spring REST Docs e o `restdocs-api-spec` das Fases 1 a 3 foram removidos
+  (`f9f7d10`)
 - exemplos: `docs/exemplos/transacoes.http` (HTTP Client do IntelliJ / REST Client do VS Code) e seção de API no
   README com `curl` mínimo
 - documentação: `api-conventions.md`, `architecture.md`, `testing.md`, `error-handling.md`, `CLAUDE.md`, README;
@@ -54,7 +53,7 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
 - agregação (`COUNT`/`SUM`) para a consulta por voz — nota na T14; a tool `list-transactions-by-category` e o
   `ListTransactionsByCategoryUseCase` ficam intocados
 - remodelar o fluxo de voz como recurso, áudios e exemplos de voz (T12)
-- CORS e "Try it out" do Swagger UI; springdoc
+- CORS e proteção do Swagger UI em produção (entra com a segurança, T08)
 - ADR; deploy; migração de dados (o índice entra por `ddl-auto=update`)
 
 ## Decisões
@@ -113,20 +112,27 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
 - Dois índices: `(category, created_at, id)` para a listagem filtrada e `(created_at, id)` para a listagem sem
   filtro, a padrão — o primeiro não serve sem `category` (coluna inicial ausente do `WHERE`); ordenar por `amount`
   fica sem índice até haver volume que o justifique (decisão do usuário)
+- OpenAPI gerada pelo springdoc, Swagger UI embutido na aplicação — o `restdocs-api-spec` não representa o
+  multipart do upload nem o áudio binário da voz (sem `requestBody`, schema `object` no `audio/mpeg`, exemplo com
+  bytes crus) e o 413 roda em servidor real, fora do MockMvc; para o escopo do projeto a geração automática a
+  partir do código é aceitável; sem anotações de OpenAPI no controller, para não acoplá-lo ao contrato (decisão do
+  usuário). Substitui as decisões "OpenAPI gerada pelos testes", "`docs/openapi.yaml`
+  versionado e conferido pelo build", "Swagger UI no compose, só leitura" e "`document(...)` no `*IT`"
+  (decisão do usuário)
 - Cinco fases: versão e base da documentação; consulta por ID; listagem paginada; voz, Swagger UI e exemplos; regras
   e notas
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo e `verifyOpenApi`), sem `OPENAI_API_KEY`
+- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY`
 - [ ] Todos os endpoints sob `/api/v1`; nenhuma rota antiga responde (404)
 - [ ] `POST` devolve 201 com `Location` que, seguido, devolve a mesma transação
 - [ ] `GET /{id}` devolve 200; UUID inexistente e ID malformado devolvem o mesmo 404 `transaction-not-found`
 - [ ] Listagem paginada com `content` + `page`, filtro `category`, ordenação padrão e por `sort`, limites de `size`
       e 400 `{parameter}` para parâmetros inválidos
 - [ ] `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha
-- [ ] `docs/openapi.yaml` descreve os quatro endpoints com respostas de sucesso e erro, descrições em pt-BR
-- [ ] `docker compose up swagger-ui` serve a especificação em `http://localhost:8081`, sem "Try it out"
+- [ ] `GET /v3/api-docs` descreve os endpoints (`POST`, `GET` lista, `GET` por ID e voz)
+- [ ] `/swagger-ui.html` serve a especificação com a aplicação no ar
 - [ ] `docs/exemplos/transacoes.http`, README, regras, `CLAUDE.md` e notas da T08/T12/T14 atualizados; checkbox da
       T07 marcado em `docs/tarefas.md` no último commit
 
@@ -340,29 +346,30 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 4: Voz na especificação, Swagger UI e exemplos
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `VoiceCommandIT`/`UploadLimitIT`/`ErrorResponseIT`: documentar o `POST /api/v1/transactions/ai`
-      (200 `audio/mpeg`, 400 sem `file`, 413, 422 `invalid-command`, 503 `assistant-unavailable` com
-      `Retry-After`); se o `restdocs-api-spec` não representar multipart ou corpo binário, registrar a limitação em
-      Decisões e consultar o usuário
-- [ ] [verificação] `compose.yml`: serviço `swagger-ui` (`swaggerapi/swagger-ui:v5.34.0`, `8081:8080`,
-      `SWAGGER_JSON=/spec/openapi.yaml`, volume `./docs/openapi.yaml:/spec/openapi.yaml:ro`,
-      `SUPPORTED_SUBMIT_METHODS: "[]"`)
+- [x] [verificação] Remover o REST Docs e o `docs/openapi.yaml` gerado (`f9f7d10`)
+- [ ] [verificação] Build: `springdoc-openapi-starter-webmvc-ui` 3.2.0; `OpenApiConfiguration` em
+      `infrastructure/config` (título "Budgeting API", versão `v1`, descrição em pt-BR); caminhos em
+      `application.properties`
+- [ ] [TDD] `OpenApiIT` (novo): `GET /v3/api-docs` → 200 com os caminhos `/api/v1/transactions`,
+      `/api/v1/transactions/{id}` e `/api/v1/transactions/ai`; `GET /swagger-ui.html` redireciona para a UI —
+      implementa a dependência e a configuração
+- [ ] [verificação] Revisar a especificação gerada no Swagger UI (parâmetros de query, `{id}`, multipart com
+      `file`, `audio/mpeg`, schemas); sem anotações — lacunas (respostas de erro, descrições em pt-BR) ficam como
+      limitação conhecida, registrada no resumo da fase
 - [ ] [verificação] `docs/exemplos/transacoes.http`: `@baseUrl`; criar (guardando o `id`), consultar por ID,
       listar sem filtro, com `category`, com `page`/`size`, com `sort=amount,desc`; erros 400 de validação, 404 de
       ID inexistente e 400 de `sort` inválido
 - [ ] [verificação] README: seção "API" — base `/api/v1`, tabela dos endpoints, especificação em
-      `docs/openapi.yaml`, Swagger UI (`docker compose up swagger-ui` → `http://localhost:8081`), exemplos em
+      `/v3/api-docs`, Swagger UI (`http://localhost:8080/swagger-ui.html`), exemplos em
       `docs/exemplos/transacoes.http` e um `curl` mínimo
 
 ### Plano de verificação
 
 - `./gradlew build` → `BUILD SUCCESSFUL`, sem `OPENAI_API_KEY`
-- `grep -n "/api/v1/transactions/ai" docs/openapi.yaml` → o caminho de voz
-- `docker compose config --services` → `database` e `swagger-ui`
-- `docker compose up -d swagger-ui && curl -s localhost:8081/ | grep -i swagger` → página do Swagger UI;
-  `docker compose stop swagger-ui`
+- subir a API (`./gradlew bootRun`) e `curl -s localhost:8080/v3/api-docs | grep -c "/api/v1/transactions"` → ao
+  menos 3 caminhos; abrir `http://localhost:8080/swagger-ui.html` → a UI lista os endpoints
 - `grep -c "^###" docs/exemplos/transacoes.http` → ao menos 9 requisições
 
 ### Resumo da fase
@@ -375,16 +382,16 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [ ] [verificação] `.claude/rules/api-conventions.md`: listagem paginada com `content` + `page` (exceção ao "sem
       envelope"); `page`/`size` (padrão 20, máximo 100, ajuste em silêncio); `sort` restrito por lista com
-      desempate por `id`; ID malformado = 404 do recurso; OpenAPI gerada pelos `*IT` com REST Docs, descrições em
-      pt-BR, `docs/openapi.yaml` atualizado por `updateOpenApi`
+      desempate por `id`; ID malformado = 404 do recurso; OpenAPI gerada pelo springdoc a partir do controller, com
+      sem anotações no controller
 - [ ] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
-- [ ] [verificação] `.claude/rules/testing.md`: `document(...)` no `*IT` que cobre o caso; endpoint ou resposta
-      nova só entra na especificação se documentada; `verifyOpenApi` no `build`
+- [ ] [verificação] `.claude/rules/testing.md`: `OpenApiIT` garante que a especificação é gerada com os
+      caminhos esperados
 - [ ] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`
-- [ ] [verificação] `CLAUDE.md`: comandos `./gradlew updateOpenApi` e Swagger UI; Estrutura com `docs/openapi.yaml`
-      e `docs/exemplos/`
+- [ ] [verificação] `CLAUDE.md`: stack com springdoc e Swagger UI (`/swagger-ui.html`); Estrutura com
+      `docs/exemplos/`
 - [ ] [verificação] `docs/tarefas.md`: nota na T14 (trocar a tool `list-transactions-by-category` por agregação
       `COUNT`/`SUM` no banco, como forma melhor da consulta existente — decisão do usuário), na T12 (atualizar a
       especificação e os exemplos do fluxo de voz) e na T08 (404 `transaction-not-found` para transação de outro
@@ -394,7 +401,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 ### Plano de verificação
 
 - `./gradlew build` → `BUILD SUCCESSFUL`
-- `grep -n "content\|updateOpenApi" .claude/rules/api-conventions.md` → ao menos uma linha cada
+- `grep -n "content\|springdoc" .claude/rules/api-conventions.md` → ao menos uma linha cada
 - `grep -n "PageQuery" .claude/rules/architecture.md` → ao menos uma linha
 - `grep -n "transaction-not-found" .claude/rules/error-handling.md` → uma linha na tabela
 - `grep -n "Nota (T07)" docs/tarefas.md` → notas na T08, T12 e T14
