@@ -17,7 +17,7 @@
 **Fase 3 — Base para evolução**
 - [x] [T05 — Contrato de erro padronizado](#t05)
 - [x] [T06 — Integridade da transação](#t06)
-- [ ] [T07 — Endpoints manuais no padrão REST](#t07)
+- [x] [T07 — Endpoints manuais no padrão REST](#t07)
 
 **Fase 4 — Identidade**
 - [ ] [T08 — Identidade mínima e isolamento por usuário](#t08)

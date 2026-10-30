@@ -132,16 +132,16 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY`
-- [ ] Todos os endpoints sob `/api/v1`; nenhuma rota antiga responde (404)
-- [ ] `POST` devolve 201 com `Location` que, seguido, devolve a mesma transação
-- [ ] `GET /{id}` devolve 200; UUID inexistente e ID malformado devolvem o mesmo 404 `transaction-not-found`
-- [ ] Listagem paginada com `content` + `page`, filtro `category`, ordenação padrão e por `sort`, limites de `size`
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY`
+- [x] Todos os endpoints sob `/api/v1`; nenhuma rota antiga responde (404)
+- [x] `POST` devolve 201 com `Location` que, seguido, devolve a mesma transação
+- [x] `GET /{id}` devolve 200; UUID inexistente e ID malformado devolvem o mesmo 404 `transaction-not-found`
+- [x] Listagem paginada com `content` + `page`, filtro `category`, ordenação padrão e por `sort`, limites de `size`
       e 400 `{parameter}` para parâmetros inválidos
-- [ ] `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha
-- [ ] `docs/openapi.yaml` descreve os quatro endpoints com respostas de sucesso e de erro, descrições em pt-BR
-- [ ] `docker compose up swagger-ui` serve a especificação em `http://localhost:8081`, sem "Try it out"
-- [ ] `docs/exemplos/transacoes.http`, README, regras, `CLAUDE.md` e notas da T08/T12/T14 atualizados; checkbox da
+- [x] `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha
+- [x] `docs/openapi.yaml` descreve os quatro endpoints com respostas de sucesso e de erro, descrições em pt-BR
+- [x] `docker compose up swagger-ui` serve a especificação em `http://localhost:8081`, sem "Try it out"
+- [x] `docs/exemplos/transacoes.http`, README, regras, `CLAUDE.md` e notas da T08/T12/T14 atualizados; checkbox da
       T07 marcado em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -411,7 +411,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 5: Regras e notas
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `.claude/rules/api-conventions.md`: listagem paginada com `content` + `page` (exceção ao "sem
       envelope"); `page`/`size` (padrão 20, máximo 100, ajuste em silêncio); `sort` restrito por lista com
@@ -427,7 +427,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `COUNT`/`SUM` no banco, como forma melhor da consulta existente — decisão do usuário), na T12 (atualizar a
       especificação e os exemplos do fluxo de voz) e na T08 (404 `transaction-not-found` para transação de outro
       usuário)
-- [ ] [verificação] Marcar a T07 em `docs/tarefas.md` (último commit)
+- [x] [verificação] Marcar a T07 em `docs/tarefas.md` (último commit)
 
 ### Plano de verificação
 
@@ -439,8 +439,38 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- **Feito:** `api-conventions.md` (listagem `content` + `page`, `page`/`size`/`sort`, desempate por `id`, ID
+  malformado = 404, contrato em `docs/openapi.yaml` e Swagger UI do compose), `architecture.md` (tipos de
+  paginação do `domain`, `TransactionCriterion`, exceções de negócio em `domain/`), `error-handling.md` (404
+  `transaction-not-found`, `parameter` × `pointer` em `MethodArgumentNotValidException`), `CLAUDE.md` (estrutura
+  com `docs/openapi.yaml` e `docs/exemplos/`, comando do Swagger UI) e as notas da T08, T12 e T14 em
+  `docs/tarefas.md`. T07 marcada.
+- **Decisões:** `testing.md` não mudou: sem teste para a documentação, não há regra nova de teste a registrar.
+- **Para a próxima sessão:** nada pendente nesta tarefa; resta o PR (`/pr`).
+- **Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`; `content` e `openapi` em `api-conventions.md`;
+  `PageQuery` em `architecture.md`; `transaction-not-found` em `error-handling.md`; `Nota (T07)` nas tarefas
+  T08, T12 e T14; com a API no ar, `/transactions`, `/transactions/GROCERIES` e `/transactions/ai` → 404, e ID
+  inexistente e malformado → o mesmo 404 `transaction-not-found`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+- **Entregue:** todos os endpoints sob `/api/v1`; `POST /transactions` devolve 201 com `Location` absoluto;
+  `GET /transactions/{id}` devolve 200 ou o 404 `transaction-not-found` (também para ID malformado);
+  `GET /transactions` devolve `content` + `page`, com filtro `category`, `page`/`size` (padrão 20, máximo 100,
+  ajuste silencioso), `sort` restrito a `createdAt|amount` com desempate por `id` e 400 `{parameter}` para
+  parâmetro inválido; o comando de voz responde `audio/mpeg`. O contrato está em `docs/openapi.yaml`, com o
+  Swagger UI do compose para consulta, e há 9 exemplos em `docs/exemplos/transacoes.http`, a seção "API" do README,
+  as regras atualizadas e as notas da T08, T12 e T14.
+- **Estrutura nova:** tipos de paginação no `domain` (`PageQuery`, `PageResult`, `TransactionSort`,
+  `TransactionFilter` como lista de `TransactionCriterion`, `sealed`); `ListTransactionsUseCase`,
+  `GetTransactionUseCase`, `TransactionNotFoundException`; adaptador JPA com `Specification`, ordenação com
+  desempate e dois índices (`(category, created_at, id)` e `(created_at, id)`); `@Transactional` nos use cases.
+- **Desvios do plano (aprovados):** a listagem foi antecipada para a Fase 2 (a rota `GET /{category}` colidia com
+  `GET /{id}`); filtros por `Specification` e `TransactionFilter` em lista de critérios; segundo índice; regra
+  `ParameterNumber` do Checkstyle suprimida para `*Controller.java`; o Spring REST Docs (Fases 1 a 3) e o springdoc
+  foram adotados e removidos, e o contrato OpenAPI passou a ser mantido em `docs/openapi.yaml`.
+- **Riscos:** o contrato não é gerado nem conferido pelo build, então acompanha o código só por revisão de PR; a
+  regra `security-defined` do Redocly fica em aberto até a T08. O índice por `amount` não existe (a ordenação por
+  valor varre a tabela).
+- **Definição de pronto:** todos os critérios conferidos acima. O "seguir o `Location`" é coberto por dois `*IT`
+  (o do `Location` e o do `GET` por ID), não por um teste único. Sem plano de deploy (a tarefa não o previa).
