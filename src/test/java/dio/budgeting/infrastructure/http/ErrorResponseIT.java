@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -212,6 +213,21 @@ class ErrorResponseIT {
                 .isEqualTo("#/amount"));
         assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
         assertThat(output.getAll()).doesNotContain("secret-value");
+    }
+
+    @Test
+    void should_logRejectedRequestWithProblemType_when_transactionIsNotFound(CapturedOutput output) throws Exception {
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/" + UUID.randomUUID()))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(404);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:transaction-not-found");
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
     }
 
     @Test

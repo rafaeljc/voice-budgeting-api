@@ -257,7 +257,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `application/problem+json`, `type` `urn:problem-type:budgeting:transaction-not-found`, `title` e `detail` em
       pt-BR, documentado — implementa `ProblemType.TRANSACTION_NOT_FOUND`, `problem.transaction-not-found.*` e o
       handler
-- [ ] [TDD] `ErrorResponseIT`: o 404 gera `INFO` `Request rejected` com `status` 404 e o `problemType`, com o
+- [x] [TDD] `ErrorResponseIT`: o 404 gera `INFO` `Request rejected` com `status` 404 e o `problemType`, com o
       `traceId` da requisição
 - [ ] [verificação] `@Transactional` no `PersistTransactionUseCase` (sem comportamento observável a testar)
 
