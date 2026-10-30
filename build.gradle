@@ -15,6 +15,7 @@ plugins {
     id 'checkstyle'
     id 'jacoco'
     id 'com.diffplug.spotless' version '8.4.0'
+    id 'com.epages.restdocs-api-spec' version '0.20.2'
 }
 
 group = 'dio'
@@ -38,6 +39,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:testcontainers-mysql'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.springframework.boot:spring-boot-restdocs'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.20.2'
     testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -72,6 +76,18 @@ tasks.register('integrationTest', Test) {
         includeTestsMatching '*IT'
     }
     shouldRunAfter tasks.named('test')
+}
+
+openapi3 {
+    title = 'Budgeting API'
+    description = 'API de orçamento por voz.'
+    version = 'v1'
+    format = 'yaml'
+    outputDirectory = layout.buildDirectory.dir('api-spec').get().asFile.path
+}
+
+tasks.matching { it.name == 'openapi3' }.configureEach {
+    dependsOn tasks.named('integrationTest')
 }
 
 jacoco {

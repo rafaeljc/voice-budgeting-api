@@ -171,9 +171,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Versão no caminho e base da documentação OpenAPI
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Build: Spring REST Docs + plugin `com.epages.restdocs-api-spec` + `restdocs-api-spec-mockmvc`;
+- [x] [verificação] Build: Spring REST Docs + plugin `com.epages.restdocs-api-spec` + `restdocs-api-spec-mockmvc`;
       tarefa `openapi3` (YAML, título "Budgeting API", versão `v1`, saída em `build/api-spec/`) alimentada pelos
       snippets do `integrationTest` — prova de compatibilidade com o Boot 4 documentando o `POST` existente no
       `TransactionEndpointsIT`; se falhar, parar e consultar o usuário

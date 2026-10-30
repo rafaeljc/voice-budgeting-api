@@ -1,11 +1,14 @@
 package dio.budgeting.infrastructure.http;
 
+import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epages.restdocs.apispec.ResourceDocumentation;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
@@ -16,12 +19,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
 class TransactionEndpointsIT {
 
     private final MockMvc mockMvc;
@@ -41,6 +46,12 @@ class TransactionEndpointsIT {
         mockMvc.perform(post("/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                .andDo(document(
+                        "create-transaction",
+                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
+                                .tag("Transações")
+                                .summary("Cria uma transação")
+                                .build())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.amount").value("80.00"))
                 .andExpect(jsonPath("$.currency").value("BRL"));
