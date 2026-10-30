@@ -220,9 +220,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Consulta por ID
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionIdTest` (novo): `parse` devolve o ID para UUID válido e vazio para texto malformado, vazio
+- [x] [TDD] `TransactionIdTest` (novo): `parse` devolve o ID para UUID válido e vazio para texto malformado, vazio
       ou nulo
 - [ ] [TDD] `GetTransactionUseCaseTest` (novo): transação encontrada → `TransactionOutput`; ID não encontrado ou
       malformado → `TransactionNotFoundException` — implementa `GetTransactionUseCase`
