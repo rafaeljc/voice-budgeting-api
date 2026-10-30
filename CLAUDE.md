@@ -47,7 +47,7 @@ src/main/resources/
   prompts/                      # prompts do sistema (*.st, UTF-8)
 src/test/resources/audio/       # áudios de exemplo para testes
 src/test/resources/ai/          # payloads da IA simulada, por provedor (ai/openai/)
-docs/openapi.yaml               # contrato OpenAPI da API (contract-first)
+docs/openapi.yaml               # contrato OpenAPI da API
 docs/exemplos/                  # exemplos de requisição (.http)
 ```
 

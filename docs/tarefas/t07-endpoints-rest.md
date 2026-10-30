@@ -38,7 +38,7 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   `Page<TransactionEntity> findAllByCategory(Category, Pageable)`; índice `(category, created_at, id)` via
   `@Table(indexes = ...)`
 - endpoint de voz: só o prefixo (`POST /api/v1/transactions/ai`) e `produces = "audio/mpeg"`; comportamento igual
-- OpenAPI escrita à mão em `docs/openapi.yaml` (contract-first, 3.0.3, descrições em pt-BR), versionada e
+- OpenAPI escrita à mão em `docs/openapi.yaml` (3.0.3, descrições em pt-BR), versionada e
   revisada a cada PR; o contrato descreve os quatro endpoints com respostas de sucesso e de erro. Spring REST Docs
   e springdoc (adotados e removidos durante a tarefa) não fazem parte da entrega
 - Swagger UI no `compose.yml` (`swaggerapi/swagger-ui:v5.34.0`, porta 8081, `SWAGGER_JSON` lendo
@@ -113,14 +113,14 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
 - Dois índices: `(category, created_at, id)` para a listagem filtrada e `(created_at, id)` para a listagem sem
   filtro, a padrão — o primeiro não serve sem `category` (coluna inicial ausente do `WHERE`); ordenar por `amount`
   fica sem índice até haver volume que o justifique (decisão do usuário)
-- (Substituída por "Contract-first", abaixo) OpenAPI gerada pelo springdoc, Swagger UI embutido na aplicação — o `restdocs-api-spec` não representa o
+- (Substituída pela decisão do contrato em `docs/openapi.yaml`, abaixo) OpenAPI gerada pelo springdoc, Swagger UI embutido na aplicação — o `restdocs-api-spec` não representa o
   multipart do upload nem o áudio binário da voz (sem `requestBody`, schema `object` no `audio/mpeg`, exemplo com
   bytes crus) e o 413 roda em servidor real, fora do MockMvc; para o escopo do projeto a geração automática a
   partir do código é aceitável; sem anotações de OpenAPI no controller, para não acoplá-lo ao contrato (decisão do
   usuário). Substitui as decisões "OpenAPI gerada pelos testes", "`docs/openapi.yaml`
   versionado e conferido pelo build", "Swagger UI no compose, só leitura" e "`document(...)` no `*IT`"
   (decisão do usuário)
-- Contract-first: `docs/openapi.yaml` escrito à mão, Swagger UI no compose apenas para consulta — o
+- Contrato em `docs/openapi.yaml` escrito à mão, Swagger UI no compose apenas para consulta — o
   `restdocs-api-spec` não representa o multipart nem o áudio binário, e o springdoc sem anotações quebra o
   multipart quando achata os parâmetros da listagem (e exige anotação para não perder `201`/`Location` e os erros);
   as duas geram um contrato impreciso. Substitui as decisões "OpenAPI gerada pelos testes", "OpenAPI gerada pelo
@@ -359,7 +359,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] Remover o REST Docs e o `docs/openapi.yaml` gerado (`f9f7d10`)
 - [x] [verificação] Springdoc adicionado (`3e72ecd`) e descartado: ver Decisões
 - [x] [verificação] Remover o springdoc: dependência, `OpenApiConfiguration` e propriedades `springdoc.*`
-- [x] [verificação] `docs/openapi.yaml` à mão (contract-first, 3.0.3): `POST /api/v1/transactions` (201 com
+- [x] [verificação] `docs/openapi.yaml` à mão (3.0.3): `POST /api/v1/transactions` (201 com
       `Location`; 400, 415), `GET /api/v1/transactions` (parâmetros `category`, `page`, `size`, `sort`; 400),
       `GET /api/v1/transactions/{id}` (200; 404) e `POST /api/v1/transactions/ai` (`multipart/form-data` com
       `file` binário; 200 `audio/mpeg`; 400, 413, 422 `invalid-command`, 503 `assistant-unavailable` com
@@ -393,10 +393,10 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 - **Feito:** o Spring REST Docs (`f9f7d10`) e o springdoc (`15d6973`) foram adotados e removidos: o primeiro não
   representa o multipart nem o áudio binário; o segundo, sem anotações, quebra o multipart ao achatar os
   parâmetros da listagem e perde o `201`/`Location` e os erros. O contrato ficou em `docs/openapi.yaml`
-  (contract-first, 3.0.3), com os quatro endpoints, respostas de sucesso e de erro (Problem Details, `errors` com
+  (3.0.3), com os quatro endpoints, respostas de sucesso e de erro (Problem Details, `errors` com
   `pointer`/`parameter`, `Retry-After`) e descrições em pt-BR. Swagger UI no `compose.yml` (porta 8081, somente
   leitura). `docs/exemplos/transacoes.http` com 9 requisições e a seção "API" do README.
-- **Decisões:** contract-first (ver Decisões); sem teste para a documentação.
+- **Decisões:** contrato mantido em `docs/openapi.yaml` (ver Decisões); sem teste para a documentação.
 - **Para a próxima sessão:**
   - O contrato não é gerado nem conferido pelo build: ele acompanha o código só por revisão de PR. Quem muda um
     endpoint, um status ou um erro atualiza `docs/openapi.yaml` no mesmo PR.
@@ -416,7 +416,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `.claude/rules/api-conventions.md`: listagem paginada com `content` + `page` (exceção ao "sem
       envelope"); `page`/`size` (padrão 20, máximo 100, ajuste em silêncio); `sort` restrito por lista com
       desempate por `id`; ID malformado = 404 do recurso; contrato OpenAPI escrito à mão em `docs/openapi.yaml`
-      (contract-first), atualizado no mesmo PR que muda o endpoint, descrições em pt-BR
+      atualizado no mesmo PR que muda o endpoint, descrições em pt-BR
 - [x] [verificação] `.claude/rules/architecture.md`: paginação com tipos próprios do `domain` (`PageQuery`,
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
 - [x] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404

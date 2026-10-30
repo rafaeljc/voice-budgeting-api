@@ -85,7 +85,7 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - Toda validação de dado externo acontece na fronteira em que ele entra: no HTTP, Bean Validation no `Request`
   (formato e regras de negócio); o use case recebe dado válido. O domínio só mantém as invariantes como rede de
   proteção.
-- O contrato OpenAPI é escrito antes do código (contract-first) em `docs/openapi.yaml`, e o PR que muda um
+- O contrato OpenAPI fica em `docs/openapi.yaml`, e o PR que muda um
   endpoint, um status ou um erro atualiza o arquivo. Todo endpoint documenta as respostas de sucesso e de erro, com
   descrições em pt-BR. O Swagger UI do `compose.yml` (`docker compose up swagger-ui`, porta 8081) só consulta o
   contrato.
