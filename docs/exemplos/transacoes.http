@@ -1,0 +1,48 @@
+# Exemplos de requisição dos endpoints manuais (HTTP Client do IntelliJ / REST Client do VS Code).
+# Com a API no ar (./gradlew bootRun). Rode "Criar transação" antes de "Consultar por ID".
+
+@baseUrl = http://localhost:8080/api/v1
+
+### Criar transação
+# @name createTransaction
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+
+{
+  "description": "Mercado",
+  "category": "GROCERIES",
+  "amount": "80.00",
+  "currency": "BRL"
+}
+
+### Consultar por ID (usa o id da transação criada acima)
+GET {{baseUrl}}/transactions/{{createTransaction.response.body.$.id}}
+
+### Listar sem filtro (mais recentes primeiro, 20 por página)
+GET {{baseUrl}}/transactions
+
+### Listar por categoria
+GET {{baseUrl}}/transactions?category=GROCERIES
+
+### Listar com paginação
+GET {{baseUrl}}/transactions?page=1&size=5
+
+### Listar ordenando pelo valor, do maior para o menor
+GET {{baseUrl}}/transactions?sort=amount,desc
+
+### Erro 400: valor inválido na criação
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+
+{
+  "description": "Mercado",
+  "category": "GROCERIES",
+  "amount": "0.00",
+  "currency": "BRL"
+}
+
+### Erro 404: transação inexistente
+GET {{baseUrl}}/transactions/00000000-0000-4000-8000-000000000000
+
+### Erro 400: ordenação inválida
+GET {{baseUrl}}/transactions?sort=description,asc

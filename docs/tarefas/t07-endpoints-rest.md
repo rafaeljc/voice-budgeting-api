@@ -357,7 +357,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [ ] [verificação] Revisar a especificação gerada no Swagger UI (parâmetros de query, `{id}`, multipart com
       `file`, `audio/mpeg`, schemas); sem anotações — lacunas (respostas de erro, descrições em pt-BR) ficam como
       limitação conhecida, registrada no resumo da fase
-- [ ] [verificação] `docs/exemplos/transacoes.http`: `@baseUrl`; criar (guardando o `id`), consultar por ID,
+- [x] [verificação] `docs/exemplos/transacoes.http`: `@baseUrl`; criar (guardando o `id`), consultar por ID,
       listar sem filtro, com `category`, com `page`/`size`, com `sort=amount,desc`; erros 400 de validação, 404 de
       ID inexistente e 400 de `sort` inválido
 - [ ] [verificação] README: seção "API" — base `/api/v1`, tabela dos endpoints, especificação em
