@@ -94,6 +94,33 @@ paths:
                     :\"GROCERIES\",\"description\":\"Mercado\",\"amount\":\"80.00\"\
                     ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
                     }"
+  /api/v1/transactions/{id}:
+    get:
+      tags:
+      - Transações
+      summary: Consulta uma transação
+      description: Devolve a transação com o identificador informado.
+      operationId: get-transaction
+      parameters:
+      - name: id
+        in: path
+        description: Identificador da transação.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/api-v1-transactions-1221895240"
+              examples:
+                get-transaction:
+                  value: "{\"id\":\"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f\",\"category\"\
+                    :\"GROCERIES\",\"description\":\"Mercado\",\"amount\":\"80.00\"\
+                    ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
+                    }"
 components:
   schemas:
     api-v1-transactions1106890157:

@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.infrastructure.ai.tool.TransactionTools;
@@ -24,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +41,7 @@ public class TransactionController {
 
     private final PersistTransactionUseCase persistTransactionUseCase;
     private final ListTransactionsUseCase listTransactionsUseCase;
+    private final GetTransactionUseCase getTransactionUseCase;
 
     private final TranscriptionModel transcriptionModel;
     private final ChatClient chatClient;
@@ -47,6 +50,7 @@ public class TransactionController {
     public TransactionController(
             PersistTransactionUseCase persistTransactionUseCase,
             ListTransactionsUseCase listTransactionsUseCase,
+            GetTransactionUseCase getTransactionUseCase,
             TranscriptionModel transcriptionModel,
             TransactionTools transactionTools,
             @Value("classpath:prompts/system-message.st") Resource systemPrompt,
@@ -55,6 +59,7 @@ public class TransactionController {
             throws IOException {
         this.persistTransactionUseCase = persistTransactionUseCase;
         this.listTransactionsUseCase = listTransactionsUseCase;
+        this.getTransactionUseCase = getTransactionUseCase;
         this.transcriptionModel = transcriptionModel;
         this.chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt.getContentAsString(Charset.defaultCharset()))
@@ -79,6 +84,11 @@ public class TransactionController {
     @GetMapping
     public TransactionPageResponse listTransactions(@Valid ListTransactionsRequest request) {
         return TransactionPageResponse.from(listTransactionsUseCase.execute(request.toInput()));
+    }
+
+    @GetMapping("/{id}")
+    public TransactionResponse getTransaction(@PathVariable String id) {
+        return TransactionResponse.from(getTransactionUseCase.execute(id));
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")

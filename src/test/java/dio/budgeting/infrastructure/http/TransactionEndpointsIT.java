@@ -35,6 +35,7 @@ import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDoc
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
@@ -162,6 +163,46 @@ class TransactionEndpointsIT {
                                         fieldWithPath("page.totalElements")
                                                 .description("Total de transações que atendem ao filtro."),
                                         fieldWithPath("page.totalPages").description("Total de páginas."))
+                                .build())));
+    }
+
+    @Test
+    void should_returnTransaction_when_idExists() throws Exception {
+        // given
+        var id = UUID.randomUUID();
+        repository.save(new TransactionEntity(
+                id, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, Instant.parse("2026-03-01T10:00:00Z")));
+
+        // when
+        var response = mockMvc.perform(RestDocumentationRequestBuilders.get(TRANSACTIONS_PATH + "/{id}", id));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.description").value("Mercado"))
+                .andExpect(jsonPath("$.category").value("GROCERIES"))
+                .andExpect(jsonPath("$.amount").value("80.00"))
+                .andExpect(jsonPath("$.currency").value("BRL"))
+                .andExpect(jsonPath("$.createdAt").value("2026-03-01T10:00:00Z"))
+                .andDo(document(
+                        "get-transaction",
+                        preprocessResponse(
+                                replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
+                                replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z")),
+                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
+                                .tag("Transações")
+                                .summary("Consulta uma transação")
+                                .description("Devolve a transação com o identificador informado.")
+                                .pathParameters(parameterWithName("id").description("Identificador da transação."))
+                                .responseFields(
+                                        fieldWithPath("id").description("Identificador da transação."),
+                                        fieldWithPath("description").description("Descrição da transação."),
+                                        fieldWithPath("category").description("Categoria da transação."),
+                                        fieldWithPath("amount")
+                                                .description("Valor, em texto, com duas casas decimais."),
+                                        fieldWithPath("currency").description("Moeda da transação."),
+                                        fieldWithPath("createdAt")
+                                                .description("Data e hora do registro, em UTC (ISO 8601)."))
                                 .build())));
     }
 

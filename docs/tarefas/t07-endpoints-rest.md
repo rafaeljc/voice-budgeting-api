@@ -251,7 +251,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       decrescente e `page` `{size: 20, number: 0, totalElements, totalPages}`, documentado (query params e campos
       da página) — implementa `ListTransactionsRequest`, `TransactionPageResponse`, o adaptador JPA (`Pageable`,
       `Sort` com desempate) e o índice; remove o `GET /{category}`
-- [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions/{id}` de uma transação criada → 200 com o recurso,
+- [x] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions/{id}` de uma transação criada → 200 com o recurso,
       documentado — implementa o endpoint e o `findById` no adaptador JPA
 - [ ] [TDD] `TransactionEndpointsIT` (parametrizado): UUID inexistente e ID malformado (`abc`) → 404
       `application/problem+json`, `type` `urn:problem-type:budgeting:transaction-not-found`, `title` e `detail` em
