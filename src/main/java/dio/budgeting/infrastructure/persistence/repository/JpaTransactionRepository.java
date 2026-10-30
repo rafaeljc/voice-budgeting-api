@@ -1,9 +1,13 @@
 package dio.budgeting.infrastructure.persistence.repository;
 
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.PageQuery;
+import dio.budgeting.domain.PageResult;
 import dio.budgeting.domain.Transaction;
+import dio.budgeting.domain.TransactionFilter;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.TransactionSort;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +30,12 @@ public class JpaTransactionRepository implements TransactionRepository {
     @Override
     public Optional<Transaction> findById(TransactionId id) {
         return transactionEntityRepository.findById(id.uuid()).map(entity -> entity.toDomain());
+    }
+
+    @Override
+    public PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page) {
+        // Implemented with the paginated listing endpoint
+        throw new UnsupportedOperationException();
     }
 
     @Override

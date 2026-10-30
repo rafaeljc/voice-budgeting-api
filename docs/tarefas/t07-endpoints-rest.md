@@ -102,6 +102,14 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   (ambiguidade de mapeamento: a aplicação não sobe); os três primeiros itens da Fase 3 (tipos de paginação, use
   case e `GET /api/v1/transactions` com o adaptador JPA, que remove o `GET /{category}`) passam a vir antes do `GET`
   por ID, na Fase 2. A Fase 3 mantém o restante (filtro, página, ordenação, limites e erros) (decisão do usuário)
+- `TransactionFilter` é uma lista de critérios (`sealed interface TransactionCriterion`, hoje só `CategoryIs`) —
+  critério novo é um `record` no domínio e um `case` no `switch` do adaptador, exaustivo pelo compilador; nenhum
+  chamador muda (decisão do usuário; descartados `withX` e `@Builder`, que crescem um campo por critério)
+- Filtros por `Specification` (`JpaSpecificationExecutor`) em vez de `findAllByCategory(Category, Pageable)` — o
+  filtro por período é a evolução esperada, e um método derivado por combinação não escala; cada critério é uma
+  especificação nomeada em `TransactionSpecifications`, composta com `Specification.allOf` (decisão do usuário)
+- No item do use case o adaptador JPA só satisfaz a porta (`UnsupportedOperationException`); a implementação real
+  vem no item do IT da listagem, depois do teste que falha
 - Cinco fases: versão e base da documentação; consulta por ID; listagem paginada; voz, Swagger UI e exemplos; regras
   e notas
 
@@ -233,7 +241,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (`@Transactional(readOnly = true)`), `TransactionNotFoundException` e `findById` na porta
 - [x] [TDD] `PageResultTest` (novo, `domain`): `totalPages` (0 itens → 0; 41 itens com `size` 20 → 3) e `map`
       preserva os metadados; `PageQuery` rejeita `number` < 0 e `size` < 1
-- [ ] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
+- [x] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
       `PageResult<TransactionOutput>` — implementa `ListTransactionsUseCase` (`@Transactional(readOnly = true)`),
       `ListTransactionsInput`, `TransactionFilter`, `TransactionSort` e `findAll` na porta
 - [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions` sem parâmetros → `content` em `createdAt`
