@@ -98,6 +98,10 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
 - Sem ADR — nenhuma das decisões justifica (decisão do usuário)
 - `document(...)` no `*IT` que já cobre cada caso, sem classe só de documentação — nenhum comportamento testado duas
   vezes
+- Listagem antecipada para a Fase 2 — `GET /{id}` e o `GET /{category}` antigo têm a mesma forma de caminho
+  (ambiguidade de mapeamento: a aplicação não sobe); os três primeiros itens da Fase 3 (tipos de paginação, use
+  case e `GET /api/v1/transactions` com o adaptador JPA, que remove o `GET /{category}`) passam a vir antes do `GET`
+  por ID, na Fase 2. A Fase 3 mantém o restante (filtro, página, ordenação, limites e erros) (decisão do usuário)
 - Cinco fases: versão e base da documentação; consulta por ID; listagem paginada; voz, Swagger UI e exemplos; regras
   e notas
 
@@ -227,6 +231,15 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `GetTransactionUseCaseTest` (novo): transação encontrada → `TransactionOutput`; ID não encontrado ou
       malformado → `TransactionNotFoundException` — implementa `GetTransactionUseCase`
       (`@Transactional(readOnly = true)`), `TransactionNotFoundException` e `findById` na porta
+- [ ] [TDD] `PageResultTest` (novo, `domain`): `totalPages` (0 itens → 0; 41 itens com `size` 20 → 3) e `map`
+      preserva os metadados; `PageQuery` rejeita `number` < 0 e `size` < 1
+- [ ] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
+      `PageResult<TransactionOutput>` — implementa `ListTransactionsUseCase` (`@Transactional(readOnly = true)`),
+      `ListTransactionsInput`, `TransactionFilter`, `TransactionSort` e `findAll` na porta
+- [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions` sem parâmetros → `content` em `createdAt`
+      decrescente e `page` `{size: 20, number: 0, totalElements, totalPages}`, documentado (query params e campos
+      da página) — implementa `ListTransactionsRequest`, `TransactionPageResponse`, o adaptador JPA (`Pageable`,
+      `Sort` com desempate) e o índice; remove o `GET /{category}`
 - [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions/{id}` de uma transação criada → 200 com o recurso,
       documentado — implementa o endpoint e o `findById` no adaptador JPA
 - [ ] [TDD] `TransactionEndpointsIT` (parametrizado): UUID inexistente e ID malformado (`abc`) → 404
@@ -253,15 +266,6 @@ _(preencher ao concluir a fase)_
 
 Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `PageResultTest` (novo, `domain`): `totalPages` (0 itens → 0; 41 itens com `size` 20 → 3) e `map`
-      preserva os metadados; `PageQuery` rejeita `number` < 0 e `size` < 1
-- [ ] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
-      `PageResult<TransactionOutput>` — implementa `ListTransactionsUseCase` (`@Transactional(readOnly = true)`),
-      `ListTransactionsInput`, `TransactionFilter`, `TransactionSort` e `findAll` na porta
-- [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions` sem parâmetros → `content` em `createdAt`
-      decrescente e `page` `{size: 20, number: 0, totalElements, totalPages}`, documentado (query params e campos
-      da página) — implementa `ListTransactionsRequest`, `TransactionPageResponse`, o adaptador JPA (`Pageable`,
-      `Sort` com desempate) e o índice; remove o `GET /{category}`
 - [ ] [TDD] `TransactionEndpointsIT`: `?category=GROCERIES` traz só as da categoria; `?page=1&size=2` traz a
       segunda página com os metadados certos
 - [ ] [TDD] `TransactionEndpointsIT` (parametrizado): `sort=amount,asc`, `amount,desc`, `createdAt,asc` ordenam
