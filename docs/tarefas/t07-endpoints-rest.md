@@ -301,7 +301,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionEndpointsIT`: `?category=GROCERIES` traz só as da categoria; `?page=1&size=2` traz a
       segunda página com os metadados certos
-- [ ] [TDD] `TransactionEndpointsIT` (parametrizado): `sort=amount,asc`, `amount,desc`, `createdAt,asc` ordenam
+- [x] [TDD] `TransactionEndpointsIT` (parametrizado): `sort=amount,asc`, `amount,desc`, `createdAt,asc` ordenam
       como pedido; mesmo `createdAt` desempata por `id`
 - [ ] [TDD] `TransactionEndpointsIT` (parametrizado): `size=500` → `page.size` 100; `size=0` → 20; `page=-1` → 0
 - [ ] [TDD] `ErrorResponseIT` (parametrizado): `category=FOO`, `sort=description,asc`, `sort=amount`,

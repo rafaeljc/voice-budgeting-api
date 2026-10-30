@@ -3,6 +3,7 @@ package dio.budgeting.infrastructure.http;
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -27,12 +28,14 @@ import dio.budgeting.support.IntegrationTest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -282,9 +285,57 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.page.totalPages").value(3));
     }
 
+    @ParameterizedTest
+    @MethodSource("sortings")
+    void should_orderAsRequested_when_sortIsGiven(String sort, List<String> expectedOrder) throws Exception {
+        // given
+        save("A", Category.GROCERIES, "30.00", "2026-03-01T10:00:00Z");
+        save("B", Category.GROCERIES, "10.00", "2026-03-02T10:00:00Z");
+        save("C", Category.GROCERIES, "20.00", "2026-03-03T10:00:00Z");
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("sort", sort));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].description").value(contains(expectedOrder.toArray())));
+    }
+
+    static Stream<Arguments> sortings() {
+        return Stream.of(
+                Arguments.of("amount,asc", List.of("B", "C", "A")),
+                Arguments.of("amount,desc", List.of("A", "C", "B")),
+                Arguments.of("createdAt,asc", List.of("A", "B", "C")));
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            delimiter = '|',
+            value = {"createdAt,desc|SECOND|FIRST", "createdAt,asc|FIRST|SECOND"})
+    void should_breakTiesById_when_createdAtIsEqual(String sort, String expectedFirst, String expectedSecond)
+            throws Exception {
+        // given
+        var sameInstant = "2026-03-01T10:00:00Z";
+        save(UUID.fromString("00000000-0000-4000-8000-000000000001"), "FIRST", "10.00", sameInstant);
+        save(UUID.fromString("00000000-0000-4000-8000-000000000002"), "SECOND", "10.00", sameInstant);
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("sort", sort));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].description").value(expectedFirst))
+                .andExpect(jsonPath("$.content[1].description").value(expectedSecond));
+    }
+
     private void save(String description, Category category, String amount, String createdAt) {
         repository.save(new TransactionEntity(
                 UUID.randomUUID(), description, new BigDecimal(amount), category, Instant.parse(createdAt)));
+    }
+
+    private void save(UUID id, String description, String amount, String createdAt) {
+        repository.save(new TransactionEntity(
+                id, description, new BigDecimal(amount), Category.GROCERIES, Instant.parse(createdAt)));
     }
 
     private void saveAt(String description, String createdAt) {
