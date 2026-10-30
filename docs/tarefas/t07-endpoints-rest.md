@@ -231,7 +231,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `GetTransactionUseCaseTest` (novo): transação encontrada → `TransactionOutput`; ID não encontrado ou
       malformado → `TransactionNotFoundException` — implementa `GetTransactionUseCase`
       (`@Transactional(readOnly = true)`), `TransactionNotFoundException` e `findById` na porta
-- [ ] [TDD] `PageResultTest` (novo, `domain`): `totalPages` (0 itens → 0; 41 itens com `size` 20 → 3) e `map`
+- [x] [TDD] `PageResultTest` (novo, `domain`): `totalPages` (0 itens → 0; 41 itens com `size` 20 → 3) e `map`
       preserva os metadados; `PageQuery` rejeita `number` < 0 e `size` < 1
 - [ ] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
       `PageResult<TransactionOutput>` — implementa `ListTransactionsUseCase` (`@Transactional(readOnly = true)`),
