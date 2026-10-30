@@ -179,7 +179,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `TransactionEndpointsIT`; se falhar, parar e consultar o usuário
 - [x] [TDD] `TransactionEndpointsIT`, `ErrorResponseIT`, `VoiceCommandIT`, `UploadLimitIT`, `RequestCorrelationIT`
       com as URLs `/api/v1/...` (inclusive `instance`) — implementa `@RequestMapping("/api/v1/transactions")`
-- [ ] [TDD] `VoiceCommandIT`: resposta do comando de voz com `Content-Type` `audio/mpeg` — implementa o `produces`
+- [x] [TDD] `VoiceCommandIT`: resposta do comando de voz com `Content-Type` `audio/mpeg` — implementa o `produces`
 - [ ] [TDD] `TransactionEndpointsIT`: `POST` → 201 com `Location` terminando em `/api/v1/transactions/{id}` (o `id`
       do corpo), documentado com REST Docs (campos da requisição e da resposta, cabeçalho `Location`, descrições
       em pt-BR) — implementa `ResponseEntity.created(...)`

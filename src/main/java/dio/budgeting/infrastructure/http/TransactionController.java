@@ -78,7 +78,7 @@ public class TransactionController {
                 .toList();
     }
 
-    @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mp3")
+    @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
     ResponseEntity<Resource> transcribe(@RequestParam("file") MultipartFile file) {
         log.atInfo()
                 .addKeyValue("audioSizeBytes", file.getSize())

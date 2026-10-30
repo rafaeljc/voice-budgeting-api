@@ -66,7 +66,7 @@ class VoiceCommandIT {
 
         // then
         response.andExpect(status().isOk())
-                .andExpect(content().contentType("audio/mp3"))
+                .andExpect(content().contentType("audio/mpeg"))
                 .andExpect(content().bytes(speech));
         assertThat(transactionRepository.findAllByCategory(Category.GROCERIES))
                 .singleElement()
