@@ -1,0 +1,93 @@
+openapi: 3.0.1
+info:
+  title: Budgeting API
+  description: API de orçamento por voz.
+  version: v1
+servers:
+- url: http://localhost
+tags: []
+paths:
+  /api/v1/transactions:
+    post:
+      tags:
+      - Transações
+      summary: Cria uma transação
+      description: Registra uma transação financeira e devolve o recurso criado.
+      operationId: create-transaction
+      requestBody:
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: "#/components/schemas/api-v1-transactions230587816"
+            examples:
+              create-transaction:
+                value: |
+                  {"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}
+      responses:
+        "201":
+          description: "201"
+          headers:
+            Location:
+              description: URL absoluta da transação criada.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/api-v1-transactions-1221895240"
+              examples:
+                create-transaction:
+                  value: "{\"id\":\"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f\",\"category\"\
+                    :\"GROCERIES\",\"description\":\"Mercado\",\"amount\":\"80.00\"\
+                    ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
+                    }"
+components:
+  schemas:
+    api-v1-transactions230587816:
+      required:
+      - amount
+      - category
+      - currency
+      - description
+      type: object
+      properties:
+        amount:
+          type: string
+          description: "Valor positivo, em texto, com duas casas decimais."
+        description:
+          type: string
+          description: "Descrição da transação, até 255 caracteres."
+        currency:
+          type: string
+          description: Moeda; apenas `BRL`.
+        category:
+          type: string
+          description: Categoria da transação.
+    api-v1-transactions-1221895240:
+      required:
+      - amount
+      - category
+      - createdAt
+      - currency
+      - description
+      - id
+      type: object
+      properties:
+        createdAt:
+          type: string
+          description: "Data e hora do registro, em UTC (ISO 8601)."
+        amount:
+          type: string
+          description: "Valor, em texto, com duas casas decimais."
+        description:
+          type: string
+          description: Descrição da transação.
+        currency:
+          type: string
+          description: Moeda da transação.
+        id:
+          type: string
+          description: Identificador da transação.
+        category:
+          type: string
+          description: Categoria da transação.

@@ -171,7 +171,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Versão no caminho e base da documentação OpenAPI
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Build: Spring REST Docs + plugin `com.epages.restdocs-api-spec` + `restdocs-api-spec-mockmvc`;
       tarefa `openapi3` (YAML, título "Budgeting API", versão `v1`, saída em `build/api-spec/`) alimentada pelos
@@ -183,7 +183,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `TransactionEndpointsIT`: `POST` → 201 com `Location` terminando em `/api/v1/transactions/{id}` (o `id`
       do corpo), documentado com REST Docs (campos da requisição e da resposta, cabeçalho `Location`, descrições
       em pt-BR) — implementa `ResponseEntity.created(...)`
-- [ ] [verificação] Tarefas `updateOpenApi` (copia `build/api-spec/openapi3.yaml` para `docs/openapi.yaml`) e
+- [x] [verificação] Tarefas `updateOpenApi` (copia `build/api-spec/openapi3.yaml` para `docs/openapi.yaml`) e
       `verifyOpenApi` (falha se diverge; `check` depende dela); `docs/openapi.yaml` inicial gerado
 
 ### Plano de verificação
@@ -196,7 +196,27 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- **Feito:** REST Docs + `restdocs-api-spec` 0.20.2 funcionam no Boot 4.1.2/Gradle 9.4.1 (artefatos
+  `spring-boot-restdocs` e `spring-restdocs-mockmvc`, `@AutoConfigureRestDocs` em
+  `org.springframework.boot.restdocs.test.autoconfigure`). Controller em `/api/v1/transactions`, voz com
+  `audio/mpeg`, `POST` devolvendo 201 + `Location` absoluto, documentado. `docs/openapi.yaml` gerado (só o `POST`;
+  os demais endpoints entram nas fases 2 a 4); `updateOpenApi` e `verifyOpenApi` (ligada ao `check`).
+- **Decisões:** testes usam as constantes de `dio.budgeting.support.ApiPaths` (`BASE_PATH`, `TRANSACTIONS_PATH`,
+  `VOICE_COMMAND_PATH`) em vez de literais. O `Location` é montado por `locationOf(String)` no controller.
+- **Para a próxima sessão:**
+  - O plugin adiciona dependências do `openapi3` em `afterEvaluate` (inclusive `check`); o `build.gradle` as
+    substitui também em `afterEvaluate` pelo `integrationTest`, senão `check -> verifyOpenApi -> openapi3 -> check`
+    é um ciclo.
+  - Exemplos da especificação saem da resposta real; para a saída ser determinística, `document(...)` usa
+    `preprocessResponse(replacePattern(...), modifyHeaders())` para fixar `id`, `createdAt` e `Location`. Repita
+    em todo `document(...)` que devolva esses valores.
+  - O `@AutoConfigureRestDocs` fixa o host da requisição em `localhost:8080`; o teste do `Location` compara com
+    `result.getRequest().getRequestURL() + "/" + id`.
+  - `updateOpenApi` e `verifyOpenApi` não têm ordem entre si; rode `updateOpenApi` sozinha.
+  - Snippets antigos em `build/generated-snippets` podem sobreviver a testes removidos; `./gradlew clean` limpa.
+- **Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`; `grep '"/transactions' src/test/java` só acha o sufixo
+  em `ApiPaths`; `docs/openapi.yaml` traz `/api/v1/transactions`, 201 e `Location`; descrição alterada à mão →
+  `verifyOpenApi` falha ("docs/openapi.yaml is out of date"), `updateOpenApi` restaura → passa.
 
 ## Fase 2: Consulta por ID
 
