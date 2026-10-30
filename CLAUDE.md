@@ -47,6 +47,8 @@ src/main/resources/
   prompts/                      # prompts do sistema (*.st, UTF-8)
 src/test/resources/audio/       # áudios de exemplo para testes
 src/test/resources/ai/          # payloads da IA simulada, por provedor (ai/openai/)
+docs/openapi.yaml               # contrato OpenAPI da API (contract-first)
+docs/exemplos/                  # exemplos de requisição (.http)
 ```
 
 ## Nomenclatura
@@ -96,6 +98,7 @@ git config core.hooksPath .githooks   # uma vez por clone: ativa a validação d
 ./gradlew spotlessApply               # formata o código
 set -a && source .env && set +a       # carrega o .env (cp .env.example .env) antes do bootRun
 ./gradlew bootRun                     # sobe a API (MySQL via compose.yml; exige OPENAI_API_KEY)
+docker compose up swagger-ui          # Swagger UI do contrato docs/openapi.yaml em http://localhost:8081
 ```
 
 ## Fluxo de trabalho

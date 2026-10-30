@@ -421,7 +421,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `PageResult`), adaptador traduz para o Spring Data; exceções de negócio em `domain/`
 - [x] [verificação] `.claude/rules/error-handling.md`: linha `TransactionNotFoundException` → 404
       `transaction-not-found`; `{parameter}` para erros de query param via `MethodArgumentNotValidException`
-- [ ] [verificação] `CLAUDE.md`: Swagger UI (`docker compose up swagger-ui`); Estrutura com `docs/openapi.yaml`
+- [x] [verificação] `CLAUDE.md`: Swagger UI (`docker compose up swagger-ui`); Estrutura com `docs/openapi.yaml`
       e `docs/exemplos/`
 - [ ] [verificação] `docs/tarefas.md`: nota na T14 (trocar a tool `list-transactions-by-category` por agregação
       `COUNT`/`SUM` no banco, como forma melhor da consulta existente — decisão do usuário), na T12 (atualizar a
