@@ -180,7 +180,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `TransactionEndpointsIT`, `ErrorResponseIT`, `VoiceCommandIT`, `UploadLimitIT`, `RequestCorrelationIT`
       com as URLs `/api/v1/...` (inclusive `instance`) — implementa `@RequestMapping("/api/v1/transactions")`
 - [x] [TDD] `VoiceCommandIT`: resposta do comando de voz com `Content-Type` `audio/mpeg` — implementa o `produces`
-- [ ] [TDD] `TransactionEndpointsIT`: `POST` → 201 com `Location` terminando em `/api/v1/transactions/{id}` (o `id`
+- [x] [TDD] `TransactionEndpointsIT`: `POST` → 201 com `Location` terminando em `/api/v1/transactions/{id}` (o `id`
       do corpo), documentado com REST Docs (campos da requisição e da resposta, cabeçalho `Location`, descrições
       em pt-BR) — implementa `ResponseEntity.created(...)`
 - [ ] [verificação] Tarefas `updateOpenApi` (copia `build/api-spec/openapi3.yaml` para `docs/openapi.yaml`) e
