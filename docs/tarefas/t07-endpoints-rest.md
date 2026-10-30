@@ -224,7 +224,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionIdTest` (novo): `parse` devolve o ID para UUID válido e vazio para texto malformado, vazio
       ou nulo
-- [ ] [TDD] `GetTransactionUseCaseTest` (novo): transação encontrada → `TransactionOutput`; ID não encontrado ou
+- [x] [TDD] `GetTransactionUseCaseTest` (novo): transação encontrada → `TransactionOutput`; ID não encontrado ou
       malformado → `TransactionNotFoundException` — implementa `GetTransactionUseCase`
       (`@Transactional(readOnly = true)`), `TransactionNotFoundException` e `findById` na porta
 - [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions/{id}` de uma transação criada → 200 com o recurso,
