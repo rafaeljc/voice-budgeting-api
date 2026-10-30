@@ -1,25 +1,16 @@
 package dio.budgeting.infrastructure.http;
 
-import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.modifyHeaders;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.replacePattern;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epages.restdocs.apispec.ResourceDocumentation;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
@@ -30,29 +21,20 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
-@AutoConfigureRestDocs
 class TransactionEndpointsIT {
-
-    private static final Pattern UUID_PATTERN =
-            Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
-    private static final Pattern INSTANCE_PATTERN = Pattern.compile("\"instance\":\"[^\"]*\"");
-    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z");
 
     private final MockMvc mockMvc;
     private final TransactionEntityRepository repository;
@@ -74,37 +56,7 @@ class TransactionEndpointsIT {
                 post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
 
         // then
-        var result = response.andExpect(status().isCreated())
-                .andDo(document(
-                        "create-transaction",
-                        preprocessResponse(
-                                replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
-                                replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z"),
-                                modifyHeaders().set(HttpHeaders.LOCATION, "http://localhost/api/v1/transactions/{id}")),
-                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
-                                .tag("Transações")
-                                .summary("Cria uma transação")
-                                .description("Registra uma transação financeira e devolve o recurso criado.")
-                                .requestFields(
-                                        fieldWithPath("description")
-                                                .description("Descrição da transação, até 255 caracteres."),
-                                        fieldWithPath("category").description("Categoria da transação."),
-                                        fieldWithPath("amount")
-                                                .description("Valor positivo, em texto, com duas casas decimais."),
-                                        fieldWithPath("currency").description("Moeda; apenas `BRL`."))
-                                .responseFields(
-                                        fieldWithPath("id").description("Identificador da transação."),
-                                        fieldWithPath("description").description("Descrição da transação."),
-                                        fieldWithPath("category").description("Categoria da transação."),
-                                        fieldWithPath("amount")
-                                                .description("Valor, em texto, com duas casas decimais."),
-                                        fieldWithPath("currency").description("Moeda da transação."),
-                                        fieldWithPath("createdAt")
-                                                .description("Data e hora do registro, em UTC (ISO 8601)."))
-                                .responseHeaders(headerWithName(HttpHeaders.LOCATION)
-                                        .description("URL absoluta da transação criada."))
-                                .build())))
-                .andReturn();
+        var result = response.andExpect(status().isCreated()).andReturn();
         var id = JsonPath.<String>read(result.getResponse().getContentAsString(), "$.id");
         assertThat(result.getResponse().getHeader(HttpHeaders.LOCATION))
                 .isEqualTo(result.getRequest().getRequestURL() + "/" + id);
@@ -129,13 +81,7 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.page.size").value(20))
                 .andExpect(jsonPath("$.page.number").value(0))
                 .andExpect(jsonPath("$.page.totalElements").value(3))
-                .andExpect(jsonPath("$.page.totalPages").value(1))
-                .andDo(document(
-                        "list-transactions",
-                        preprocessResponse(
-                                replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
-                                replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z")),
-                        ResourceDocumentation.resource(listDocumentation())));
+                .andExpect(jsonPath("$.page.totalPages").value(1));
     }
 
     @Test
@@ -146,7 +92,7 @@ class TransactionEndpointsIT {
                 id, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, Instant.parse("2026-03-01T10:00:00Z")));
 
         // when
-        var response = mockMvc.perform(RestDocumentationRequestBuilders.get(TRANSACTIONS_PATH + "/{id}", id));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/{id}", id));
 
         // then
         response.andExpect(status().isOk())
@@ -155,34 +101,14 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.category").value("GROCERIES"))
                 .andExpect(jsonPath("$.amount").value("80.00"))
                 .andExpect(jsonPath("$.currency").value("BRL"))
-                .andExpect(jsonPath("$.createdAt").value("2026-03-01T10:00:00Z"))
-                .andDo(document(
-                        "get-transaction",
-                        preprocessResponse(
-                                replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
-                                replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z")),
-                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
-                                .tag("Transações")
-                                .summary("Consulta uma transação")
-                                .description("Devolve a transação com o identificador informado.")
-                                .pathParameters(parameterWithName("id").description("Identificador da transação."))
-                                .responseFields(
-                                        fieldWithPath("id").description("Identificador da transação."),
-                                        fieldWithPath("description").description("Descrição da transação."),
-                                        fieldWithPath("category").description("Categoria da transação."),
-                                        fieldWithPath("amount")
-                                                .description("Valor, em texto, com duas casas decimais."),
-                                        fieldWithPath("currency").description("Moeda da transação."),
-                                        fieldWithPath("createdAt")
-                                                .description("Data e hora do registro, em UTC (ISO 8601)."))
-                                .build())));
+                .andExpect(jsonPath("$.createdAt").value("2026-03-01T10:00:00Z"));
     }
 
     @ParameterizedTest
     @MethodSource("unknownIds")
     void should_returnNotFoundProblem_when_idIsUnknownOrMalformed(String id) throws Exception {
         // when
-        var response = mockMvc.perform(RestDocumentationRequestBuilders.get(TRANSACTIONS_PATH + "/{id}", id));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/{id}", id));
 
         // then
         response.andExpect(status().isNotFound())
@@ -190,61 +116,11 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-not-found"))
                 .andExpect(jsonPath("$.title").value("Transação não encontrada"))
                 .andExpect(jsonPath("$.detail").value("A transação solicitada não existe."))
-                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/" + id))
-                .andDo(document(
-                        "get-transaction-not-found",
-                        preprocessResponse(
-                                replacePattern(INSTANCE_PATTERN, "\"instance\":\"" + TRANSACTIONS_PATH + "/{id}\"")),
-                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
-                                .tag("Transações")
-                                .summary("Consulta uma transação")
-                                .pathParameters(parameterWithName("id").description("Identificador da transação."))
-                                .responseFields(
-                                        fieldWithPath("type").description("Tipo do problema."),
-                                        fieldWithPath("title").description("Resumo do problema."),
-                                        fieldWithPath("status").description("Status HTTP."),
-                                        fieldWithPath("detail").description("Explicação do problema."),
-                                        fieldWithPath("instance").description("Caminho da requisição."))
-                                .build())));
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/" + id));
     }
 
     static Stream<String> unknownIds() {
         return Stream.of(UUID.randomUUID().toString(), "abc");
-    }
-
-    private static ResourceSnippetParameters listDocumentation() {
-        return ResourceSnippetParameters.builder()
-                .tag("Transações")
-                .summary("Lista as transações")
-                .description("Lista as transações de forma paginada, da mais recente para a mais antiga.")
-                .queryParameters(
-                        parameterWithName("category")
-                                .description("Filtra pela categoria da transação.")
-                                .optional(),
-                        parameterWithName("page")
-                                .description("Número da página, a partir de 0; padrão 0.")
-                                .optional(),
-                        parameterWithName("size")
-                                .description("Itens por página, de 1 a 100; padrão 20.")
-                                .optional(),
-                        parameterWithName("sort")
-                                .description(
-                                        "Ordenação no formato `campo,direção`, com campo `createdAt` ou `amount` e direção `asc` ou `desc`; padrão `createdAt,desc`.")
-                                .optional())
-                .responseFields(
-                        fieldWithPath("content[]").description("Transações da página."),
-                        fieldWithPath("content[].id").description("Identificador da transação."),
-                        fieldWithPath("content[].description").description("Descrição da transação."),
-                        fieldWithPath("content[].category").description("Categoria da transação."),
-                        fieldWithPath("content[].amount").description("Valor, em texto, com duas casas decimais."),
-                        fieldWithPath("content[].currency").description("Moeda da transação."),
-                        fieldWithPath("content[].createdAt").description("Data e hora do registro, em UTC (ISO 8601)."),
-                        fieldWithPath("page").description("Metadados da paginação."),
-                        fieldWithPath("page.size").description("Itens por página aplicado."),
-                        fieldWithPath("page.number").description("Número da página, a partir de 0."),
-                        fieldWithPath("page.totalElements").description("Total de transações que atendem ao filtro."),
-                        fieldWithPath("page.totalPages").description("Total de páginas."))
-                .build();
     }
 
     @Test

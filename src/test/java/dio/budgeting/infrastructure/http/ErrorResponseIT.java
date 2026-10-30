@@ -1,12 +1,10 @@
 package dio.budgeting.infrastructure.http;
 
-import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -15,8 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epages.restdocs.apispec.ResourceDocumentation;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
@@ -27,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.restdocs.test.autoconfigure.AutoConfigureRestDocs;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -37,7 +32,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
-@AutoConfigureRestDocs
 @ExtendWith(OutputCaptureExtension.class)
 class ErrorResponseIT {
 
@@ -127,24 +121,7 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.errors.length()").value(1))
                 .andExpect(jsonPath("$.errors[0].parameter").value(parameter))
                 .andExpect(jsonPath("$.errors[0].detail").value(detail))
-                .andExpect(jsonPath("$.errors[0].pointer").doesNotExist())
-                .andDo(document(
-                        "list-transactions-invalid-parameter",
-                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
-                                .tag("Transações")
-                                .summary("Lista as transações")
-                                .responseFields(
-                                        fieldWithPath("type").description("Tipo do problema."),
-                                        fieldWithPath("title").description("Resumo do problema."),
-                                        fieldWithPath("status").description("Status HTTP."),
-                                        fieldWithPath("detail").description("Explicação do problema."),
-                                        fieldWithPath("instance").description("Caminho da requisição."),
-                                        fieldWithPath("errors[]").description("Parâmetros inválidos."),
-                                        fieldWithPath("errors[].parameter")
-                                                .description("Nome do parâmetro de consulta inválido."),
-                                        fieldWithPath("errors[].detail")
-                                                .description("Motivo pelo qual o parâmetro é inválido."))
-                                .build())));
+                .andExpect(jsonPath("$.errors[0].pointer").doesNotExist());
     }
 
     static Stream<Arguments> invalidQueryParameters() {
