@@ -29,9 +29,7 @@ class RequestCorrelationIT {
     @Test
     void should_returnTraceIdAsRequestIdAndLogItInJson_when_requestIsMade(CapturedOutput output) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"))
-                .andReturn()
-                .getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
 
         // then
         var requestId = response.getHeader("X-Request-Id");
@@ -47,8 +45,8 @@ class RequestCorrelationIT {
         var traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES")
-                        .header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
+        var response = mockMvc.perform(
+                        get(TRANSACTIONS_PATH).header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
                 .andReturn()
                 .getResponse();
 
@@ -59,7 +57,7 @@ class RequestCorrelationIT {
     @Test
     void should_ignoreClientRequestId_when_headerIsSent() throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES").header("X-Request-Id", "client-chosen-id"))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header("X-Request-Id", "client-chosen-id"))
                 .andReturn()
                 .getResponse();
 

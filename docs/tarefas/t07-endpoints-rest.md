@@ -110,6 +110,9 @@ especificação OpenAPI gerada pelos testes (DOC-05) e exemplos de requisição 
   especificação nomeada em `TransactionSpecifications`, composta com `Specification.allOf` (decisão do usuário)
 - No item do use case o adaptador JPA só satisfaz a porta (`UnsupportedOperationException`); a implementação real
   vem no item do IT da listagem, depois do teste que falha
+- Dois índices: `(category, created_at, id)` para a listagem filtrada e `(created_at, id)` para a listagem sem
+  filtro, a padrão — o primeiro não serve sem `category` (coluna inicial ausente do `WHERE`); ordenar por `amount`
+  fica sem índice até haver volume que o justifique (decisão do usuário)
 - Cinco fases: versão e base da documentação; consulta por ID; listagem paginada; voz, Swagger UI e exemplos; regras
   e notas
 
@@ -244,7 +247,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `ListTransactionsUseCaseTest` (novo): repassa filtro, ordenação e página à porta e devolve
       `PageResult<TransactionOutput>` — implementa `ListTransactionsUseCase` (`@Transactional(readOnly = true)`),
       `ListTransactionsInput`, `TransactionFilter`, `TransactionSort` e `findAll` na porta
-- [ ] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions` sem parâmetros → `content` em `createdAt`
+- [x] [TDD] `TransactionEndpointsIT`: `GET /api/v1/transactions` sem parâmetros → `content` em `createdAt`
       decrescente e `page` `{size: 20, number: 0, totalElements, totalPages}`, documentado (query params e campos
       da página) — implementa `ListTransactionsRequest`, `TransactionPageResponse`, o adaptador JPA (`Pageable`,
       `Sort` com desempate) e o índice; remove o `GET /{category}`
@@ -283,7 +286,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       `size=abc` → 400 `validation-error` com `errors[0].parameter` (`category`, `sort`, `size`) e sem `pointer`,
       documentado; log `Request rejected` com `invalidFields` pelo nome do parâmetro — implementa a distinção corpo
       x query no `ApiExceptionHandler` e `transaction.sort.invalid` em `messages.properties`
-- [ ] [TDD] `ErrorResponseIT`: os testes de 500 passam a usar a listagem nova (mock do `findAll` da porta)
+- [x] [TDD] `ErrorResponseIT`: os testes de 500 passam a usar a listagem nova (mock do `findAll` da porta)
 
 ### Plano de verificação
 

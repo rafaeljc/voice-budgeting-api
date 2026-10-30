@@ -8,6 +8,59 @@ servers:
 tags: []
 paths:
   /api/v1/transactions:
+    get:
+      tags:
+      - Transações
+      summary: Lista as transações
+      description: "Lista as transações de forma paginada, da mais recente para a\
+        \ mais antiga."
+      operationId: list-transactions
+      parameters:
+      - name: category
+        in: query
+        description: Filtra pela categoria da transação.
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: "Número da página, a partir de 0; padrão 0."
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "Itens por página, de 1 a 100; padrão 20."
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: "Ordenação no formato `campo,direção`, com campo `createdAt`\
+          \ ou `amount` e direção `asc` ou `desc`; padrão `createdAt,desc`."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/api-v1-transactions1106890157"
+              examples:
+                list-transactions:
+                  value: "{\"content\":[{\"id\":\"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f\"\
+                    ,\"category\":\"GROCERIES\",\"description\":\"Padaria\",\"amount\"\
+                    :\"10.00\",\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
+                    },{\"id\":\"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f\",\"category\"\
+                    :\"GROCERIES\",\"description\":\"Feira\",\"amount\":\"10.00\"\
+                    ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
+                    },{\"id\":\"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f\",\"category\"\
+                    :\"GROCERIES\",\"description\":\"Mercado\",\"amount\":\"10.00\"\
+                    ,\"currency\":\"BRL\",\"createdAt\":\"2026-01-15T10:30:00.000Z\"\
+                    }],\"page\":{\"size\":20,\"number\":0,\"totalElements\":3,\"totalPages\"\
+                    :1}}"
     post:
       tags:
       - Transações
@@ -43,6 +96,64 @@ paths:
                     }"
 components:
   schemas:
+    api-v1-transactions1106890157:
+      required:
+      - content
+      - page
+      type: object
+      properties:
+        page:
+          required:
+          - number
+          - size
+          - totalElements
+          - totalPages
+          type: object
+          properties:
+            number:
+              type: number
+              description: "Número da página, a partir de 0."
+            size:
+              type: number
+              description: Itens por página aplicado.
+            totalPages:
+              type: number
+              description: Total de páginas.
+            totalElements:
+              type: number
+              description: Total de transações que atendem ao filtro.
+          description: Metadados da paginação.
+        content:
+          type: array
+          description: Transações da página.
+          items:
+            required:
+            - amount
+            - category
+            - createdAt
+            - currency
+            - description
+            - id
+            type: object
+            properties:
+              createdAt:
+                type: string
+                description: "Data e hora do registro, em UTC (ISO 8601)."
+              amount:
+                type: string
+                description: "Valor, em texto, com duas casas decimais."
+              description:
+                type: string
+                description: Descrição da transação.
+              currency:
+                type: string
+                description: Moeda da transação.
+              id:
+                type: string
+                description: Identificador da transação.
+              category:
+                type: string
+                description: Categoria da transação.
     api-v1-transactions230587816:
       required:
       - amount

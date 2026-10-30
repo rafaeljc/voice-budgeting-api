@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -50,8 +51,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        var inBody = ex.getParameter().hasParameterAnnotation(RequestBody.class);
         var errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> InvalidField.inBody(error.getField(), error.getDefaultMessage()))
+                .map(error -> {
+                    var detail = error.isBindingFailure() ? message(INVALID_VALUE_CODE) : error.getDefaultMessage();
+                    return inBody
+                            ? InvalidField.inBody(error.getField(), detail)
+                            : InvalidField.inRequest(error.getField(), detail);
+                })
                 .toList();
         return handleExceptionInternal(
                 ex, problem(ProblemType.VALIDATION_ERROR, status, errors), headers, status, request);

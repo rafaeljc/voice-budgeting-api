@@ -8,6 +8,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.mo
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.replacePattern;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,10 +17,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.epages.restdocs.apispec.ResourceDocumentation;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.jayway.jsonpath.JsonPath;
+import dio.budgeting.domain.Category;
+import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -98,6 +103,74 @@ class TransactionEndpointsIT {
     }
 
     @Test
+    void should_returnPageNewestFirst_when_listingWithoutParameters() throws Exception {
+        // given
+        saveAt("Mercado", "2026-03-01T10:00:00Z");
+        saveAt("Padaria", "2026-03-03T10:00:00Z");
+        saveAt("Feira", "2026-03-02T10:00:00Z");
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].description").value("Padaria"))
+                .andExpect(jsonPath("$.content[1].description").value("Feira"))
+                .andExpect(jsonPath("$.content[2].description").value("Mercado"))
+                .andExpect(jsonPath("$.page.size").value(20))
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.totalElements").value(3))
+                .andExpect(jsonPath("$.page.totalPages").value(1))
+                .andDo(document(
+                        "list-transactions",
+                        preprocessResponse(
+                                replacePattern(UUID_PATTERN, "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f"),
+                                replacePattern(TIMESTAMP_PATTERN, "2026-01-15T10:30:00.000Z")),
+                        ResourceDocumentation.resource(ResourceSnippetParameters.builder()
+                                .tag("Transações")
+                                .summary("Lista as transações")
+                                .description(
+                                        "Lista as transações de forma paginada, da mais recente para a mais antiga.")
+                                .queryParameters(
+                                        parameterWithName("category")
+                                                .description("Filtra pela categoria da transação.")
+                                                .optional(),
+                                        parameterWithName("page")
+                                                .description("Número da página, a partir de 0; padrão 0.")
+                                                .optional(),
+                                        parameterWithName("size")
+                                                .description("Itens por página, de 1 a 100; padrão 20.")
+                                                .optional(),
+                                        parameterWithName("sort")
+                                                .description(
+                                                        "Ordenação no formato `campo,direção`, com campo `createdAt` ou `amount` e direção `asc` ou `desc`; padrão `createdAt,desc`.")
+                                                .optional())
+                                .responseFields(
+                                        fieldWithPath("content[]").description("Transações da página."),
+                                        fieldWithPath("content[].id").description("Identificador da transação."),
+                                        fieldWithPath("content[].description").description("Descrição da transação."),
+                                        fieldWithPath("content[].category").description("Categoria da transação."),
+                                        fieldWithPath("content[].amount")
+                                                .description("Valor, em texto, com duas casas decimais."),
+                                        fieldWithPath("content[].currency").description("Moeda da transação."),
+                                        fieldWithPath("content[].createdAt")
+                                                .description("Data e hora do registro, em UTC (ISO 8601)."),
+                                        fieldWithPath("page").description("Metadados da paginação."),
+                                        fieldWithPath("page.size").description("Itens por página aplicado."),
+                                        fieldWithPath("page.number").description("Número da página, a partir de 0."),
+                                        fieldWithPath("page.totalElements")
+                                                .description("Total de transações que atendem ao filtro."),
+                                        fieldWithPath("page.totalPages").description("Total de páginas."))
+                                .build())));
+    }
+
+    private void saveAt(String description, String createdAt) {
+        repository.save(new TransactionEntity(
+                UUID.randomUUID(), description, new BigDecimal("10.00"), Category.GROCERIES, Instant.parse(createdAt)));
+    }
+
+    @Test
     void should_returnCreatedTransaction_when_listingByCategory() throws Exception {
         // given
         var body = """
@@ -111,16 +184,16 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.currency").value("BRL"));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "GROCERIES"));
 
         // then
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").isNotEmpty())
-                .andExpect(jsonPath("$[0].description").value("Mercado"))
-                .andExpect(jsonPath("$[0].category").value("GROCERIES"))
-                .andExpect(jsonPath("$[0].amount").value("80.00"))
-                .andExpect(jsonPath("$[0].currency").value("BRL"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].description").value("Mercado"))
+                .andExpect(jsonPath("$.content[0].category").value("GROCERIES"))
+                .andExpect(jsonPath("$.content[0].amount").value("80.00"))
+                .andExpect(jsonPath("$.content[0].currency").value("BRL"));
     }
 
     @Test
@@ -143,9 +216,9 @@ class TransactionEndpointsIT {
         var createdAt = JsonPath.<String>read(created.getResponse().getContentAsString(), "$.createdAt");
         assertThat(createdAt).endsWith("Z");
         assertThat(Instant.parse(createdAt)).isBetween(before.truncatedTo(ChronoUnit.MILLIS), after);
-        mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"))
+        mockMvc.perform(get(TRANSACTIONS_PATH))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].createdAt").value(createdAt));
+                .andExpect(jsonPath("$.content[0].createdAt").value(createdAt));
     }
 
     @ParameterizedTest

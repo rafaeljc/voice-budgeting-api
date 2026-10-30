@@ -102,15 +102,15 @@ class ErrorResponseIT {
     }
 
     @Test
-    void should_returnValidationProblemWithParameter_when_pathCategoryDoesNotExist() throws Exception {
+    void should_returnValidationProblemWithParameter_when_queryCategoryDoesNotExist() throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/FOO"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "FOO"));
 
         // then
         response.andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
-                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/FOO"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andExpect(jsonPath("$.errors.length()").value(1))
                 .andExpect(jsonPath("$.errors[0].parameter").value("category"))
                 .andExpect(jsonPath("$.errors[0].pointer").doesNotExist());
@@ -173,10 +173,10 @@ class ErrorResponseIT {
     @Test
     void should_returnGenericProblem_when_unexpectedFailureOccurs() throws Exception {
         // given
-        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH));
 
         // then
         var result = response.andExpect(status().isInternalServerError())
@@ -184,7 +184,7 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("about:blank"))
                 .andExpect(jsonPath("$.title").value("Erro interno"))
                 .andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado. Tente novamente mais tarde."))
-                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/GROCERIES"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH))
                 .andReturn();
         assertThat(result.getResponse().getContentAsString()).doesNotContain(INTERNAL_MARKER);
     }
@@ -217,12 +217,10 @@ class ErrorResponseIT {
     @Test
     void should_logUnexpectedErrorWithStackTrace_when_unexpectedFailureOccurs(CapturedOutput output) throws Exception {
         // given
-        when(transactionRepository.findAllByCategory(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/GROCERIES"))
-                .andReturn()
-                .getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
 
         // then
         var event = LogEvents.withMessage(output, "Unexpected error");

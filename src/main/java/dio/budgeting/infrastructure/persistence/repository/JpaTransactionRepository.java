@@ -11,6 +11,8 @@ import dio.budgeting.domain.TransactionSort;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -34,8 +36,18 @@ public class JpaTransactionRepository implements TransactionRepository {
 
     @Override
     public PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page) {
-        // Implemented with the paginated listing endpoint
-        throw new UnsupportedOperationException();
+        var pageable = PageRequest.of(page.number(), page.size(), toSpringSort(sort));
+        var result = transactionEntityRepository.findAll(TransactionSpecifications.from(filter), pageable);
+        var content =
+                result.getContent().stream().map(entity -> entity.toDomain()).toList();
+        return new PageResult<>(content, page.number(), page.size(), result.getTotalElements());
+    }
+
+    // The id breaks ties so that pages never repeat or skip rows sharing the same sort value
+    private static Sort toSpringSort(TransactionSort sort) {
+        var direction = Sort.Direction.valueOf(sort.direction().name());
+        var property = sort.field() == TransactionSort.Field.AMOUNT ? "amount" : "createdAt";
+        return Sort.by(direction, property).and(Sort.by(direction, "id"));
     }
 
     @Override

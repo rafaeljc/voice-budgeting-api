@@ -4,8 +4,10 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 
-public interface TransactionEntityRepository extends CrudRepository<TransactionEntity, UUID> {
+public interface TransactionEntityRepository
+        extends CrudRepository<TransactionEntity, UUID>, JpaSpecificationExecutor<TransactionEntity> {
     List<TransactionEntity> findAllByCategory(Category category);
 }
