@@ -289,7 +289,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/openapi.yaml`: `components.securitySchemes.bearerAuth` (`http`, `bearer`, `JWT`, descrição
       apontando para `docs/autenticacao.md`), `security` global e resposta 401 (Problem Details `unauthenticated`,
       `WWW-Authenticate`) em cada endpoint; nota de isolamento no 404 do `GET /{id}`
-- [ ] [verificação] `docs/exemplos/transacoes.http`: variável `@token` com instrução para gerar, `Authorization` em
+- [x] [verificação] `docs/exemplos/transacoes.http`: variável `@token` com instrução para gerar, `Authorization` em
       todas as requisições e um exemplo de 401 sem token
 - [ ] [verificação] `CLAUDE.md` (stack, estrutura `infrastructure/security/`, `scripts/generate_token.py` nos
       comandos, `JWT_SECRET` nos segredos); `.claude/rules/security.md` reescrito (JWT HS256 de desenvolvimento,
