@@ -154,6 +154,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             logProviderUnavailable(statusCode, providerFailure);
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
+        } else if (ex instanceof AuthenticationException) {
+            logAuthenticationFailed(statusCode, response);
         } else if (response.getBody() instanceof ProblemDetail problem) {
             logRejected(ex, statusCode, problem);
         }
@@ -174,6 +176,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             event = event.addKeyValue("providerStatus", service.statusCode());
         }
         event.log("AI provider unavailable");
+    }
+
+    // Never the token or the failure cause: both can echo the credential
+    private void logAuthenticationFailed(HttpStatusCode status, ResponseEntity<Object> response) {
+        var event = log.atWarn().addKeyValue("status", status.value());
+        if (response.getBody() instanceof ProblemDetail problem) {
+            event = event.addKeyValue("problemType", problem.getType().toString());
+        }
+        event.log("Authentication failed");
     }
 
     private void logRejected(Exception ex, HttpStatusCode status, ProblemDetail problem) {

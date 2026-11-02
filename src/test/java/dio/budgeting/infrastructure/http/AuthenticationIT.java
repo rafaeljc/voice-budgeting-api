@@ -1,6 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,13 +11,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -24,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 class AuthenticationIT {
 
     private final MockMvc mockMvc;
@@ -105,5 +111,27 @@ class AuthenticationIT {
 
         // then
         response.andExpect(status().isOk());
+    }
+
+    @Test
+    void should_returnRequestIdAndLogWarnWithoutToken_when_authenticationFails(CapturedOutput output) throws Exception {
+        // given
+        var token = AccessTokens.sign(
+                "another-secret-with-at-least-32-bytes!", AccessTokens.validClaims(AccessTokens.DEFAULT_USER));
+
+        // when
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, "Bearer " + token))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var requestId = response.getHeader("X-Request-Id");
+        assertThat(requestId).matches("[0-9a-f]{32}");
+        var event = LogEvents.withMessage(output, "Authentication failed");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("WARN");
+        assertThat(event.path("status").asInt()).isEqualTo(401);
+        assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:unauthenticated");
+        assertThat(event.path("traceId").asString()).isEqualTo(requestId);
+        assertThat(output.getAll()).doesNotContain(token);
     }
 }
