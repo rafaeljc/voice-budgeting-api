@@ -3,8 +3,9 @@ package dio.budgeting.infrastructure.http;
 import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
+import dio.budgeting.application.ProcessVoiceCommandUseCase;
+import dio.budgeting.application.input.ProcessVoiceCommandInput;
 import dio.budgeting.domain.UserId;
-import dio.budgeting.infrastructure.ai.tool.TransactionTools;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
 import dio.budgeting.infrastructure.http.response.TransactionPageResponse;
@@ -12,14 +13,8 @@ import dio.budgeting.infrastructure.http.response.TransactionResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.audio.transcription.TranscriptionModel;
-import org.springframework.ai.audio.tts.TextToSpeechModel;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -47,29 +42,17 @@ public class TransactionController {
     private final ListTransactionsUseCase listTransactionsUseCase;
     private final GetTransactionUseCase getTransactionUseCase;
 
-    private final TranscriptionModel transcriptionModel;
-    private final ChatClient chatClient;
-    private final TextToSpeechModel textToSpeechModel;
+    private final ProcessVoiceCommandUseCase processVoiceCommandUseCase;
 
     public TransactionController(
             PersistTransactionUseCase persistTransactionUseCase,
             ListTransactionsUseCase listTransactionsUseCase,
             GetTransactionUseCase getTransactionUseCase,
-            TranscriptionModel transcriptionModel,
-            TransactionTools transactionTools,
-            @Value("classpath:prompts/system-message.st") Resource systemPrompt,
-            ChatClient.Builder chatClientBuilder,
-            TextToSpeechModel textToSpeechModel)
-            throws IOException {
+            ProcessVoiceCommandUseCase processVoiceCommandUseCase) {
         this.persistTransactionUseCase = persistTransactionUseCase;
         this.listTransactionsUseCase = listTransactionsUseCase;
         this.getTransactionUseCase = getTransactionUseCase;
-        this.transcriptionModel = transcriptionModel;
-        this.chatClient = chatClientBuilder
-                .defaultSystem(systemPrompt.getContentAsString(Charset.defaultCharset()))
-                .defaultTools(transactionTools)
-                .build();
-        this.textToSpeechModel = textToSpeechModel;
+        this.processVoiceCommandUseCase = processVoiceCommandUseCase;
     }
 
     @PostMapping
@@ -103,26 +86,15 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
-    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file) {
+    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file)
+            throws IOException {
         log.atInfo()
                 .addKeyValue("audioSizeBytes", file.getSize())
                 .addKeyValue("audioContentType", file.getContentType())
                 .log("Voice command received");
 
-        var userMessage = transcriptionModel.transcribe(file.getResource());
-        log.atInfo().addKeyValue("transcriptionLength", userMessage.length()).log("Audio transcribed");
-
-        var result = chatClient
-                .prompt()
-                .user(userMessage)
-                .toolContext(Map.of(TransactionTools.USER_ID, userId(jwt)))
-                .call()
-                .content();
-        log.atInfo().addKeyValue("answerLength", result.length()).log("Assistant answered");
-
-        byte[] audio = textToSpeechModel.call(result);
-        log.atInfo().addKeyValue("speechSizeBytes", audio.length).log("Speech synthesized");
-        var resource = new ByteArrayResource(audio);
+        var input = new ProcessVoiceCommandInput(file.getBytes(), file.getOriginalFilename(), file.getContentType());
+        var output = processVoiceCommandUseCase.execute(userId(jwt), input);
 
         return ResponseEntity.ok()
                 .header(
@@ -131,6 +103,6 @@ public class TransactionController {
                                 .filename("audio.mp3")
                                 .build()
                                 .toString())
-                .body(resource);
+                .body(new ByteArrayResource(output.speech()));
     }
 }

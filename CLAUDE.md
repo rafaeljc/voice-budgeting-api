@@ -33,12 +33,12 @@ DDD em camadas. Dependências apontam para dentro: `infrastructure` → `applica
 src/main/java/dio/budgeting/
   BudgetingApplication.java
   domain/                       # Transaction, TransactionId, UserId, Money, Category, TransactionRepository
-  application/                  # *UseCase
+  application/                  # *UseCase, portas *Gateway (serviços externos), exceções neutras da IA
     input/  output/
   infrastructure/
     http/                       # *Controller
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
-    ai/
+    ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect
       tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
         argument/               # *ToolArguments
     config/                     # *Configuration (ex.: Clock)
@@ -61,6 +61,8 @@ docs/exemplos/                  # exemplos de requisição (.http)
 - DTOs HTTP: `<Verbo?><Substantivo>Request`, `<Substantivo>Response`; controller: `<Substantivo>Controller`
 - Persistência: porta `<X>Repository` (domain) → adaptador `Jpa<X>Repository` → Spring Data `<X>EntityRepository`;
   entidade JPA `<X>Entity`
+- Serviço externo: porta `<X>Gateway` (application, par do `Repository`) → adaptador `<Tecnologia><X>Gateway`
+  (ex.: `SpringAiSpeechToTextGateway`)
 - ID tipado: `<X>Id` (record sobre `UUID`)
 - Exceções: `<Condição>Exception` (ex.: `TransactionNotFoundException`)
 - Testes: `<Classe>Test` (unitário), `<Funcionalidade>IT` (integração)

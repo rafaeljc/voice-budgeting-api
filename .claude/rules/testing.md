@@ -27,7 +27,7 @@ paths:
   `validClaims`/`sign` cobrem outro usuário e tokens inválidos.
 - IA: o perfil `test` aponta a OpenAI para uma URL inválida, então um `*IT` que aciona a IA sem stub falha na hora.
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
-  `givenAnswer`, `givenSpeech`. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
+  `givenAnswer`, `givenSpeech` e `givenFailure(AiStage, AiFailure)` (falha por etapa). O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em

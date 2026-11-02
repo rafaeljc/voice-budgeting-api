@@ -1,8 +1,6 @@
 package dio.budgeting.infrastructure.http.error;
 
-import com.openai.errors.OpenAIException;
-import com.openai.errors.OpenAIIoException;
-import com.openai.errors.OpenAIServiceException;
+import dio.budgeting.application.AiProviderUnavailableException;
 import dio.budgeting.domain.TransactionNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -120,11 +118,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.UNAUTHENTICATED, status, null), headers, status, request);
     }
 
-    @ExceptionHandler(OpenAIException.class)
-    ResponseEntity<Object> handleAiProviderFailure(OpenAIException ex, WebRequest request) {
-        if (!isTransient(ex)) {
-            return handleUnexpected(ex, request);
-        }
+    @ExceptionHandler(AiProviderUnavailableException.class)
+    ResponseEntity<Object> handleAiProviderUnavailable(AiProviderUnavailableException ex, WebRequest request) {
         var status = HttpStatus.SERVICE_UNAVAILABLE;
         var headers = new HttpHeaders();
         headers.set(
@@ -150,8 +145,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         if (response.getBody() instanceof ProblemDetail problem && problem.getType() == null) {
             problem.setType(BLANK_TYPE);
         }
-        if (ex instanceof OpenAIException providerFailure && isTransient(providerFailure)) {
-            logProviderUnavailable(statusCode, providerFailure);
+        if (ex instanceof AiProviderUnavailableException unavailable) {
+            logProviderUnavailable(statusCode, unavailable);
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (ex instanceof AuthenticationException) {
@@ -162,18 +157,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return response;
     }
 
-    // Network failures, rate limiting and provider 5xx may succeed on a later attempt; anything else is on our side
-    private static boolean isTransient(OpenAIException ex) {
-        return ex instanceof OpenAIIoException
-                || ex instanceof OpenAIServiceException service
-                        && (service.statusCode() == HttpStatus.TOO_MANY_REQUESTS.value()
-                                || service.statusCode() >= 500);
-    }
-
-    private void logProviderUnavailable(HttpStatusCode status, OpenAIException ex) {
+    private void logProviderUnavailable(HttpStatusCode status, AiProviderUnavailableException ex) {
         var event = log.atWarn().addKeyValue("status", status.value());
-        if (ex instanceof OpenAIServiceException service) {
-            event = event.addKeyValue("providerStatus", service.statusCode());
+        if (ex.getProviderStatus() != null) {
+            event = event.addKeyValue("providerStatus", ex.getProviderStatus());
         }
         event.log("AI provider unavailable");
     }

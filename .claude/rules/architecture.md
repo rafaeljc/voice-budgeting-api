@@ -29,6 +29,16 @@ infrastructure/persistence/repository/TransactionEntityRepository # Spring Data 
 infrastructure/persistence/entity/TransactionEntity            # entidade JPA
 ```
 
+Serviços externos seguem o mesmo padrão, com o sufixo `Gateway` (par do `Repository`): a porta fica na raiz de
+`application/`, sem subpacote, como o `TransactionRepository` na raiz de `domain/`; o adaptador, em
+`infrastructure/`, leva o nome da tecnologia. Uma porta por etapa, para que cada dependência tenha timeout, retry,
+circuit breaker e degradação próprios.
+
+```
+application/SpeechToTextGateway                                # porta (interface)
+infrastructure/ai/SpringAiSpeechToTextGateway                  # adaptador, implementa a porta
+```
+
 Adaptadores de entrada (o mundo externo aciona a aplicação) ficam na mesma camada, cada um com seus DTOs:
 
 ```
@@ -38,6 +48,10 @@ infrastructure/ai/tool/TransactionTools                        # adaptador de to
 
 O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
 `@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
+
+Os tipos das portas são neutros: `Audio`, `byte[]` e `String`, nunca `MultipartFile`, `Resource` nem tipos do
+Spring AI. A falha do provedor sai da porta como `AiProviderUnavailableException` (transitória) ou
+`AiProviderFailedException` (definitiva), em `application/`, sem tipo do provedor.
 
 Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e `XEntity.from(domain)`.
 

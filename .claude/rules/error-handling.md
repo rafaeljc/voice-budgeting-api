@@ -15,7 +15,10 @@ paths:
 
 - Resultado de negócio esperado → exceção tipada `<Condição>Exception` (ex.: `TransactionNotFoundException`).
 - Violação de invariante na construção → `IllegalArgumentException` (erro de programação; vira 500).
-- Falha de infraestrutura (banco, OpenAI) → tratada no adaptador, onde se decide retentar, degradar ou propagar.
+- Falha de infraestrutura (banco, provedor de IA) → tratada no adaptador, onde se decide retentar, degradar ou
+  propagar. A do provedor de IA sai da porta como exceção neutra (`AiProviderUnavailableException`, transitória, ou
+  `AiProviderFailedException`, definitiva), traduzida pelo aspecto `OpenAiExceptionTranslationAspect`; o use case e
+  o advice nunca veem tipo do SDK.
 
 ## Mapeamento
 
@@ -38,8 +41,8 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `HttpRequestMethodNotSupportedException`             | 405    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `HttpMediaTypeNotSupportedException`                 | 415    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `MaxUploadSizeExceededException`                     | 413    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
-| `OpenAIException` transitória (IO, 429, 5xx)         | 503    | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After`      | `WARN` `AI provider unavailable` |
-| `OpenAIException` definitiva (demais status)         | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
+| `AiProviderUnavailableException` (IO, 429, 5xx)      | 503    | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After`      | `WARN` `AI provider unavailable` |
+| `AiProviderFailedException` (demais status)          | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 | Qualquer outra `Exception`                           | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 
 - Extensão `errors` nos `validation-error`: lista de `{pointer, detail}` para campo do corpo (JSON Pointer, ex.:
