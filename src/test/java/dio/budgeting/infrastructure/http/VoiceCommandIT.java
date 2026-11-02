@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -15,15 +16,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
+import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -62,13 +66,15 @@ class VoiceCommandIT {
         givenExpenseCommand(speech);
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isOk())
                 .andExpect(content().contentType("audio/mpeg"))
                 .andExpect(content().bytes(speech));
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES))
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
                 .singleElement()
                 .satisfies(transaction -> {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
@@ -77,12 +83,34 @@ class VoiceCommandIT {
     }
 
     @Test
+    void should_persistForTokenUserOnly_when_commandRegistersExpense() throws Exception {
+        // given
+        var tokenUser = new UserId(UUID.randomUUID());
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+
+        // when
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization(tokenUser))
+                        .file(recording()))
+                .andExpect(status().isOk());
+
+        // then
+        assertThat(transactionRepository.findAllByUserIdAndCategory(tokenUser, Category.GROCERIES))
+                .hasSize(1);
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
+    }
+
+    @Test
     void should_notLogTranscriptionNorAnswer_when_commandIsProcessed(CapturedOutput output) throws Exception {
         // given
         givenExpenseCommand(new byte[] {1, 2, 3, 4});
 
         // when
-        mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording())).andExpect(status().isOk());
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .file(recording()))
+                .andExpect(status().isOk());
 
         // then
         assertThat(output.getAll())
@@ -97,14 +125,16 @@ class VoiceCommandIT {
         var recording = recording();
 
         // when
-        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .file(recording))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
 
         // then
         var transactionId = transactionRepository
-                .findAllByCategory(Category.GROCERIES)
+                .findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
                 .getFirst()
                 .getId()
                 .uuid()
@@ -127,7 +157,9 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(failure);
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isServiceUnavailable())
@@ -146,7 +178,9 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isInternalServerError())
@@ -163,7 +197,9 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.RATE_LIMITED);
 
         // when
-        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .file(recording()))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
@@ -184,7 +220,9 @@ class VoiceCommandIT {
         aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
 
         // when
-        mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         var event = LogEvents.withMessage(output, "Unexpected error");
@@ -200,7 +238,9 @@ class VoiceCommandIT {
                 """);
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
@@ -213,7 +253,8 @@ class VoiceCommandIT {
                                 + " Envie um novo comando de voz."))
                 .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH))
                 .andExpect(jsonPath("$.errors").doesNotExist());
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
     }
 
     @ParameterizedTest
@@ -223,12 +264,15 @@ class VoiceCommandIT {
         givenPersistCommand(arguments);
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
     }
 
     @Test
@@ -238,7 +282,9 @@ class VoiceCommandIT {
         givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
 
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
 
         // then
         response.andExpect(status().isUnprocessableContent())
@@ -253,7 +299,9 @@ class VoiceCommandIT {
         givenPersistCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
 
         // when
-        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()))
+        var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .file(recording()))
                 .andReturn()
                 .getResponse()
                 .getHeader("X-Request-Id");
@@ -283,7 +331,9 @@ class VoiceCommandIT {
             givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
 
             // when
-            var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH).file(recording()));
+            var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                    .header(AUTHORIZATION, AccessTokens.authorization())
+                    .file(recording()));
 
             // then
             response.andExpect(status().isInternalServerError())

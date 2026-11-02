@@ -6,9 +6,10 @@ import java.util.Optional;
 public interface TransactionRepository {
     Transaction save(Transaction transaction);
 
-    Optional<Transaction> findById(TransactionId id);
+    Optional<Transaction> findByIdAndUserId(TransactionId id, UserId userId);
 
-    PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page);
+    PageResult<Transaction> findAllByUserId(
+            UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page);
 
-    List<Transaction> findAllByCategory(Category category);
+    List<Transaction> findAllByUserIdAndCategory(UserId userId, Category category);
 }

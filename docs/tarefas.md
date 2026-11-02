@@ -20,7 +20,7 @@
 - [x] [T07 — Endpoints manuais no padrão REST](#t07)
 
 **Fase 4 — Identidade**
-- [ ] [T08 — Identidade mínima e isolamento por usuário](#t08)
+- [x] [T08 — Identidade mínima e isolamento por usuário](#t08)
 
 **Fase 5 — Fluxo de voz confiável**
 - [ ] [T09 — Orquestração de IA na camada de aplicação](#t09)
@@ -193,6 +193,8 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 **Nota (T05):** o `ApiExceptionHandler` trata hoje as falhas da IA direto pelas exceções do SDK (`com.openai.errors.*`). Ao criar o adaptador de IA, ele deve lançar uma exceção neutra da porta (transitória x definitiva) e o handler do SDK sai do advice.
 
 **Nota (T06):** as tools (`@Tool`/`@ToolParam`) já estão em `infrastructure/ai/tool/` desde a T06, fora da camada de aplicação, com os argumentos validados no adaptador; a T09 só move a orquestração (transcrição, `ChatClient`, voz). O `ApiExceptionHandler` também trata `ConstraintViolationException` e `DatabindException` (422 `invalid-command`) e a tool ainda devolve o `TransactionOutput` ao modelo (avaliar um `ToolResponse`).
+
+**Nota (T08):** o `UserId` do token chega às tools pelo `toolContext` do `ChatClient` (`TransactionTools.USER_ID`), montado hoje no `TransactionController`. Ao mover a orquestração, o use case de voz recebe o `UserId` como primeiro parâmetro de `execute` e o repassa ao `toolContext`; a tool continua lendo o usuário do `ToolContext`, nunca dos argumentos do modelo.
 
 <a id="t10"></a>
 ### T10 — Timeouts e retries

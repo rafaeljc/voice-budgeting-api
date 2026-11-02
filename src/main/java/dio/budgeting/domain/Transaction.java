@@ -11,21 +11,27 @@ public class Transaction {
     public static final int DESCRIPTION_MAX_LENGTH = 255;
 
     private TransactionId id;
+    private UserId userId;
     private String description;
     private Money amount;
     private Category category;
     private Instant createdAt;
 
-    public Transaction(String description, Money amount, Category category, Instant createdAt) {
-        requireValid(description, amount, category, createdAt);
+    public Transaction(UserId userId, String description, Money amount, Category category, Instant createdAt) {
+        requireValid(userId, description, amount, category, createdAt);
         this.id = new TransactionId();
+        this.userId = userId;
         this.description = description.strip();
         this.amount = amount;
         this.category = category;
         this.createdAt = createdAt.truncatedTo(ChronoUnit.MILLIS);
     }
 
-    private static void requireValid(String description, Money amount, Category category, Instant createdAt) {
+    private static void requireValid(
+            UserId userId, String description, Money amount, Category category, Instant createdAt) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Transaction userId must not be null");
+        }
         if (description == null || description.strip().isEmpty()) {
             throw new IllegalArgumentException("Transaction description must not be blank");
         }

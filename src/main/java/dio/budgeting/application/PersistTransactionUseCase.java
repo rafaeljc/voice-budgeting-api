@@ -4,6 +4,7 @@ import dio.budgeting.application.input.PersistTransactionInput;
 import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import java.time.Clock;
 import java.time.Instant;
 import org.slf4j.Logger;
@@ -24,9 +25,9 @@ public class PersistTransactionUseCase {
     }
 
     @Transactional
-    public TransactionOutput execute(PersistTransactionInput input) {
+    public TransactionOutput execute(UserId userId, PersistTransactionInput input) {
         var transaction = transactionRepository.save(
-                new Transaction(input.description(), input.toMoney(), input.category(), Instant.now(clock)));
+                new Transaction(userId, input.description(), input.toMoney(), input.category(), Instant.now(clock)));
         log.atInfo().addKeyValue("transactionId", transaction.getId().uuid()).log("Transaction persisted");
 
         return TransactionOutput.from(transaction);

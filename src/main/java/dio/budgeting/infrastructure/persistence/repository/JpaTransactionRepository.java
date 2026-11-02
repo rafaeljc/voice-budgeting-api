@@ -8,6 +8,7 @@ import dio.budgeting.domain.TransactionFilter;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.TransactionSort;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.util.List;
 import java.util.Optional;
@@ -30,14 +31,18 @@ public class JpaTransactionRepository implements TransactionRepository {
     }
 
     @Override
-    public Optional<Transaction> findById(TransactionId id) {
-        return transactionEntityRepository.findById(id.uuid()).map(entity -> entity.toDomain());
+    public Optional<Transaction> findByIdAndUserId(TransactionId id, UserId userId) {
+        return transactionEntityRepository
+                .findByIdAndUserId(id.uuid(), userId.uuid())
+                .map(entity -> entity.toDomain());
     }
 
     @Override
-    public PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page) {
+    public PageResult<Transaction> findAllByUserId(
+            UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page) {
         var pageable = PageRequest.of(page.number(), page.size(), toSpringSort(sort));
-        var result = transactionEntityRepository.findAll(TransactionSpecifications.from(filter), pageable);
+        var result = transactionEntityRepository.findAll(
+                TransactionSpecifications.ownedBy(userId).and(TransactionSpecifications.from(filter)), pageable);
         var content =
                 result.getContent().stream().map(entity -> entity.toDomain()).toList();
         return new PageResult<>(content, page.number(), page.size(), result.getTotalElements());
@@ -51,8 +56,8 @@ public class JpaTransactionRepository implements TransactionRepository {
     }
 
     @Override
-    public List<Transaction> findAllByCategory(Category category) {
-        return transactionEntityRepository.findAllByCategory(category).stream()
+    public List<Transaction> findAllByUserIdAndCategory(UserId userId, Category category) {
+        return transactionEntityRepository.findAllByUserIdAndCategory(userId.uuid(), category).stream()
                 .map(entity -> entity.toDomain())
                 .toList();
     }

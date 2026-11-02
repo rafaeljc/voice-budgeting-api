@@ -21,6 +21,10 @@ paths:
 - `@IntegrationTest` (`support/`): contexto Spring, perfil `test`, injeção por construtor e MySQL. Todo `*IT` usa.
 - MySQL: container `mysql:9.6` único por JVM (`support/mysql/`). O banco é zerado antes de cada teste
   (`TRUNCATE` das tabelas lidas de `information_schema`); não depender de rollback.
+- Autenticação: todo `*IT` HTTP envia `Authorization: Bearer` com um token real, assinado por
+  `support/security/AccessTokens` (`NimbusJwtEncoder` e o segredo do perfil `test`), não o `jwt()` do
+  `spring-security-test`. `AccessTokens.authorization()` usa o usuário padrão; `authorization(userId)` e
+  `validClaims`/`sign` cobrem outro usuário e tokens inválidos.
 - IA: o perfil `test` aponta a OpenAI para uma URL inválida, então um `*IT` que aciona a IA sem stub falha na hora.
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
   `givenAnswer`, `givenSpeech`. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.

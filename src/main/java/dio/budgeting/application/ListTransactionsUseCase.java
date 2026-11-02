@@ -4,6 +4,7 @@ import dio.budgeting.application.input.ListTransactionsInput;
 import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.PageResult;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,9 +21,9 @@ public class ListTransactionsUseCase {
     }
 
     @Transactional(readOnly = true)
-    public PageResult<TransactionOutput> execute(ListTransactionsInput input) {
+    public PageResult<TransactionOutput> execute(UserId userId, ListTransactionsInput input) {
         var page = transactionRepository
-                .findAll(input.filter(), input.sort(), input.page())
+                .findAllByUserId(userId, input.filter(), input.sort(), input.page())
                 .map(TransactionOutput::from);
         log.atInfo().addKeyValue("resultCount", page.content().size()).log("Transactions listed");
         return page;

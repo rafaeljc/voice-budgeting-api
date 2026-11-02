@@ -26,7 +26,12 @@ class MySqlCleanerIT {
     void should_removeAllRows_when_cleaned() {
         // given
         repository.save(new TransactionEntity(
-                UUID.randomUUID(), "Mercado", new BigDecimal("80.00"), Category.GROCERIES, Instant.now()));
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Mercado",
+                new BigDecimal("80.00"),
+                Category.GROCERIES,
+                Instant.now()));
 
         // when
         cleaner.clean();

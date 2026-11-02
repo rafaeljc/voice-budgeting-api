@@ -5,6 +5,7 @@ import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
+import dio.budgeting.support.security.AccessTokens;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -54,8 +56,10 @@ class ErrorResponseIT {
                 """;
 
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -79,8 +83,10 @@ class ErrorResponseIT {
                 """;
 
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -94,8 +100,10 @@ class ErrorResponseIT {
     @Test
     void should_returnMalformedRequestProblemWithoutErrors_when_jsonIsMalformed() throws Exception {
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content("{\"description\": "));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"description\": "));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -111,7 +119,9 @@ class ErrorResponseIT {
     void should_returnValidationProblemWithParameter_when_queryParameterIsInvalid(
             String parameter, String value, String detail) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param(parameter, value));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param(parameter, value));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -139,7 +149,9 @@ class ErrorResponseIT {
     void should_logRejectedRequestWithParameterNameOnly_when_queryParameterIsInvalid(CapturedOutput output)
             throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("size", "secret-value"))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .param("size", "secret-value"))
                 .andReturn()
                 .getResponse();
 
@@ -155,7 +167,8 @@ class ErrorResponseIT {
     @Test
     void should_returnValidationProblemWithParameter_when_audioFileIsMissing() throws Exception {
         // when
-        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH));
+        var response =
+                mockMvc.perform(multipart(VOICE_COMMAND_PATH).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isBadRequest())
@@ -168,7 +181,7 @@ class ErrorResponseIT {
     @Test
     void should_returnBlankTypeProblemInPortuguese_when_routeDoesNotExist() throws Exception {
         // when
-        var response = mockMvc.perform(get("/nowhere"));
+        var response = mockMvc.perform(get("/nowhere").header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isNotFound())
@@ -182,7 +195,7 @@ class ErrorResponseIT {
     @Test
     void should_returnBlankTypeProblemInPortuguese_when_methodIsNotSupported() throws Exception {
         // when
-        var response = mockMvc.perform(delete(TRANSACTIONS_PATH));
+        var response = mockMvc.perform(delete(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isMethodNotAllowed())
@@ -195,8 +208,10 @@ class ErrorResponseIT {
     @Test
     void should_returnBlankTypeProblemInPortuguese_when_contentTypeIsNotSupported() throws Exception {
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.TEXT_PLAIN).content("x"));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("x"));
 
         // then
         response.andExpect(status().isUnsupportedMediaType())
@@ -209,10 +224,11 @@ class ErrorResponseIT {
     @Test
     void should_returnGenericProblem_when_unexpectedFailureOccurs() throws Exception {
         // given
-        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAllByUserId(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         var result = response.andExpect(status().isInternalServerError())
@@ -234,6 +250,7 @@ class ErrorResponseIT {
 
         // when
         var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andReturn()
@@ -253,7 +270,8 @@ class ErrorResponseIT {
     @Test
     void should_logRejectedRequestWithProblemType_when_transactionIsNotFound(CapturedOutput output) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/" + UUID.randomUUID()))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/" + UUID.randomUUID())
+                        .header(AUTHORIZATION, AccessTokens.authorization()))
                 .andReturn()
                 .getResponse();
 
@@ -268,10 +286,13 @@ class ErrorResponseIT {
     @Test
     void should_logUnexpectedErrorWithStackTrace_when_unexpectedFailureOccurs(CapturedOutput output) throws Exception {
         // given
-        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAllByUserId(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()))
+                .andReturn()
+                .getResponse();
 
         // then
         var event = LogEvents.withMessage(output, "Unexpected error");

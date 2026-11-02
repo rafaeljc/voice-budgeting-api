@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -110,6 +111,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.TRANSACTION_NOT_FOUND, status, null), new HttpHeaders(), status, request);
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Object> handleUnauthenticated(AuthenticationException ex, WebRequest request) {
+        var status = HttpStatus.UNAUTHORIZED;
+        var headers = new HttpHeaders();
+        headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+        return handleExceptionInternal(
+                ex, problem(ProblemType.UNAUTHENTICATED, status, null), headers, status, request);
+    }
+
     @ExceptionHandler(OpenAIException.class)
     ResponseEntity<Object> handleAiProviderFailure(OpenAIException ex, WebRequest request) {
         if (!isTransient(ex)) {
@@ -144,6 +154,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             logProviderUnavailable(statusCode, providerFailure);
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
+        } else if (ex instanceof AuthenticationException) {
+            logAuthenticationFailed(statusCode, response);
         } else if (response.getBody() instanceof ProblemDetail problem) {
             logRejected(ex, statusCode, problem);
         }
@@ -164,6 +176,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             event = event.addKeyValue("providerStatus", service.statusCode());
         }
         event.log("AI provider unavailable");
+    }
+
+    // Never the token or the failure cause: both can echo the credential
+    private void logAuthenticationFailed(HttpStatusCode status, ResponseEntity<Object> response) {
+        var event = log.atWarn().addKeyValue("status", status.value());
+        if (response.getBody() instanceof ProblemDetail problem) {
+            event = event.addKeyValue("problemType", problem.getType().toString());
+        }
+        event.log("Authentication failed");
     }
 
     private void logRejected(Exception ex, HttpStatusCode status, ProblemDetail problem) {

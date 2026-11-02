@@ -25,6 +25,7 @@ cp .env.example .env
 | `MYSQL_USER`          | usuário da aplicação no MySQL local                      |
 | `MYSQL_PASSWORD`      | senha do usuário da aplicação                            |
 | `OPENAI_API_KEY`      | chave da OpenAI, necessária só para executar a aplicação |
+| `JWT_SECRET`          | segredo (mínimo de 32 bytes) que assina e valida os tokens; a aplicação não sobe sem ele |
 
 ## Execução
 
@@ -35,7 +36,8 @@ set -a && source .env && set +a
 
 ## API
 
-Base `/api/v1`. O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml) e é revisado a cada PR. Para navegar por ele, suba o Swagger UI (somente leitura, não chama a API): `docker compose up swagger-ui` e abra
+Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); veja como gerá-lo e usá-lo em
+[docs/autenticacao.md](docs/autenticacao.md). O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.yaml) e é revisado a cada PR. Para navegar por ele, suba o Swagger UI (somente leitura, não chama a API): `docker compose up swagger-ui` e abra
 `http://localhost:8081`.
 
 | Método | Caminho                      | Descrição                                                          |
@@ -48,11 +50,14 @@ Base `/api/v1`. O contrato OpenAPI está em [`docs/openapi.yaml`](docs/openapi.y
 Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http). Com `curl`:
 
 ```bash
+TOKEN=$(python3 scripts/generate_token.py)
+
 curl -i -X POST http://localhost:8080/api/v1/transactions \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}'
 
-curl 'http://localhost:8080/api/v1/transactions?category=GROCERIES&sort=amount,desc'
+curl -H "Authorization: Bearer $TOKEN" 'http://localhost:8080/api/v1/transactions?category=GROCERIES&sort=amount,desc'
 ```
 
 ## Logs e rastreamento

@@ -22,6 +22,9 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
   `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
   adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave
   do JSON enviada pelo modelo.
+- O usuário chega à tool pelo `ToolContext` (parâmetro do método, excluído do schema enviado ao modelo), montado no
+  `toolContext(...)` do `ChatClient` com o `UserId` autenticado; a tool nunca pede o usuário ao modelo e opera só
+  para ele.
 - Argumentos inválidos da tool (inclusive categoria inexistente) → 422 `invalid-command` sem resposta do modelo e sem
   voz (ver `error-handling.md`). Falhas de tool nunca voltam ao modelo como texto: o
   `ToolExecutionExceptionProcessor` relança, e qualquer outra falha vira 500.

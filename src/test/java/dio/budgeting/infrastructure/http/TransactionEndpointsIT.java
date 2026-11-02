@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -16,6 +17,7 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.security.AccessTokens;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +38,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class TransactionEndpointsIT {
 
+    private static final UUID USER_ID = AccessTokens.DEFAULT_USER.uuid();
+
     private final MockMvc mockMvc;
     private final TransactionEntityRepository repository;
 
@@ -52,8 +56,10 @@ class TransactionEndpointsIT {
                 """;
 
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
 
         // then
         var result = response.andExpect(status().isCreated()).andReturn();
@@ -70,7 +76,7 @@ class TransactionEndpointsIT {
         saveAt("Feira", "2026-03-02T10:00:00Z");
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isOk())
@@ -89,10 +95,16 @@ class TransactionEndpointsIT {
         // given
         var id = UUID.randomUUID();
         repository.save(new TransactionEntity(
-                id, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, Instant.parse("2026-03-01T10:00:00Z")));
+                id,
+                USER_ID,
+                "Mercado",
+                new BigDecimal("80.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-01T10:00:00Z")));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/{id}", id));
+        var response = mockMvc.perform(
+                get(TRANSACTIONS_PATH + "/{id}", id).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isOk())
@@ -104,11 +116,35 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.createdAt").value("2026-03-01T10:00:00Z"));
     }
 
+    @Test
+    void should_returnSameNotFoundProblemAsUnknownId_when_transactionBelongsToAnotherUser() throws Exception {
+        // given
+        var id = UUID.randomUUID();
+        repository.save(new TransactionEntity(
+                id,
+                UUID.randomUUID(),
+                "Mercado",
+                new BigDecimal("80.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-01T10:00:00Z")));
+
+        // when
+        var response = mockMvc.perform(
+                get(TRANSACTIONS_PATH + "/{id}", id).header(AUTHORIZATION, AccessTokens.authorization()));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-not-found"))
+                .andExpect(jsonPath("$.title").value("Transação não encontrada"))
+                .andExpect(jsonPath("$.detail").value("A transação solicitada não existe."));
+    }
+
     @ParameterizedTest
     @MethodSource("unknownIds")
     void should_returnNotFoundProblem_when_idIsUnknownOrMalformed(String id) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH + "/{id}", id));
+        var response = mockMvc.perform(
+                get(TRANSACTIONS_PATH + "/{id}", id).header(AUTHORIZATION, AccessTokens.authorization()));
 
         // then
         response.andExpect(status().isNotFound())
@@ -131,7 +167,9 @@ class TransactionEndpointsIT {
         save("Remédio", Category.PHARMA, "10.00", "2026-03-03T10:00:00Z");
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param("category", "GROCERIES"));
 
         // then
         response.andExpect(status().isOk())
@@ -148,7 +186,10 @@ class TransactionEndpointsIT {
         }
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("page", "1").param("size", "2"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param("page", "1")
+                .param("size", "2"));
 
         // then
         response.andExpect(status().isOk())
@@ -170,7 +211,9 @@ class TransactionEndpointsIT {
         save("C", Category.GROCERIES, "20.00", "2026-03-03T10:00:00Z");
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("sort", sort));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param("sort", sort));
 
         // then
         response.andExpect(status().isOk())
@@ -196,7 +239,9 @@ class TransactionEndpointsIT {
         save(UUID.fromString("00000000-0000-4000-8000-000000000002"), "SECOND", "10.00", sameInstant);
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("sort", sort));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param("sort", sort));
 
         // then
         response.andExpect(status().isOk())
@@ -209,26 +254,62 @@ class TransactionEndpointsIT {
     void should_adjustOutOfRangeValues_when_pageOrSizeIsOutOfRange(
             String parameter, String value, String metadata, int applied) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param(parameter, value));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param(parameter, value));
 
         // then
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.page." + metadata).value(applied));
     }
 
+    @ParameterizedTest
+    @CsvSource(
+            value = {"NULL,2", "GROCERIES,1"},
+            nullValues = "NULL")
+    void should_listOnlyOwnTransactions_when_otherUsersHaveTransactions(String category, int expected)
+            throws Exception {
+        // given
+        save("Mercado", Category.GROCERIES, "10.00", "2026-03-01T10:00:00Z");
+        save("Uber", Category.PHARMA, "20.00", "2026-03-02T10:00:00Z");
+        var other = UUID.randomUUID();
+        repository.save(new TransactionEntity(
+                UUID.randomUUID(),
+                other,
+                "Alheio",
+                new BigDecimal("30.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-03T10:00:00Z")));
+
+        // when
+        var request = get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization());
+        var response = mockMvc.perform(category == null ? request : request.param("category", category));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(expected))
+                .andExpect(jsonPath("$.content[?(@.description == 'Alheio')]").isEmpty())
+                .andExpect(jsonPath("$.page.totalElements").value(expected));
+    }
+
     private void save(String description, Category category, String amount, String createdAt) {
         repository.save(new TransactionEntity(
-                UUID.randomUUID(), description, new BigDecimal(amount), category, Instant.parse(createdAt)));
+                UUID.randomUUID(), USER_ID, description, new BigDecimal(amount), category, Instant.parse(createdAt)));
     }
 
     private void save(UUID id, String description, String amount, String createdAt) {
         repository.save(new TransactionEntity(
-                id, description, new BigDecimal(amount), Category.GROCERIES, Instant.parse(createdAt)));
+                id, USER_ID, description, new BigDecimal(amount), Category.GROCERIES, Instant.parse(createdAt)));
     }
 
     private void saveAt(String description, String createdAt) {
         repository.save(new TransactionEntity(
-                UUID.randomUUID(), description, new BigDecimal("10.00"), Category.GROCERIES, Instant.parse(createdAt)));
+                UUID.randomUUID(),
+                USER_ID,
+                description,
+                new BigDecimal("10.00"),
+                Category.GROCERIES,
+                Instant.parse(createdAt)));
     }
 
     @Test
@@ -238,6 +319,7 @@ class TransactionEndpointsIT {
                 {"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}
                 """;
         mockMvc.perform(post(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -245,7 +327,9 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.currency").value("BRL"));
 
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).param("category", "GROCERIES"));
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .param("category", "GROCERIES"));
 
         // then
         response.andExpect(status().isOk())
@@ -267,6 +351,7 @@ class TransactionEndpointsIT {
 
         // when
         var created = mockMvc.perform(post(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -277,7 +362,7 @@ class TransactionEndpointsIT {
         var createdAt = JsonPath.<String>read(created.getResponse().getContentAsString(), "$.createdAt");
         assertThat(createdAt).endsWith("Z");
         assertThat(Instant.parse(createdAt)).isBetween(before.truncatedTo(ChronoUnit.MILLIS), after);
-        mockMvc.perform(get(TRANSACTIONS_PATH))
+        mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].createdAt").value(createdAt));
     }
@@ -286,8 +371,10 @@ class TransactionEndpointsIT {
     @MethodSource("invalidBodies")
     void should_returnBadRequestAndSaveNothing_when_amountOrCurrencyIsInvalid(String body) throws Exception {
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
 
         // then
         response.andExpect(status().isBadRequest());
@@ -299,8 +386,10 @@ class TransactionEndpointsIT {
     void should_returnValidationErrorAndSaveNothing_when_fieldViolatesBusinessRule(
             String body, String pointer, String detail) throws Exception {
         // when
-        var response = mockMvc.perform(
-                post(TRANSACTIONS_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
+        var response = mockMvc.perform(post(TRANSACTIONS_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
 
         // then
         response.andExpect(status().isBadRequest())
