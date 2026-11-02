@@ -5,6 +5,7 @@
 API que registra e consulta transações financeiras a partir de comandos de voz. O áudio é transcrito, interpretado
 pela IA (tool calling) e executado pelos use cases da aplicação, e a resposta volta falada. Escopo e plano em
 [docs/escopo.md](docs/escopo.md) e [docs/tarefas.md](docs/tarefas.md).
+Camadas e fluxo de voz em [docs/arquitetura.md](docs/arquitetura.md).
 
 ## Pré-requisitos
 
