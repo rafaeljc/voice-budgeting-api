@@ -9,8 +9,8 @@ O script `scripts/generate_token.py` usa só a biblioteca padrão do Python e im
 
 ```bash
 set -a && source .env && set +a          # carrega JWT_SECRET
-scripts/generate_token.py                # usuário aleatório, validade de 24h
-scripts/generate_token.py --user-id 0b7e2f0a-1c3d-4e5f-8a9b-0c1d2e3f4a5b --expires-in 30m
+python3 scripts/generate_token.py                # usuário aleatório, validade de 24h
+python3 scripts/generate_token.py --user-id 0b7e2f0a-1c3d-4e5f-8a9b-0c1d2e3f4a5b --expires-in 30m
 ```
 
 | Argumento / variável | Descrição                                                                              |
@@ -25,7 +25,7 @@ mesmo `--user-id`.
 ## Enviar o token
 
 ```bash
-TOKEN=$(scripts/generate_token.py)
+TOKEN=$(python3 scripts/generate_token.py)
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/transactions
 ```
 

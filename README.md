@@ -50,7 +50,7 @@ Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); ve
 Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http). Com `curl`:
 
 ```bash
-TOKEN=$(scripts/generate_token.py)
+TOKEN=$(python3 scripts/generate_token.py)
 
 curl -i -X POST http://localhost:8080/api/v1/transactions \
   -H "Authorization: Bearer $TOKEN" \
