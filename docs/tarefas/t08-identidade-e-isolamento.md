@@ -218,7 +218,7 @@ os `*IT` usam o usuário fixo `AccessTokens.DEFAULT_USER`; `Transaction` ainda n
 
 ## Fase 2: Isolamento por usuário
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionTest`: construtor de criação rejeita `userId` nulo; `PersistTransactionUseCaseTest`: grava
       com o `UserId` recebido — implementa `Transaction.userId`, `user_id` na entidade (`NOT NULL`),
@@ -233,7 +233,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `JpaTransactionRepositoryIT` (novo): `findAllByUserIdAndCategory` não traz transações de outro usuário;
       `ListTransactionsByCategoryUseCase` com `execute(UserId, Category)` — implementa o método da porta e o
       `ToolContext` na tool `list-transactions-by-category`
-- [ ] [TDD] `VoiceCommandIT`: o comando de voz grava a transação para o usuário do token (não visível para outro)
+- [x] [TDD] `VoiceCommandIT`: o comando de voz grava a transação para o usuário do token (não visível para outro)
 
 ### Plano de verificação
 
@@ -245,7 +245,35 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+**O que foi feito**
+
+- `Transaction` ganhou `userId` (obrigatório no construtor de criação); `TransactionEntity` ganhou `user_id` `NOT NULL`
+  e os índices passaram a `(user_id, category, created_at, id)` e `(user_id, created_at, id)`.
+- Porta `TransactionRepository` com o usuário explícito: `findByIdAndUserId`, `findAllByUserId` e
+  `findAllByUserIdAndCategory`. No adaptador, `TransactionSpecifications.ownedBy(userId)` soma-se às
+  especificações do filtro.
+- Use cases recebem `UserId` como primeiro parâmetro de `execute` (`Persist`, `Get`, `List`, `ListByCategory`).
+- `TransactionController`: `@AuthenticationPrincipal Jwt` → `UserId` em cada endpoint; no de voz, o `UserId` vai no
+  `toolContext` do `ChatClient`. `TransactionTools`: as duas tools recebem `ToolContext` (fora do schema enviado ao
+  modelo) e operam para o usuário do contexto.
+- Transação de outro usuário → 404 `transaction-not-found`, com o mesmo corpo do ID inexistente.
+- Testes: `TransactionTest`, `PersistTransactionUseCaseTest`, `GetTransactionUseCaseTest`,
+  `ListTransactionsUseCaseTest`, `TransactionEndpointsIT` (outro usuário e listagem com/sem `category`),
+  `JpaTransactionRepositoryIT` (novo) e `VoiceCommandIT`.
+
+**Decisões e detalhes**
+
+- O `@Validated` do adaptador continua validando os argumentos da tool com o parâmetro `ToolContext` extra.
+- O teste de voz com outro usuário passou de imediato: o `ToolContext` já fora ligado nos itens 1 e 4; fica como
+  regressão do isolamento no fluxo de voz.
+- Linhas antigas do banco local ficam com `user_id` zerado, sem dono real (fora de escopo, sem migração).
+
+**Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`, sem `OPENAI_API_KEY` nem `JWT_SECRET` no ambiente;
+`grep org.springframework` no `domain` → nenhuma linha; `grep "findById(|findAll(|findAllByCategory("` em `domain` e
+`application` → nenhuma linha; `ToolContext` presente nas duas tools de `TransactionTools`.
+
+**Para uma sessão nova:** a fase 3 é só documentação. O `userId` chega às tools pelo `toolContext` do `ChatClient`,
+montado no `TransactionController` (a T09 move a orquestração).
 
 ## Fase 3: Documentação
 

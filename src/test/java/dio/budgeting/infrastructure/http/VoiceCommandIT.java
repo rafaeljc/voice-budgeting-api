@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStub;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,25 @@ class VoiceCommandIT {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
                     assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
                 });
+    }
+
+    @Test
+    void should_persistForTokenUserOnly_when_commandRegistersExpense() throws Exception {
+        // given
+        var tokenUser = new UserId(UUID.randomUUID());
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+
+        // when
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization(tokenUser))
+                        .file(recording()))
+                .andExpect(status().isOk());
+
+        // then
+        assertThat(transactionRepository.findAllByUserIdAndCategory(tokenUser, Category.GROCERIES))
+                .hasSize(1);
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
     }
 
     @Test
