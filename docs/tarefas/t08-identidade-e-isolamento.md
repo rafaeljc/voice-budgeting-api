@@ -153,7 +153,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Autenticação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `UserIdTest` (novo, `domain`): `parse` devolve o ID para UUID válido e vazio para texto malformado,
       vazio ou nulo; construtor rejeita `null` — implementa `UserId`
@@ -170,7 +170,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `AuthenticationIT`: o 401 traz `X-Request-Id` e gera `WARN` `Authentication failed` com `status` 401 e
       `problemType`, com o `traceId` da requisição e sem o token no log — implementa a ordem do `RequestIdFilter` e
       o log
-- [ ] [verificação] `scripts/generate_token.py` (`--user-id`, `--expires-in`, `JWT_SECRET`) e `JWT_SECRET` no
+- [x] [verificação] `scripts/generate_token.py` (`--user-id`, `--expires-in`, `JWT_SECRET`) e `JWT_SECRET` no
       `.env.example` e em `budgeting.security.jwt.secret` do `application.properties`
 
 ### Plano de verificação
@@ -186,7 +186,35 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+**O que foi feito**
+
+- `UserId` no domínio (record sobre `UUID`, `parse` como `TransactionId.parse`).
+- Starter `oauth2-resource-server`; `JwtProperties` (`budgeting.security.jwt.secret`, `@NotBlank`, `@Size(min = 32)`);
+  `SecurityConfiguration` com `JwtDecoder` HS256 (validadores padrão + `exp` presente + `sub` UUID),
+  `SecurityFilterChain` (só `/actuator/health` público, stateless, sem CSRF/form login/Basic) e
+  `AuthenticationEntryPoint` que delega ao `HandlerExceptionResolver`.
+- 401 em Problem Details (`ProblemType.UNAUTHENTICATED`, mensagens em `messages.properties`, `WWW-Authenticate: Bearer`),
+  log `WARN` `Authentication failed` com `status` e `problemType`, sem token.
+- `RequestIdFilter` com `@Order(SecurityFilterProperties.DEFAULT_FILTER_ORDER - 1)`: o 401 leva `X-Request-Id`.
+- Testes: `UserIdTest`, `AuthenticationIT` (sem token, inválidos parametrizados, rota inexistente, health, request id e
+  log), helper `support/security/AccessTokens`; todos os `*IT` existentes enviam `Authorization: Bearer`.
+- `scripts/generate_token.py` e `JWT_SECRET` no `.env.example` e no `application.properties`.
+
+**Decisões e detalhes**
+
+- Em Boot 4.1.2 a constante da ordem do filtro está em
+  `org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterProperties`.
+- `createDefaultWithValidators` recebe `List.of(...)` (a forma varargs gera aviso de array genérico).
+- O `AuthenticationEntryPoint` é configurado só em `oauth2ResourceServer`, que também cobre o token ausente.
+- Os casos "rota inexistente sem token" e "health público" passaram de imediato: já decorriam da configuração do
+  item 2; ficam como teste de regressão.
+
+**Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`, sem `OPENAI_API_KEY` nem `JWT_SECRET` no ambiente; script
+gera três partes com `sub` e `exp` ≈ agora + 1800 e falha (≠ 0) com segredo curto; `bootRun` → 401 sem token, 200
+com token, 200 em `/actuator/health`; sem `JWT_SECRET` a subida falha citando `budgeting.security.jwt.secret`.
+
+**Para uma sessão nova:** o `.env` local precisa de `JWT_SECRET` (mínimo de 32 bytes) para o `bootRun`. Nesta fase
+os `*IT` usam o usuário fixo `AccessTokens.DEFAULT_USER`; `Transaction` ainda não tem dono (fase 2).
 
 ## Fase 2: Isolamento por usuário
 
