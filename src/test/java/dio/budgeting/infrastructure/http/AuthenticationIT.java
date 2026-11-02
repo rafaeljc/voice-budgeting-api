@@ -87,4 +87,23 @@ class AuthenticationIT {
         // then
         response.andExpect(status().isOk());
     }
+
+    @Test
+    void should_returnUnauthenticatedProblem_when_routeDoesNotExistAndTokenIsMissing() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/nowhere"));
+
+        // then
+        response.andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:unauthenticated"));
+    }
+
+    @Test
+    void should_answerHealthWithoutToken_when_actuatorHealthIsRequested() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/actuator/health"));
+
+        // then
+        response.andExpect(status().isOk());
+    }
 }

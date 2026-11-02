@@ -165,7 +165,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       cabeçalho `Authorization` em todos os `*IT` existentes
 - [x] [TDD] `AuthenticationIT` (parametrizado): assinatura com outro segredo, expirado, sem `exp`, `sub` ausente,
       `sub` que não é UUID e token malformado (`abc`) → o mesmo 401 — implementa os `JwtClaimValidator`
-- [ ] [TDD] `AuthenticationIT`: rota inexistente sem token → 401 (negar por padrão); `GET /actuator/health` sem
+- [x] [TDD] `AuthenticationIT`: rota inexistente sem token → 401 (negar por padrão); `GET /actuator/health` sem
       token → 200
 - [ ] [TDD] `AuthenticationIT`: o 401 traz `X-Request-Id` e gera `WARN` `Authentication failed` com `status` 401 e
       `problemType`, com o `traceId` da requisição e sem o token no log — implementa a ordem do `RequestIdFilter` e
