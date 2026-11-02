@@ -284,7 +284,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       o 401; e a orientação para produção: script e segredo compartilhado só para desenvolvimento, provedor de
       identidade (Keycloak ou outro) emitindo os tokens e a API validando pela chave pública (`issuer-uri` ou
       `jwk-set-uri`), sem mudar domínio nem use cases
-- [ ] [verificação] README: `JWT_SECRET` na configuração e uma linha na execução/API apontando para
+- [x] [verificação] README: `JWT_SECRET` na configuração e uma linha na execução/API apontando para
       `docs/autenticacao.md`
 - [ ] [verificação] `docs/openapi.yaml`: `components.securitySchemes.bearerAuth` (`http`, `bearer`, `JWT`, descrição
       apontando para `docs/autenticacao.md`), `security` global e resposta 401 (Problem Details `unauthenticated`,
