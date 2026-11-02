@@ -10,12 +10,14 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
 - Spring Web MVC, Spring Data JPA, MySQL 9.6 (`compose.yml`, iniciado pelo `spring-boot-docker-compose`)
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
+- Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
+  por `scripts/generate_token.py`
 - Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`)
 - Lombok (`io.freefair.lombok`), Jackson 3 (`tools.jackson.*`)
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
 - Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
-- Configuração em `application.properties`; segredos só por variável de ambiente (`OPENAI_API_KEY`, credenciais do
-  MySQL), modelo em `.env.example` e `.env` fora do versionamento
+- Configuração em `application.properties`; segredos só por variável de ambiente (`OPENAI_API_KEY`, `JWT_SECRET`,
+  credenciais do MySQL), modelo em `.env.example` e `.env` fora do versionamento
 
 ## Arquitetura
 
@@ -30,7 +32,7 @@ DDD em camadas. Dependências apontam para dentro: `infrastructure` → `applica
 ```
 src/main/java/dio/budgeting/
   BudgetingApplication.java
-  domain/                       # Transaction, TransactionId, Money, Category, TransactionRepository
+  domain/                       # Transaction, TransactionId, UserId, Money, Category, TransactionRepository
   application/                  # *UseCase
     input/  output/
   infrastructure/
@@ -40,6 +42,7 @@ src/main/java/dio/budgeting/
       tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
         argument/               # *ToolArguments
     config/                     # *Configuration (ex.: Clock)
+    security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
 src/main/resources/
@@ -97,7 +100,8 @@ git config core.hooksPath .githooks   # uma vez por clone: ativa a validação d
 ./gradlew test --tests "<FQN>"        # roda um teste específico (integrationTest para um *IT)
 ./gradlew spotlessApply               # formata o código
 set -a && source .env && set +a       # carrega o .env (cp .env.example .env) antes do bootRun
-./gradlew bootRun                     # sobe a API (MySQL via compose.yml; exige OPENAI_API_KEY)
+./gradlew bootRun                     # sobe a API (MySQL via compose.yml; exige OPENAI_API_KEY e JWT_SECRET)
+python3 scripts/generate_token.py     # token JWT de desenvolvimento (JWT_SECRET no ambiente; ver docs/autenticacao.md)
 docker compose up swagger-ui          # Swagger UI do contrato docs/openapi.yaml em http://localhost:8081
 ```
 

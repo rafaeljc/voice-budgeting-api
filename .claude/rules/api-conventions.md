@@ -73,6 +73,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 
 ## Cabeçalhos
 
+- `Authorization: Bearer <token>` em toda requisição, exceto `/actuator/health`; sem ele, ou com token inválido, a
+  resposta é 401 com `WWW-Authenticate: Bearer` (ver `security.md`).
 - `Location` em toda resposta 201.
 - `X-Request-Id` em toda resposta, com o `traceId` da requisição (32 hex); um `X-Request-Id` enviado pelo cliente é
   ignorado. A correlação de entrada é pelo `traceparent` (W3C).
@@ -97,3 +99,4 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - Verbo no caminho.
 - Data e hora sem fuso no contrato.
 - 403 para recurso de outro usuário (revela que ele existe).
+- Endpoint novo sem `bearerAuth` e sem a resposta 401 no `docs/openapi.yaml`.

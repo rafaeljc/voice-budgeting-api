@@ -291,7 +291,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `WWW-Authenticate`) em cada endpoint; nota de isolamento no 404 do `GET /{id}`
 - [x] [verificação] `docs/exemplos/transacoes.http`: variável `@token` com instrução para gerar, `Authorization` em
       todas as requisições e um exemplo de 401 sem token
-- [ ] [verificação] `CLAUDE.md` (stack, estrutura `infrastructure/security/`, `scripts/generate_token.py` nos
+- [x] [verificação] `CLAUDE.md` (stack, estrutura `infrastructure/security/`, `scripts/generate_token.py` nos
       comandos, `JWT_SECRET` nos segredos); `.claude/rules/security.md` reescrito (JWT HS256 de desenvolvimento,
       `sub`/`exp`, sem senha/BCrypt, `@AuthenticationPrincipal Jwt` → `UserId`, porta com `UserId`); linhas do 401
       em `error-handling.md` e `api-conventions.md` (`Authorization`, `WWW-Authenticate`); `ToolContext` em

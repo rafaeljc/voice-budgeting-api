@@ -48,6 +48,11 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 - Entidades de domínio: classe com dois construtores — criação (gera o ID) e reidratação (todos os campos).
 - Value objects: `record` com invariantes no construtor compacto (`IllegalArgumentException`).
 - Use cases: uma classe por caso de uso, um único método público `execute(...)`, recebe `Input` e devolve `Output`.
+  O usuário autenticado é o primeiro parâmetro (`execute(UserId userId, ...)`): contexto da requisição, fora do
+  `Input`.
+- Dono dos dados: toda transação tem `userId`. A porta nomeia o usuário em toda leitura
+  (`findByIdAndUserId(TransactionId, UserId)`, `findAllByUserId(UserId, TransactionFilter, TransactionSort, PageQuery)`,
+  `findAllByUserIdAndCategory(UserId, Category)`); `UserId` é `record` sobre `UUID`, com `parse` como o `TransactionId`.
 - Exceções de negócio (`TransactionNotFoundException`) ficam em `domain/`, são unchecked e não importam Spring.
 - Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,
   `PageResult<T>` (com `totalPages()` e `map`), `TransactionSort` (campos e direções fechados) e
