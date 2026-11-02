@@ -227,7 +227,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `GetTransactionUseCaseTest`: consulta a porta com o `UserId`; `TransactionEndpointsIT`: transação de
       outro usuário → 404 `transaction-not-found`, mesmo corpo do ID inexistente — implementa `findByIdAndUserId`
       (porta e adaptador) e `execute(UserId, String)`
-- [ ] [TDD] `ListTransactionsUseCaseTest`: repassa o `UserId` à porta; `TransactionEndpointsIT`: listagem (com e
+- [x] [TDD] `ListTransactionsUseCaseTest`: repassa o `UserId` à porta; `TransactionEndpointsIT`: listagem (com e
       sem `category`) traz só as do usuário, com `totalElements` dele — implementa `findAllByUserId` (adaptador com
       `Specification` do usuário somada às do filtro) e os índices com `user_id`
 - [ ] [TDD] `JpaTransactionRepositoryIT` (novo): `findAllByUserIdAndCategory` não traz transações de outro usuário;

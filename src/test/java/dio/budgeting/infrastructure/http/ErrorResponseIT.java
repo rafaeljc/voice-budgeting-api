@@ -224,7 +224,8 @@ class ErrorResponseIT {
     @Test
     void should_returnGenericProblem_when_unexpectedFailureOccurs() throws Exception {
         // given
-        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAllByUserId(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
         var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()));
@@ -285,7 +286,8 @@ class ErrorResponseIT {
     @Test
     void should_logUnexpectedErrorWithStackTrace_when_unexpectedFailureOccurs(CapturedOutput output) throws Exception {
         // given
-        when(transactionRepository.findAll(any(), any(), any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
+        when(transactionRepository.findAllByUserId(any(), any(), any(), any()))
+                .thenThrow(new RuntimeException(INTERNAL_MARKER));
 
         // when
         var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()))

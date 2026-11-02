@@ -92,8 +92,9 @@ public class TransactionController {
     }
 
     @GetMapping
-    public TransactionPageResponse listTransactions(@Valid ListTransactionsRequest request) {
-        return TransactionPageResponse.from(listTransactionsUseCase.execute(request.toInput()));
+    public TransactionPageResponse listTransactions(
+            @AuthenticationPrincipal Jwt jwt, @Valid ListTransactionsRequest request) {
+        return TransactionPageResponse.from(listTransactionsUseCase.execute(userId(jwt), request.toInput()));
     }
 
     @GetMapping("/{id}")

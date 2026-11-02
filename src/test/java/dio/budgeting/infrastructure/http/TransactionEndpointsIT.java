@@ -263,6 +263,35 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.page." + metadata).value(applied));
     }
 
+    @ParameterizedTest
+    @CsvSource(
+            value = {"NULL,2", "GROCERIES,1"},
+            nullValues = "NULL")
+    void should_listOnlyOwnTransactions_when_otherUsersHaveTransactions(String category, int expected)
+            throws Exception {
+        // given
+        save("Mercado", Category.GROCERIES, "10.00", "2026-03-01T10:00:00Z");
+        save("Uber", Category.PHARMA, "20.00", "2026-03-02T10:00:00Z");
+        var other = UUID.randomUUID();
+        repository.save(new TransactionEntity(
+                UUID.randomUUID(),
+                other,
+                "Alheio",
+                new BigDecimal("30.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-03T10:00:00Z")));
+
+        // when
+        var request = get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization());
+        var response = mockMvc.perform(category == null ? request : request.param("category", category));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(expected))
+                .andExpect(jsonPath("$.content[?(@.description == 'Alheio')]").isEmpty())
+                .andExpect(jsonPath("$.page.totalElements").value(expected));
+    }
+
     private void save(String description, Category category, String amount, String createdAt) {
         repository.save(new TransactionEntity(
                 UUID.randomUUID(), USER_ID, description, new BigDecimal(amount), category, Instant.parse(createdAt)));

@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ListTransactionsUseCaseTest {
 
+    private static final UserId USER_ID = new UserId(UUID.randomUUID());
+
     @Mock
     private TransactionRepository repository;
 
@@ -40,15 +42,16 @@ class ListTransactionsUseCaseTest {
         var sort = new TransactionSort(TransactionSort.Field.AMOUNT, TransactionSort.Direction.ASC);
         var page = new PageQuery(1, 2);
         var transaction = new Transaction(
-                new UserId(UUID.randomUUID()),
+                USER_ID,
                 "Mercado",
                 new Money(new BigDecimal("80.00")),
                 Category.GROCERIES,
                 Instant.parse("2026-03-01T12:30:45Z"));
-        when(repository.findAll(filter, sort, page)).thenReturn(new PageResult<>(List.of(transaction), 1, 2, 3));
+        when(repository.findAllByUserId(USER_ID, filter, sort, page))
+                .thenReturn(new PageResult<>(List.of(transaction), 1, 2, 3));
 
         // when
-        var output = useCase.execute(new ListTransactionsInput(filter, sort, page));
+        var output = useCase.execute(USER_ID, new ListTransactionsInput(filter, sort, page));
 
         // then
         assertThat(output.number()).isEqualTo(1);

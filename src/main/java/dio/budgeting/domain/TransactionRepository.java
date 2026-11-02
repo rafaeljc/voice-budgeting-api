@@ -8,7 +8,8 @@ public interface TransactionRepository {
 
     Optional<Transaction> findByIdAndUserId(TransactionId id, UserId userId);
 
-    PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page);
+    PageResult<Transaction> findAllByUserId(
+            UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page);
 
     List<Transaction> findAllByCategory(Category category);
 }

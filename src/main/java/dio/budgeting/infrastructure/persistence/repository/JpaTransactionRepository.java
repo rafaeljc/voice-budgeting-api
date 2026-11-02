@@ -38,9 +38,11 @@ public class JpaTransactionRepository implements TransactionRepository {
     }
 
     @Override
-    public PageResult<Transaction> findAll(TransactionFilter filter, TransactionSort sort, PageQuery page) {
+    public PageResult<Transaction> findAllByUserId(
+            UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page) {
         var pageable = PageRequest.of(page.number(), page.size(), toSpringSort(sort));
-        var result = transactionEntityRepository.findAll(TransactionSpecifications.from(filter), pageable);
+        var result = transactionEntityRepository.findAll(
+                TransactionSpecifications.ownedBy(userId).and(TransactionSpecifications.from(filter)), pageable);
         var content =
                 result.getContent().stream().map(entity -> entity.toDomain()).toList();
         return new PageResult<>(content, page.number(), page.size(), result.getTotalElements());

@@ -3,12 +3,17 @@ package dio.budgeting.infrastructure.persistence.repository;
 import dio.budgeting.domain.TransactionCriterion;
 import dio.budgeting.domain.TransactionCriterion.CategoryIs;
 import dio.budgeting.domain.TransactionFilter;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import org.springframework.data.jpa.domain.Specification;
 
 final class TransactionSpecifications {
 
     private TransactionSpecifications() {}
+
+    static Specification<TransactionEntity> ownedBy(UserId userId) {
+        return (root, query, builder) -> builder.equal(root.get("userId"), userId.uuid());
+    }
 
     static Specification<TransactionEntity> from(TransactionFilter filter) {
         return Specification.allOf(
