@@ -100,14 +100,14 @@ Mover o fluxo de voz (transcrição → interpretação → voz) do `Transaction
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
-- [ ] `VoiceCommandIT` passa com os mesmos status, corpos, cabeçalhos e eventos de log de antes, mais os casos de
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
+- [x] `VoiceCommandIT` passa com os mesmos status, corpos, cabeçalhos e eventos de log de antes, mais os casos de
       falha por etapa
-- [ ] `grep -rn "com.openai" src/main/java | grep -v "/infrastructure/ai/"` → nenhuma linha
-- [ ] `grep -rn "org.springframework.ai" src/main/java/dio/budgeting/infrastructure/http src/main/java/dio/budgeting/application`
+- [x] `grep -rn "com.openai" src/main/java | grep -v "/infrastructure/ai/"` → nenhuma linha
+- [x] `grep -rn "org.springframework.ai" src/main/java/dio/budgeting/infrastructure/http src/main/java/dio/budgeting/application`
       → nenhuma linha
-- [ ] `grep -rnE "org.springframework.web|jakarta.persistence" src/main/java/dio/budgeting/application` → nenhuma linha
-- [ ] `docs/arquitetura.md` com os dois diagramas renderizando; README, `CLAUDE.md`, regras e notas de
+- [x] `grep -rnE "org.springframework.web|jakarta.persistence" src/main/java/dio/budgeting/application` → nenhuma linha
+- [x] `docs/arquitetura.md` com os dois diagramas renderizando; README, `CLAUDE.md`, regras e notas de
       `docs/tarefas.md` atualizados; checkbox da T09 marcado em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -247,7 +247,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/arquitetura.md` (novo): um parágrafo curto antes de cada diagrama e os dois diagramas
       Mermaid abaixo (aprovados na entrevista; mudar só com aprovação)
@@ -260,7 +260,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       nos adaptadores, `givenFailure(AiStage, AiFailure)`); `error-handling.md` (linhas de `OpenAIException` →
       `AiProviderUnavailableException` 503 e `AiProviderFailedException` 500); `testing.md` (`givenFailure` no
       lugar de `givenTranscriptionFailure`, se citado)
-- [ ] [verificação] `docs/tarefas.md`: nota da T06 sobre `ToolResponse` levada à T12 (avaliar o que a tool devolve
+- [x] [verificação] `docs/tarefas.md`: nota da T06 sobre `ToolResponse` levada à T12 (avaliar o que a tool devolve
       ao modelo ao redesenhar a tool de escrita) e citada na T14 (tool de consulta); notas da T09 na T10 (timeout e
       retry nos adaptadores `SpringAi*Gateway`, retentando só `AiProviderUnavailableException`), na T15 (um circuit
       breaker e um bulkhead por gateway) e na T16 (o use case captura a falha do `TextToSpeechGateway` para
@@ -323,8 +323,37 @@ flowchart TB
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `docs/arquitetura.md` (novo): um parágrafo antes de cada diagrama Mermaid (arquitetura em camadas e sequência do
+  fluxo de voz), exatamente os aprovados na entrevista, sem nome de fornecedor.
+- README com uma linha para o documento; `CLAUDE.md` com a estrutura (portas `*Gateway` na raiz de `application/`;
+  adaptadores, `AssistantConfiguration` e o aspecto em `infrastructure/ai/`) e a nomenclatura `<X>Gateway` →
+  `<Tecnologia><X>Gateway`.
+- Regras: `architecture.md` (portas de gateway ao lado das de repositório, tipos neutros), `ai-integration.md`
+  (`ChatClient` no `AssistantConfiguration`, tradução por aspecto, `givenFailure`), `error-handling.md` (linhas de
+  `AiProviderUnavailableException` 503 e `AiProviderFailedException` 500) e `testing.md` (`givenFailure`).
+- `docs/tarefas.md`: nota da T06 sobre `ToolResponse` levada à T12 e citada na T14; notas da T09 na T10, T15 e T16.
+  A nota da T09 foi ajustada para não citar mais o `ToolResponse`. Na T10 acrescentei que o retry do SDK da OpenAI
+  precisa ser considerado ou desligado.
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL` (inclui o Spotless dos `.md`); `mermaid-cli` → código de saída
+  0 e dois `.svg`; `grep` de `arquitetura.md` no README → 1 linha; `OpenAIException` e `givenTranscriptionFailure` em
+  `.claude/rules` e `CLAUDE.md` → nenhuma; `ToolResponse` em `docs/tarefas.md` → notas na T12 e na T14; `openai` em
+  `docs/arquitetura.md` → nenhuma.
 
 ## Resumo final
+
+- O fluxo de voz saiu do `TransactionController` para `ProcessVoiceCommandUseCase`, com uma porta por etapa
+  (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`) e adaptadores `SpringAi*Gateway`. O controller
+  não importa mais Spring AI, e o `ChatClient` é um `@Bean` do `AssistantConfiguration` (prompt em UTF-8).
+- As falhas do provedor saem das portas como `AiProviderUnavailableException` (503 com `Retry-After`) e
+  `AiProviderFailedException` (500), traduzidas por um aspecto (`OpenAiExceptionTranslationAspect`) que é a única
+  classe a conhecer o SDK. O `ApiExceptionHandler` não cita mais `com.openai`. O contrato HTTP não mudou.
+- Desvio do plano original, aprovado na execução: a tradução é um aspecto AOP (com `spring-boot-starter-aspectj`
+  declarado), não um tradutor injetado nos adaptadores. Está em Decisões.
+- Testes: `ProcessVoiceCommandUseCaseTest` (unitário) e `VoiceCommandIT` com 12 casos de falha por etapa
+  (`AiStage`, `AiStub.givenFailure`). O item 1 da fase 1 não teve prova por mutação do stub.
+- Documentação: `docs/arquitetura.md` com os dois diagramas, README, `CLAUDE.md`, regras e notas das tarefas
+  seguintes atualizados.
+- Sem plano de deploy: a tarefa não altera infraestrutura nem configuração de ambiente.
+
 
 _(preencher ao concluir todas as fases)_

@@ -23,7 +23,7 @@
 - [x] [T08 — Identidade mínima e isolamento por usuário](#t08)
 
 **Fase 5 — Fluxo de voz confiável**
-- [ ] [T09 — Orquestração de IA na camada de aplicação](#t09)
+- [x] [T09 — Orquestração de IA na camada de aplicação](#t09)
 - [ ] [T10 — Timeouts e retries](#t10)
 - [ ] [T11 — Validação do áudio recebido](#t11)
 - [ ] [T12 — Confirmação em duas etapas](#t12)
@@ -192,7 +192,7 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 
 **Nota (T05):** o `ApiExceptionHandler` trata hoje as falhas da IA direto pelas exceções do SDK (`com.openai.errors.*`). Ao criar o adaptador de IA, ele deve lançar uma exceção neutra da porta (transitória x definitiva) e o handler do SDK sai do advice.
 
-**Nota (T06):** as tools (`@Tool`/`@ToolParam`) já estão em `infrastructure/ai/tool/` desde a T06, fora da camada de aplicação, com os argumentos validados no adaptador; a T09 só move a orquestração (transcrição, `ChatClient`, voz). O `ApiExceptionHandler` também trata `ConstraintViolationException` e `DatabindException` (422 `invalid-command`) e a tool ainda devolve o `TransactionOutput` ao modelo (avaliar um `ToolResponse`).
+**Nota (T06):** as tools (`@Tool`/`@ToolParam`) já estão em `infrastructure/ai/tool/` desde a T06, fora da camada de aplicação, com os argumentos validados no adaptador; a T09 só move a orquestração (transcrição, `ChatClient`, voz). O `ApiExceptionHandler` também trata `ConstraintViolationException` e `DatabindException` (422 `invalid-command`).
 
 **Nota (T08):** o `UserId` do token chega às tools pelo `toolContext` do `ChatClient` (`TransactionTools.USER_ID`), montado hoje no `TransactionController`. Ao mover a orquestração, o use case de voz recebe o `UserId` como primeiro parâmetro de `execute` e o repassa ao `toolContext`; a tool continua lendo o usuário do `ToolContext`, nunca dos argumentos do modelo.
 
@@ -207,6 +207,8 @@ Definir tempo máximo para todas as chamadas externas e repetir automaticamente 
 - RES-01 — Timeouts
 - RES-02 — Retries com backoff exponencial e jitter
 - QA-03 — Testes de falha (parcial)
+
+**Nota (T09):** os adaptadores `SpringAi*Gateway` (`infrastructure/ai/`) são o lugar do timeout e do retry de cada etapa. Retentar só `AiProviderUnavailableException`; `AiProviderFailedException` não se retenta. O SDK da OpenAI já tem retry próprio, que precisa ser considerado ou desligado para não multiplicar tentativas.
 
 <a id="t11"></a>
 ### T11 — Validação do áudio recebido
@@ -233,6 +235,8 @@ Fazer com que comandos de registro gerem uma proposta persistida, que o cliente 
 - DOC-04 — Diagramas (estados da proposta)
 - DOC-06 — Exemplos de requisição e áudio (fluxo de voz)
 
+**Nota (T06):** a tool de escrita ainda devolve o `TransactionOutput` ao modelo. Ao redesenhá-la para gerar a proposta, avaliar o que ela devolve ao modelo (um `ToolResponse` com só o necessário para a resposta falada).
+
 **Nota (T07):** ao remodelar o fluxo de voz como recursos, atualizar `docs/openapi.yaml` (hoje `POST /api/v1/transactions/ai`), os exemplos em `docs/exemplos/transacoes.http` e a seção "API" do README.
 
 <a id="t13"></a>
@@ -257,6 +261,8 @@ Padronizar as respostas do assistente (frases fixas, formato único de valores e
 - FN-08 — Respostas mais claras
 - FN-07 — Proteções da IA (guardrails)
 
+**Nota (T06):** ao trocar a tool de consulta, avaliar o que ela devolve ao modelo (um `ToolResponse`), como na T12.
+
 **Nota (T07):** trocar a tool `list-transactions-by-category` por uma agregação (`COUNT`/`SUM`) feita no banco, em outro use case: é a forma melhor de responder à consulta por voz que já existe, não uma consulta nova. A listagem paginada da T07 não serve à voz, e a tool atual lista tudo de uma categoria sem limite.
 
 ## Fase 6 — Resiliência e recuperação de falhas
@@ -273,6 +279,8 @@ Aplicar circuit breaker e limite de chamadas simultâneas a cada dependência de
 - RES-04 — Bulkhead
 - QA-03 — Testes de falha (parcial)
 
+**Nota (T09):** um circuit breaker e um bulkhead por gateway (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`), pois as três dependências falham de forma independente.
+
 <a id="t16"></a>
 ### T16 — Degradação controlada
 
@@ -283,6 +291,8 @@ Definir a resposta para cada cenário de falha: texto quando a geração de voz 
 **Itens do escopo:**
 - RES-05 — Degradação controlada
 - QA-03 — Testes de falha (parcial)
+
+**Nota (T09):** o use case de voz (`ProcessVoiceCommandUseCase`) captura a falha do `TextToSpeechGateway` para responder em texto quando a voz falhar; as falhas da transcrição e do assistente seguem como `AiProviderUnavailableException` (503).
 
 **Nota (T06):** o 422 `invalid-command` (argumentos inválidos da tool) não gera voz hoje e responde só com Problem Details; servir uma mensagem falada como áudio estático.
 
