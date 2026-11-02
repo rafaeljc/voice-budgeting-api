@@ -277,9 +277,9 @@ montado no `TransactionController` (a T09 move a orquestração).
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/autenticacao.md` (novo): como gerar o token (`scripts/generate_token.py`, `JWT_SECRET`,
+- [x] [verificação] `docs/autenticacao.md` (novo): como gerar o token (`scripts/generate_token.py`, `JWT_SECRET`,
       argumentos), como enviar (`Authorization: Bearer`), o que a API valida (`sub` UUID, `exp`, assinatura HS256),
       o 401; e a orientação para produção: script e segredo compartilhado só para desenvolvimento, provedor de
       identidade (Keycloak ou outro) emitindo os tokens e a API validando pela chave pública (`issuer-uri` ou
