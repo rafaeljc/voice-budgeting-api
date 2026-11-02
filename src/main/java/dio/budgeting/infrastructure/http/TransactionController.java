@@ -3,6 +3,7 @@ package dio.budgeting.infrastructure.http;
 import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.ai.tool.TransactionTools;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.audio.transcription.TranscriptionModel;
@@ -24,6 +26,8 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,9 +73,15 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<TransactionResponse> createTransaction(@Valid @RequestBody TransactionRequest request) {
-        var response = TransactionResponse.from(persistTransactionUseCase.execute(request.toInput()));
+    public ResponseEntity<TransactionResponse> createTransaction(
+            @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TransactionRequest request) {
+        var response = TransactionResponse.from(persistTransactionUseCase.execute(userId(jwt), request.toInput()));
         return ResponseEntity.created(locationOf(response.id())).body(response);
+    }
+
+    // The token was already validated: its sub is a UUID
+    private static UserId userId(Jwt jwt) {
+        return UserId.parse(jwt.getSubject()).orElseThrow();
     }
 
     private static URI locationOf(String id) {
@@ -92,7 +102,7 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
-    ResponseEntity<Resource> transcribe(@RequestParam("file") MultipartFile file) {
+    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file) {
         log.atInfo()
                 .addKeyValue("audioSizeBytes", file.getSize())
                 .addKeyValue("audioContentType", file.getContentType())
@@ -101,7 +111,12 @@ public class TransactionController {
         var userMessage = transcriptionModel.transcribe(file.getResource());
         log.atInfo().addKeyValue("transcriptionLength", userMessage.length()).log("Audio transcribed");
 
-        var result = chatClient.prompt().user(userMessage).call().content();
+        var result = chatClient
+                .prompt()
+                .user(userMessage)
+                .toolContext(Map.of(TransactionTools.USER_ID, userId(jwt)))
+                .call()
+                .content();
         log.atInfo().addKeyValue("answerLength", result.length()).log("Assistant answered");
 
         byte[] audio = textToSpeechModel.call(result);

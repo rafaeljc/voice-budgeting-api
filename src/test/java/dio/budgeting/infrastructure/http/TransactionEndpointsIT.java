@@ -38,6 +38,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class TransactionEndpointsIT {
 
+    private static final UUID USER_ID = AccessTokens.DEFAULT_USER.uuid();
+
     private final MockMvc mockMvc;
     private final TransactionEntityRepository repository;
 
@@ -93,7 +95,12 @@ class TransactionEndpointsIT {
         // given
         var id = UUID.randomUUID();
         repository.save(new TransactionEntity(
-                id, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, Instant.parse("2026-03-01T10:00:00Z")));
+                id,
+                USER_ID,
+                "Mercado",
+                new BigDecimal("80.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-01T10:00:00Z")));
 
         // when
         var response = mockMvc.perform(
@@ -235,17 +242,22 @@ class TransactionEndpointsIT {
 
     private void save(String description, Category category, String amount, String createdAt) {
         repository.save(new TransactionEntity(
-                UUID.randomUUID(), description, new BigDecimal(amount), category, Instant.parse(createdAt)));
+                UUID.randomUUID(), USER_ID, description, new BigDecimal(amount), category, Instant.parse(createdAt)));
     }
 
     private void save(UUID id, String description, String amount, String createdAt) {
         repository.save(new TransactionEntity(
-                id, description, new BigDecimal(amount), Category.GROCERIES, Instant.parse(createdAt)));
+                id, USER_ID, description, new BigDecimal(amount), Category.GROCERIES, Instant.parse(createdAt)));
     }
 
     private void saveAt(String description, String createdAt) {
         repository.save(new TransactionEntity(
-                UUID.randomUUID(), description, new BigDecimal("10.00"), Category.GROCERIES, Instant.parse(createdAt)));
+                UUID.randomUUID(),
+                USER_ID,
+                description,
+                new BigDecimal("10.00"),
+                Category.GROCERIES,
+                Instant.parse(createdAt)));
     }
 
     @Test

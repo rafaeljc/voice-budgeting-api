@@ -13,9 +13,11 @@ import dio.budgeting.domain.TransactionCriterion.CategoryIs;
 import dio.budgeting.domain.TransactionFilter;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.TransactionSort;
+import dio.budgeting.domain.UserId;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,6 +40,7 @@ class ListTransactionsUseCaseTest {
         var sort = new TransactionSort(TransactionSort.Field.AMOUNT, TransactionSort.Direction.ASC);
         var page = new PageQuery(1, 2);
         var transaction = new Transaction(
+                new UserId(UUID.randomUUID()),
                 "Mercado",
                 new Money(new BigDecimal("80.00")),
                 Category.GROCERIES,

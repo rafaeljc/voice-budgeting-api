@@ -4,6 +4,7 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionId;
+import dio.budgeting.domain.UserId;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,13 +20,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(indexes = {@Index(columnList = "category, created_at, id"), @Index(columnList = "created_at, id")})
+@Table(
+        indexes = {
+            @Index(columnList = "user_id, category, created_at, id"),
+            @Index(columnList = "user_id, created_at, id")
+        })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionEntity {
     @Id
     private UUID id;
+
+    @Column(nullable = false)
+    private UUID userId;
 
     @Column(length = Transaction.DESCRIPTION_MAX_LENGTH)
     private String description;
@@ -42,6 +50,7 @@ public class TransactionEntity {
     public static TransactionEntity from(Transaction transaction) {
         return new TransactionEntity(
                 transaction.getId().uuid(),
+                transaction.getUserId().uuid(),
                 transaction.getDescription(),
                 transaction.getAmount().value(),
                 transaction.getCategory(),
@@ -50,6 +59,11 @@ public class TransactionEntity {
 
     public Transaction toDomain() {
         return new Transaction(
-                new TransactionId(this.id), this.description, new Money(this.amount), this.category, this.createdAt);
+                new TransactionId(this.id),
+                new UserId(this.userId),
+                this.description,
+                new Money(this.amount),
+                this.category,
+                this.createdAt);
     }
 }

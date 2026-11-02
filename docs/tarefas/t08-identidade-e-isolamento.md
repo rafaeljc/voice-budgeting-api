@@ -218,9 +218,9 @@ os `*IT` usam o usuário fixo `AccessTokens.DEFAULT_USER`; `Transaction` ainda n
 
 ## Fase 2: Isolamento por usuário
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionTest`: construtor de criação rejeita `userId` nulo; `PersistTransactionUseCaseTest`: grava
+- [x] [TDD] `TransactionTest`: construtor de criação rejeita `userId` nulo; `PersistTransactionUseCaseTest`: grava
       com o `UserId` recebido — implementa `Transaction.userId`, `user_id` na entidade (`NOT NULL`),
       `execute(UserId, PersistTransactionInput)`, o `UserId` do `Jwt` no controller e o `ToolContext` na tool
       `persist-transaction`

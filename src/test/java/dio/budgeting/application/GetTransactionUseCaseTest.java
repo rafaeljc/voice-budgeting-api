@@ -11,9 +11,11 @@ import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +35,7 @@ class GetTransactionUseCaseTest {
     void should_returnOutput_when_transactionExists() {
         // given
         var transaction = new Transaction(
+                new UserId(UUID.randomUUID()),
                 "Mercado",
                 new Money(new BigDecimal("80.00")),
                 Category.GROCERIES,

@@ -11,9 +11,11 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PersistTransactionUseCaseTest {
+    private static final UserId USER_ID = new UserId(UUID.randomUUID());
     private static final Instant NOW = Instant.parse("2026-03-01T12:30:45.123Z");
 
     @Mock
@@ -42,11 +45,12 @@ class PersistTransactionUseCaseTest {
         when(clock.instant()).thenReturn(NOW);
 
         // when
-        var output = useCase.execute(input);
+        var output = useCase.execute(USER_ID, input);
 
         // then
         var saved = ArgumentCaptor.forClass(Transaction.class);
         verify(repository).save(saved.capture());
+        assertThat(saved.getValue().getUserId()).isEqualTo(USER_ID);
         assertThat(saved.getValue().getDescription()).isEqualTo("Mercado");
         assertThat(saved.getValue().getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
         assertThat(saved.getValue().getCategory()).isEqualTo(Category.GROCERIES);
