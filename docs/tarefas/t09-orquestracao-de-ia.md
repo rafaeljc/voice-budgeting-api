@@ -29,9 +29,10 @@ Mover o fluxo de voz (transcrição → interpretação → voz) do `Transaction
   - `SpringAiTextToSpeechGateway` (`TextToSpeechModel`)
   - `AssistantConfiguration` (`@Configuration`): `@Bean ChatClient` a partir do `ChatClient.Builder`, com
     `defaultSystem` lido de `classpath:prompts/system-message.st` em **UTF-8** e `defaultTools(TransactionTools)`
-  - `OpenAiExceptionTranslator`: único ponto com a regra transitória x definitiva (IO, 429, ≥ 500 → transitória),
-    usado pelos três adaptadores; captura só a falha do provedor — as exceções de argumento de tool
-    (`ConstraintViolationException`, `DatabindException`) passam intactas e continuam no 422
+  - `OpenAiExceptionTranslationAspect` (`@Aspect`, `@Around` nas portas `*Gateway`): o único ponto com a regra
+    transitória x definitiva (IO, 429, ≥ 500 → transitória); os adaptadores não tratam exceção; captura só a falha
+    do provedor — as exceções de argumento de tool (`ConstraintViolationException`, `DatabindException`) passam
+    intactas e continuam no 422
 - `TransactionController`: recebe o upload, loga `Voice command received`, monta o `ProcessVoiceCommandInput`
   (`getBytes()`, `getOriginalFilename()`, `getContentType()`), chama o use case e devolve `audio/mpeg` com
   `Content-Disposition: attachment; filename="audio.mp3"` como hoje; sem import de Spring AI
@@ -78,6 +79,11 @@ Mover o fluxo de voz (transcrição → interpretação → voz) do `Transaction
 - `ChatClient` como `@Bean` no `AssistantConfiguration`, não montado no construtor do adaptador — separa o wiring
   do assistente (prompt, tools) do comportamento do adaptador; um segundo assistente seria outro `@Bean` com
   `@Qualifier` (decisão do usuário)
+- Tradução por aspecto (`OpenAiExceptionTranslationAspect`, `@Around` em `execution(* ...application.*Gateway+.*(..))`),
+  não por tradutor injetado nos adaptadores — mesma ideia da tradução de exceções de persistência do Spring: os
+  adaptadores `SpringAi*Gateway` ficam sem código de erro e independentes de provedor, e o aspecto é a única classe
+  que cita a OpenAI (trocar de provedor é trocar o aspecto). Declara `spring-boot-starter-aspectj` no
+  `build.gradle`, em vez de depender do `aspectjweaver` que chega via `spring-boot-starter-data-jpa`. Mudança em relação ao plano original, aprovada na execução da fase 2 (decisão do usuário)
 - Prompt lido em UTF-8 (`StandardCharsets.UTF_8`), como manda `ai-integration.md`; no Java 18+ o padrão já é UTF-8,
   então o comportamento não muda
 - Testes: `givenFailure(AiStage, AiFailure)` genérico e `VoiceCommandIT` parametrizado por etapa — protege a
@@ -200,10 +206,11 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Exceções neutras
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `AiProviderUnavailableException` e `AiProviderFailedException` (raiz de `application/`);
-      `OpenAiExceptionTranslator` (`infrastructure/ai/`) usado pelos três adaptadores; `ApiExceptionHandler` com
+- [x] [verificação] `AiProviderUnavailableException` e `AiProviderFailedException` (raiz de `application/`);
+      `OpenAiExceptionTranslationAspect` (`infrastructure/ai/`) aplicado às portas `*Gateway`;
+      `ApiExceptionHandler` com
       `@ExceptionHandler(AiProviderUnavailableException.class)` (503, `Retry-After`, `WARN` com `providerStatus`),
       sem handler nem import de `com.openai` — os casos por etapa e os testes de log do `VoiceCommandIT` (fase 1)
       continuam verdes sem alteração
@@ -212,14 +219,31 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 - `./gradlew build` → `BUILD SUCCESSFUL`, sem `OPENAI_API_KEY` nem `JWT_SECRET`
 - `grep -rn "com.openai" src/main/java | grep -v "/infrastructure/ai/"` → nenhuma linha
-- `grep -rn "OpenAiExceptionTranslator" src/main/java/dio/budgeting/infrastructure/ai` → a classe e os três
-  adaptadores
+- `grep -rln "OpenAIException" src/main/java` → só `OpenAiExceptionTranslationAspect`
+- `grep -rln "com.openai" src/main/java/dio/budgeting/infrastructure/ai` → só o aspecto
 - `grep -rnE "org.springframework.web|org.springframework.ai|jakarta.persistence" src/main/java/dio/budgeting/application`
   → nenhuma linha
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `AiProviderUnavailableException(Integer providerStatus, Throwable cause)` e `AiProviderFailedException(Throwable
+  cause)` na raiz de `application/`, ambas unchecked. A transitória expõe `getProviderStatus()` (`null` em falha de
+  rede).
+- Tradução por aspecto, não por tradutor injetado (mudança em relação ao plano original, aprovada pelo usuário e
+  registrada em Decisões): `OpenAiExceptionTranslationAspect` aplica um `@Around` às portas `*Gateway` e é a única
+  classe que cita a OpenAI. Procura a `OpenAIException` na cadeia de causas e relança intacta qualquer outra
+  exceção; a falha encontrada vira a causa da exceção neutra, o que mantém `UnauthorizedException` no `stack_trace`.
+  Os adaptadores `SpringAi*Gateway` ficaram sem código de erro. Dependência `spring-boot-starter-aspectj`
+  declarada no `build.gradle` (o `aspectjweaver` já chegava transitivamente via `spring-boot-starter-data-jpa`).
+- O `ApiExceptionHandler` trata `AiProviderUnavailableException` (503, `Retry-After`, `WARN` com `providerStatus`
+  quando houver) e não importa mais `com.openai`; `AiProviderFailedException` cai no handler genérico (500 com
+  `ERROR` e causa encadeada).
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL` sem `OPENAI_API_KEY` nem `JWT_SECRET`; `VoiceCommandIT` 26
+  testes, 0 falhas, sem alteração de asserções (os 12 casos por etapa passam pelo aspecto); os `grep` do plano
+  deram o resultado esperado.
+- Para a fase 3: a documentação (`ai-integration.md`, `error-handling.md`, `architecture.md`) deve citar o aspecto
+  de tradução e as exceções neutras, não o `OpenAIException`. A tradução vale para qualquer classe que implemente
+  uma porta `*Gateway` (pointcut por tipo), então um adaptador novo já nasce coberto.
 
 ## Fase 3: Documentação
 
