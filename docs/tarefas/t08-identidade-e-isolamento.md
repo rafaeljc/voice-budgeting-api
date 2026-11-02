@@ -93,14 +93,14 @@ fluxo de voz (SEG-02).
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
-- [ ] Sem token, com token inválido, expirado, sem `exp` ou com `sub` que não é UUID → 401 Problem Details
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
+- [x] Sem token, com token inválido, expirado, sem `exp` ou com `sub` que não é UUID → 401 Problem Details
       `unauthenticated` com `WWW-Authenticate: Bearer` e `X-Request-Id`; `/actuator/health` responde sem token
-- [ ] Transação de outro usuário → 404 `transaction-not-found`; listagem e tool de IA só veem as do usuário; voz
+- [x] Transação de outro usuário → 404 `transaction-not-found`; listagem e tool de IA só veem as do usuário; voz
       grava para o usuário do token
-- [ ] `scripts/generate_token.py` gera um token aceito pela API rodando (`bootRun`)
-- [ ] `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha
-- [ ] `docs/autenticacao.md`, README, `docs/openapi.yaml`, `docs/exemplos/transacoes.http`, `.env.example`,
+- [x] `scripts/generate_token.py` gera um token aceito pela API rodando (`bootRun`)
+- [x] `grep -rn "org.springframework" src/main/java/dio/budgeting/domain` → nenhuma linha
+- [x] `docs/autenticacao.md`, README, `docs/openapi.yaml`, `docs/exemplos/transacoes.http`, `.env.example`,
       `CLAUDE.md`, regras e nota da T09 atualizados; checkbox da T08 marcado em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -277,7 +277,7 @@ montado no `TransactionController` (a T09 move a orquestração).
 
 ## Fase 3: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/autenticacao.md` (novo): como gerar o token (`scripts/generate_token.py`, `JWT_SECRET`,
       argumentos), como enviar (`Authorization: Bearer`), o que a API valida (`sub` UUID, `exp`, assinatura HS256),
@@ -296,7 +296,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `sub`/`exp`, sem senha/BCrypt, `@AuthenticationPrincipal Jwt` → `UserId`, porta com `UserId`); linhas do 401
       em `error-handling.md` e `api-conventions.md` (`Authorization`, `WWW-Authenticate`); `ToolContext` em
       `ai-integration.md`; `AccessTokens` em `testing.md`; assinaturas da porta em `architecture.md`
-- [ ] [verificação] `docs/tarefas.md`: nota na T09 (o `userId` chega às tools pelo `toolContext` do `ChatClient`;
+- [x] [verificação] `docs/tarefas.md`: nota na T09 (o `userId` chega às tools pelo `toolContext` do `ChatClient`;
       ao mover a orquestração, o use case recebe o `UserId`)
 
 ### Plano de verificação
@@ -310,8 +310,42 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+**O que foi feito**
+
+- `docs/autenticacao.md` (gerar e enviar o token, o que a API valida, o 401 e a orientação para produção), uma linha
+  e a tabela de variáveis no README, `bearerAuth` + `security` global + resposta 401 compartilhada
+  (`components.responses.Unauthenticated`, com `WWW-Authenticate`) nos quatro endpoints do `docs/openapi.yaml`, e o
+  token em todas as requisições de `docs/exemplos/transacoes.http`, mais um exemplo de 401.
+- `CLAUDE.md` (stack, estrutura com `infrastructure/security/`, comando do script, `JWT_SECRET`) e as regras:
+  `security.md` reescrito, `error-handling.md` e `api-conventions.md` com o 401, `ai-integration.md` com o
+  `ToolContext`, `testing.md` com o `AccessTokens`, `architecture.md` com a porta e os use cases com `UserId`.
+- Nota da T08 na T09 em `docs/tarefas.md`.
+
+**Decisões e detalhes**
+
+- Os comandos do script nos docs usam `python3 scripts/generate_token.py`: funciona também onde o shebang e o bit de
+  execução não valem (Windows, cópia sem permissões).
+- A resposta 401 é um `$ref` compartilhado; o `grep -i "bearerAuth\|unauthenticated"` mostra o esquema, o `security`
+  global e os quatro `$ref` (um por endpoint).
+
+**Verificação:** `./gradlew build` → `BUILD SUCCESSFUL`; `grep` do `bearerAuth`/`unauthenticated` no
+`docs/openapi.yaml` → esquema, `security` global e 401 nos quatro endpoints; `grep "autenticacao.md"` → uma linha no
+README e uma no `docs/openapi.yaml`; `grep "A definir\|BCrypt"` em `security.md` → nenhuma linha; Swagger UI servido em
+`localhost:8081` e parado em seguida.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Autenticação e isolamento por usuário entregues em três fases:
+
+1. **Autenticação:** a API é um *resource server* do Spring Security com JWT HS256 (`sub` UUID e `exp`
+   obrigatórios), segredo em `JWT_SECRET`, tokens de desenvolvimento por `scripts/generate_token.py`; 401 em Problem
+   Details (`unauthenticated`) com `WWW-Authenticate: Bearer`, `X-Request-Id` e log `WARN`; só `/actuator/health` é
+   público.
+2. **Isolamento:** `UserId` no domínio, `userId` na transação e `user_id` `NOT NULL` com novos índices; porta com o
+   usuário explícito, use cases com `UserId` como primeiro parâmetro, controller e tools (via `ToolContext`) operando
+   para o usuário do token; transação de outro usuário → 404 igual ao do inexistente.
+3. **Documentação:** `docs/autenticacao.md`, README, OpenAPI, exemplos `.http`, `CLAUDE.md`, regras e nota da T09.
+
+Para quem for rodar a aplicação: o `.env` precisa de `JWT_SECRET` (mínimo de 32 bytes). Linhas antigas do banco local
+ficam com `user_id` zerado, sem dono real e invisíveis. Fora do escopo, como previsto: ADR, `iss`/`aud`, papéis e 403,
+cadastro e login de usuários, migração de dados, `userId` nos logs, CORS e "Try it out", rate limiting (T19) e deploy.
