@@ -151,7 +151,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Rede de proteção e orquestração
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandIT`: falhas transitórias (`CONNECTION_FAILURE`, `RATE_LIMITED`, `PROVIDER_ERROR`) em cada
       etapa (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`) → 503 `assistant-unavailable` com `Retry-After: 30`;
@@ -162,7 +162,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       o `UserId` ao `AssistantGateway`, a resposta ao `TextToSpeechGateway`, e a saída traz os bytes da voz —
       implementa `ProcessVoiceCommandUseCase`, as três portas, `Audio`, `ProcessVoiceCommandInput` (`toAudio()`),
       `VoiceCommandOutput` e os logs `Audio transcribed`, `Assistant answered` e `Speech synthesized`
-- [ ] [verificação] adaptadores `SpringAiSpeechToTextGateway`, `SpringAiAssistantGateway` e
+- [x] [verificação] adaptadores `SpringAiSpeechToTextGateway`, `SpringAiAssistantGateway` e
       `SpringAiTextToSpeechGateway`; `AssistantConfiguration` (`@Bean ChatClient`, prompt em UTF-8); controller
       chamando o use case, sem Spring AI — `VoiceCommandIT` inteiro verde sem alteração de asserções
 
@@ -178,7 +178,25 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Rede de proteção: `AiStage` e `AiStub.givenFailure(AiStage, AiFailure)` substituem `givenTranscriptionFailure`;
+  `VoiceCommandIT` cobre 503 (9 casos: 3 etapas × 3 falhas transitórias) e 500 (3 casos: `REQUEST_REJECTED` por
+  etapa). Os casos de `ASSISTANT` e `SPEECH` passaram de imediato, então não houve mudança de comportamento. Os
+  testes de log continuam só na transcrição. Não houve prova por mutação do stub; o RED do item é só a ausência do
+  método (caracterização).
+- Orquestração: `ProcessVoiceCommandUseCase` (sem `@Transactional`) e as portas `SpeechToTextGateway`,
+  `AssistantGateway` e `TextToSpeechGateway` na raiz de `application/`; `Audio` e `ProcessVoiceCommandInput` em
+  `input/`; `VoiceCommandOutput` em `output/`. Os logs `Audio transcribed`, `Assistant answered` e
+  `Speech synthesized` estão no use case; `Voice command received` fica no controller.
+- Adaptadores `SpringAi*Gateway` e `AssistantConfiguration` (`@Bean ChatClient assistantChatClient`, prompt em UTF-8)
+  em `infrastructure/ai/`. O controller só monta o input, chama o use case e devolve `audio/mpeg`; `transcribe`
+  declara `throws IOException`.
+- Decisão de execução: o `@Service` do use case entrou só no commit do item 3, junto com os adaptadores. Antes disso o
+  contexto Spring não subiria (sem beans das portas) e os `*IT` quebrariam no checkpoint do item 2.
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL` sem `OPENAI_API_KEY` nem `JWT_SECRET`; `VoiceCommandIT`
+  26 testes, 0 falhas; os três `grep` (Spring AI em `http`/`application`, `givenTranscriptionFailure`,
+  `defaultCharset`) → nenhuma linha.
+- Para a fase 2: o `ApiExceptionHandler` ainda trata `OpenAIException` e os adaptadores não traduzem exceções; é o
+  que a fase 2 troca por `AiProviderUnavailableException` e `AiProviderFailedException`.
 
 ## Fase 2: Exceções neutras
 
