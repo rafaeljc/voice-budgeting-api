@@ -158,7 +158,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `REQUEST_REJECTED` em cada etapa → 500 genérico — implementa `AiStage`, `AiStub.givenFailure(AiStage,
       AiFailure)` no `OpenAiWireMockStub` (substitui `givenTranscriptionFailure`) e ajusta os testes de log ao novo
       método (caracterização: deve passar sem mudar código de produção)
-- [ ] [TDD] `ProcessVoiceCommandUseCaseTest` (novo): o áudio do input vai ao `SpeechToTextGateway`, a transcrição e
+- [x] [TDD] `ProcessVoiceCommandUseCaseTest` (novo): o áudio do input vai ao `SpeechToTextGateway`, a transcrição e
       o `UserId` ao `AssistantGateway`, a resposta ao `TextToSpeechGateway`, e a saída traz os bytes da voz —
       implementa `ProcessVoiceCommandUseCase`, as três portas, `Audio`, `ProcessVoiceCommandInput` (`toAudio()`),
       `VoiceCommandOutput` e os logs `Audio transcribed`, `Assistant answered` e `Speech synthesized`
