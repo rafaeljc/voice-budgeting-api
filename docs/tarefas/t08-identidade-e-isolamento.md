@@ -286,7 +286,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `jwk-set-uri`), sem mudar domínio nem use cases
 - [x] [verificação] README: `JWT_SECRET` na configuração e uma linha na execução/API apontando para
       `docs/autenticacao.md`
-- [ ] [verificação] `docs/openapi.yaml`: `components.securitySchemes.bearerAuth` (`http`, `bearer`, `JWT`, descrição
+- [x] [verificação] `docs/openapi.yaml`: `components.securitySchemes.bearerAuth` (`http`, `bearer`, `JWT`, descrição
       apontando para `docs/autenticacao.md`), `security` global e resposta 401 (Problem Details `unauthenticated`,
       `WWW-Authenticate`) em cada endpoint; nota de isolamento no 404 do `GET /{id}`
 - [ ] [verificação] `docs/exemplos/transacoes.http`: variável `@token` com instrução para gerar, `Authorization` em

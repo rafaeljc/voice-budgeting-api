@@ -7,9 +7,13 @@ info:
 
     Todo erro usa Problem Details (RFC 9457) com `application/problem+json`. Toda resposta traz o cabeçalho
     `X-Request-Id`, com o identificador de rastreamento da requisição.
+
+    Todas as rotas da API exigem um token JWT; cada usuário acessa só as próprias transações.
 servers:
   - url: http://localhost:8080
     description: Execução local
+security:
+  - bearerAuth: []
 tags:
   - name: Transações
     description: Cadastro e consulta de transações.
@@ -77,6 +81,8 @@ paths:
                     instance: /api/v1/transactions
         '415':
           $ref: '#/components/responses/UnsupportedMediaType'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
     get:
@@ -140,6 +146,8 @@ paths:
                 errors:
                   - parameter: sort
                     detail: A ordenação deve seguir o padrão "campo,direção" (por exemplo "amount,desc"), com campo createdAt ou amount e direção asc ou desc.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transactions/{id}:
@@ -148,8 +156,8 @@ paths:
       operationId: getTransaction
       summary: Consulta uma transação
       description: |
-        Devolve a transação com o identificador informado. Um identificador malformado responde igual a um
-        inexistente (404).
+        Devolve a transação com o identificador informado. Um identificador malformado e a transação de outro
+        usuário respondem igual a um inexistente (404).
       parameters:
         - name: id
           in: path
@@ -166,7 +174,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransactionResponse'
         '404':
-          description: Transação inexistente ou identificador malformado.
+          description: Transação inexistente, de outro usuário ou identificador malformado.
           content:
             application/problem+json:
               schema:
@@ -177,6 +185,8 @@ paths:
                 status: 404
                 detail: A transação solicitada não existe.
                 instance: /api/v1/transactions/00000000-0000-4000-8000-000000000000
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transactions/ai:
@@ -254,6 +264,8 @@ paths:
                 status: 422
                 detail: Não foi possível processar o comando com os dados entendidos. Envie um novo comando de voz.
                 instance: /api/v1/transactions/ai
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -275,7 +287,35 @@ paths:
                 detail: O assistente está temporariamente indisponível. Tente novamente em instantes.
                 instance: /api/v1/transactions/ai
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT HS256 com os claims `sub` (UUID do usuário) e `exp`, no cabeçalho `Authorization: Bearer`.
+        Veja como gerar e usar o token em `docs/autenticacao.md`.
   responses:
+    Unauthenticated:
+      description: |
+        Token ausente, malformado, com assinatura errada, expirado, sem `exp` ou com `sub` que não é UUID.
+        O corpo é o mesmo em todos esses casos.
+      headers:
+        WWW-Authenticate:
+          description: Esquema de autenticação esperado.
+          schema:
+            type: string
+            example: Bearer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:problem-type:budgeting:unauthenticated
+            title: Não autenticado
+            status: 401
+            detail: Envie um token válido no cabeçalho Authorization.
+            instance: /api/v1/transactions
     UnsupportedMediaType:
       description: Tipo de mídia da requisição não suportado.
       content:
