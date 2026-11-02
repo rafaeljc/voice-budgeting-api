@@ -230,7 +230,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `ListTransactionsUseCaseTest`: repassa o `UserId` à porta; `TransactionEndpointsIT`: listagem (com e
       sem `category`) traz só as do usuário, com `totalElements` dele — implementa `findAllByUserId` (adaptador com
       `Specification` do usuário somada às do filtro) e os índices com `user_id`
-- [ ] [TDD] `JpaTransactionRepositoryIT` (novo): `findAllByUserIdAndCategory` não traz transações de outro usuário;
+- [x] [TDD] `JpaTransactionRepositoryIT` (novo): `findAllByUserIdAndCategory` não traz transações de outro usuário;
       `ListTransactionsByCategoryUseCase` com `execute(UserId, Category)` — implementa o método da porta e o
       `ToolContext` na tool `list-transactions-by-category`
 - [ ] [TDD] `VoiceCommandIT`: o comando de voz grava a transação para o usuário do token (não visível para outro)

@@ -3,6 +3,7 @@ package dio.budgeting.application;
 import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,8 @@ public class ListTransactionsByCategoryUseCase {
         this.transactionRepository = transactionRepository;
     }
 
-    public List<TransactionOutput> execute(Category category) {
-        var transactions = transactionRepository.findAllByCategory(category).stream()
+    public List<TransactionOutput> execute(UserId userId, Category category) {
+        var transactions = transactionRepository.findAllByUserIdAndCategory(userId, category).stream()
                 .map(TransactionOutput::from)
                 .toList();
         log.atInfo().addKeyValue("resultCount", transactions.size()).log("Transactions listed");

@@ -12,5 +12,5 @@ public interface TransactionEntityRepository
         extends CrudRepository<TransactionEntity, UUID>, JpaSpecificationExecutor<TransactionEntity> {
     Optional<TransactionEntity> findByIdAndUserId(UUID id, UUID userId);
 
-    List<TransactionEntity> findAllByCategory(Category category);
+    List<TransactionEntity> findAllByUserIdAndCategory(UUID userId, Category category);
 }

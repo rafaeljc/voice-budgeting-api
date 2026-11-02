@@ -37,8 +37,8 @@ public class TransactionTools {
 
     @Tool(name = "list-transactions-by-category", description = "Lista transações financeiras por categoria")
     public List<TransactionOutput> listTransactionsByCategory(
-            @ToolParam(description = "Categoria de uma transação") Category category) {
-        return listTransactionsByCategoryUseCase.execute(category);
+            @ToolParam(description = "Categoria de uma transação") Category category, ToolContext toolContext) {
+        return listTransactionsByCategoryUseCase.execute(userId(toolContext), category);
     }
 
     // The user comes from the authenticated request, never from the model, so it is not part of the tool schema

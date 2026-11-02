@@ -72,7 +72,7 @@ class VoiceCommandIT {
         response.andExpect(status().isOk())
                 .andExpect(content().contentType("audio/mpeg"))
                 .andExpect(content().bytes(speech));
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES))
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
                 .singleElement()
                 .satisfies(transaction -> {
                     assertThat(transaction.getDescription()).isEqualTo("Mercado");
@@ -113,7 +113,7 @@ class VoiceCommandIT {
 
         // then
         var transactionId = transactionRepository
-                .findAllByCategory(Category.GROCERIES)
+                .findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
                 .getFirst()
                 .getId()
                 .uuid()
@@ -232,7 +232,8 @@ class VoiceCommandIT {
                                 + " Envie um novo comando de voz."))
                 .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH))
                 .andExpect(jsonPath("$.errors").doesNotExist());
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
     }
 
     @ParameterizedTest
@@ -249,7 +250,8 @@ class VoiceCommandIT {
         // then
         response.andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
-        assertThat(transactionRepository.findAllByCategory(Category.GROCERIES)).isEmpty();
+        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
+                .isEmpty();
     }
 
     @Test
