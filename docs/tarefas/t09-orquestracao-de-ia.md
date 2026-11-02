@@ -252,7 +252,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/arquitetura.md` (novo): um parágrafo curto antes de cada diagrama e os dois diagramas
       Mermaid abaixo (aprovados na entrevista; mudar só com aprovação)
 - [x] [verificação] README: uma linha apontando para `docs/arquitetura.md` (perto da introdução ou da seção "API")
-- [ ] [verificação] `CLAUDE.md`: estrutura (portas `*Gateway` na raiz de `application/`; em `infrastructure/ai/`
+- [x] [verificação] `CLAUDE.md`: estrutura (portas `*Gateway` na raiz de `application/`; em `infrastructure/ai/`
       os `SpringAi*Gateway`, `AssistantConfiguration` e `OpenAiExceptionTranslator`) e nomenclatura (porta
       `<X>Gateway` → adaptador `<Tecnologia><X>Gateway`, par do `Repository`)
 - [ ] [verificação] regras: `architecture.md` (exemplo de porta de gateway ao lado do de repositório; gateways na
