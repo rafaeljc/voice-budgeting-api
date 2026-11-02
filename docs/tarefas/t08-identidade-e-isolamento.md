@@ -157,7 +157,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `UserIdTest` (novo, `domain`): `parse` devolve o ID para UUID válido e vazio para texto malformado,
       vazio ou nulo; construtor rejeita `null` — implementa `UserId`
-- [ ] [TDD] `AuthenticationIT` (novo): `GET /api/v1/transactions` sem token → 401 `application/problem+json`, `type`
+- [x] [TDD] `AuthenticationIT` (novo): `GET /api/v1/transactions` sem token → 401 `application/problem+json`, `type`
       `urn:problem-type:budgeting:unauthenticated`, `title`/`detail` em pt-BR e `WWW-Authenticate` começando com
       `Bearer`; com token válido → 200 — implementa a dependência, `JwtProperties`, `SecurityConfiguration`
       (`JwtDecoder`, `SecurityFilterChain`, `AuthenticationEntryPoint`), `ProblemType.UNAUTHENTICATED`,

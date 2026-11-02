@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -108,6 +109,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         var status = HttpStatus.NOT_FOUND;
         return handleExceptionInternal(
                 ex, problem(ProblemType.TRANSACTION_NOT_FOUND, status, null), new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Object> handleUnauthenticated(AuthenticationException ex, WebRequest request) {
+        var status = HttpStatus.UNAUTHORIZED;
+        var headers = new HttpHeaders();
+        headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+        return handleExceptionInternal(
+                ex, problem(ProblemType.UNAUTHENTICATED, status, null), headers, status, request);
     }
 
     @ExceptionHandler(OpenAIException.class)

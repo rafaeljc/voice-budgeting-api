@@ -4,6 +4,7 @@ import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.security.AccessTokens;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,6 +31,7 @@ class UploadLimitIT {
     void should_returnPayloadTooLargeProblem_when_uploadExceedsLimit() throws Exception {
         // given
         var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + VOICE_COMMAND_PATH))
+                .header("Authorization", AccessTokens.authorization())
                 .header("Content-Type", "multipart/form-data; boundary=" + BOUNDARY)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(multipartWithFileOf(OVERSIZED_FILE_BYTES)))
                 .build();

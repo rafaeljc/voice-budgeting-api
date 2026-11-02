@@ -2,10 +2,12 @@ package dio.budgeting.infrastructure.http;
 
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
+import dio.budgeting.support.security.AccessTokens;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -29,7 +31,9 @@ class RequestCorrelationIT {
     @Test
     void should_returnTraceIdAsRequestIdAndLogItInJson_when_requestIsMade(CapturedOutput output) throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH)).andReturn().getResponse();
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header(AUTHORIZATION, AccessTokens.authorization()))
+                .andReturn()
+                .getResponse();
 
         // then
         var requestId = response.getHeader("X-Request-Id");
@@ -45,8 +49,9 @@ class RequestCorrelationIT {
         var traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
 
         // when
-        var response = mockMvc.perform(
-                        get(TRANSACTIONS_PATH).header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01"))
                 .andReturn()
                 .getResponse();
 
@@ -57,7 +62,9 @@ class RequestCorrelationIT {
     @Test
     void should_ignoreClientRequestId_when_headerIsSent() throws Exception {
         // when
-        var response = mockMvc.perform(get(TRANSACTIONS_PATH).header("X-Request-Id", "client-chosen-id"))
+        var response = mockMvc.perform(get(TRANSACTIONS_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .header("X-Request-Id", "client-chosen-id"))
                 .andReturn()
                 .getResponse();
 
