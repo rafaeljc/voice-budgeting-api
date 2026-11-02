@@ -97,8 +97,8 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}")
-    public TransactionResponse getTransaction(@PathVariable String id) {
-        return TransactionResponse.from(getTransactionUseCase.execute(id));
+    public TransactionResponse getTransaction(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
+        return TransactionResponse.from(getTransactionUseCase.execute(userId(jwt), id));
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")

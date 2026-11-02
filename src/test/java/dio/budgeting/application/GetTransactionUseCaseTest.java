@@ -25,6 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GetTransactionUseCaseTest {
 
+    private static final UserId USER_ID = new UserId(UUID.randomUUID());
+
     @Mock
     private TransactionRepository repository;
 
@@ -35,15 +37,15 @@ class GetTransactionUseCaseTest {
     void should_returnOutput_when_transactionExists() {
         // given
         var transaction = new Transaction(
-                new UserId(UUID.randomUUID()),
+                USER_ID,
                 "Mercado",
                 new Money(new BigDecimal("80.00")),
                 Category.GROCERIES,
                 Instant.parse("2026-03-01T12:30:45Z"));
-        when(repository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(repository.findByIdAndUserId(transaction.getId(), USER_ID)).thenReturn(Optional.of(transaction));
 
         // when
-        var output = useCase.execute(transaction.getId().uuid().toString());
+        var output = useCase.execute(USER_ID, transaction.getId().uuid().toString());
 
         // then
         assertThat(output.id()).isEqualTo(transaction.getId().uuid().toString());
@@ -56,17 +58,17 @@ class GetTransactionUseCaseTest {
     void should_throwNotFound_when_transactionDoesNotExist() {
         // given
         var id = new TransactionId();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.findByIdAndUserId(id, USER_ID)).thenReturn(Optional.empty());
 
         // when / then
-        assertThatThrownBy(() -> useCase.execute(id.uuid().toString()))
+        assertThatThrownBy(() -> useCase.execute(USER_ID, id.uuid().toString()))
                 .isInstanceOf(TransactionNotFoundException.class);
     }
 
     @Test
     void should_throwNotFoundWithoutQuerying_when_idIsMalformed() {
         // when / then
-        assertThatThrownBy(() -> useCase.execute("abc")).isInstanceOf(TransactionNotFoundException.class);
+        assertThatThrownBy(() -> useCase.execute(USER_ID, "abc")).isInstanceOf(TransactionNotFoundException.class);
         verifyNoInteractions(repository);
     }
 }

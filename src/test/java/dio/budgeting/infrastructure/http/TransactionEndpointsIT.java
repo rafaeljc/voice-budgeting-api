@@ -116,6 +116,29 @@ class TransactionEndpointsIT {
                 .andExpect(jsonPath("$.createdAt").value("2026-03-01T10:00:00Z"));
     }
 
+    @Test
+    void should_returnSameNotFoundProblemAsUnknownId_when_transactionBelongsToAnotherUser() throws Exception {
+        // given
+        var id = UUID.randomUUID();
+        repository.save(new TransactionEntity(
+                id,
+                UUID.randomUUID(),
+                "Mercado",
+                new BigDecimal("80.00"),
+                Category.GROCERIES,
+                Instant.parse("2026-03-01T10:00:00Z")));
+
+        // when
+        var response = mockMvc.perform(
+                get(TRANSACTIONS_PATH + "/{id}", id).header(AUTHORIZATION, AccessTokens.authorization()));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-not-found"))
+                .andExpect(jsonPath("$.title").value("Transação não encontrada"))
+                .andExpect(jsonPath("$.detail").value("A transação solicitada não existe."));
+    }
+
     @ParameterizedTest
     @MethodSource("unknownIds")
     void should_returnNotFoundProblem_when_idIsUnknownOrMalformed(String id) throws Exception {

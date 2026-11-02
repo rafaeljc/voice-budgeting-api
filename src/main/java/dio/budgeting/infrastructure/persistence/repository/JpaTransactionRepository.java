@@ -8,6 +8,7 @@ import dio.budgeting.domain.TransactionFilter;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.TransactionSort;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.util.List;
 import java.util.Optional;
@@ -30,8 +31,10 @@ public class JpaTransactionRepository implements TransactionRepository {
     }
 
     @Override
-    public Optional<Transaction> findById(TransactionId id) {
-        return transactionEntityRepository.findById(id.uuid()).map(entity -> entity.toDomain());
+    public Optional<Transaction> findByIdAndUserId(TransactionId id, UserId userId) {
+        return transactionEntityRepository
+                .findByIdAndUserId(id.uuid(), userId.uuid())
+                .map(entity -> entity.toDomain());
     }
 
     @Override

@@ -224,7 +224,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       com o `UserId` recebido — implementa `Transaction.userId`, `user_id` na entidade (`NOT NULL`),
       `execute(UserId, PersistTransactionInput)`, o `UserId` do `Jwt` no controller e o `ToolContext` na tool
       `persist-transaction`
-- [ ] [TDD] `GetTransactionUseCaseTest`: consulta a porta com o `UserId`; `TransactionEndpointsIT`: transação de
+- [x] [TDD] `GetTransactionUseCaseTest`: consulta a porta com o `UserId`; `TransactionEndpointsIT`: transação de
       outro usuário → 404 `transaction-not-found`, mesmo corpo do ID inexistente — implementa `findByIdAndUserId`
       (porta e adaptador) e `execute(UserId, String)`
 - [ ] [TDD] `ListTransactionsUseCaseTest`: repassa o `UserId` à porta; `TransactionEndpointsIT`: listagem (com e

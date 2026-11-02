@@ -4,6 +4,7 @@ import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionRepository;
+import dio.budgeting.domain.UserId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +17,10 @@ public class GetTransactionUseCase {
     }
 
     @Transactional(readOnly = true)
-    public TransactionOutput execute(String id) {
-        // A malformed ID names no transaction, so it is the same outcome as an unknown one
+    public TransactionOutput execute(UserId userId, String id) {
+        // A malformed ID, an unknown one and another user's transaction all end the same way: not found
         return TransactionId.parse(id)
-                .flatMap(transactionRepository::findById)
+                .flatMap(transactionId -> transactionRepository.findByIdAndUserId(transactionId, userId))
                 .map(TransactionOutput::from)
                 .orElseThrow(TransactionNotFoundException::new);
     }
