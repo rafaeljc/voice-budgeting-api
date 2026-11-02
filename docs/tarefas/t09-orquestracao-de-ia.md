@@ -151,9 +151,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Rede de proteção e orquestração
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandIT`: falhas transitórias (`CONNECTION_FAILURE`, `RATE_LIMITED`, `PROVIDER_ERROR`) em cada
+- [x] [TDD] `VoiceCommandIT`: falhas transitórias (`CONNECTION_FAILURE`, `RATE_LIMITED`, `PROVIDER_ERROR`) em cada
       etapa (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`) → 503 `assistant-unavailable` com `Retry-After: 30`;
       `REQUEST_REJECTED` em cada etapa → 500 genérico — implementa `AiStage`, `AiStub.givenFailure(AiStage,
       AiFailure)` no `OpenAiWireMockStub` (substitui `givenTranscriptionFailure`) e ajusta os testes de log ao novo

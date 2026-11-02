@@ -19,6 +19,7 @@ import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiFailure;
+import dio.budgeting.support.ai.AiStage;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
@@ -27,12 +28,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -148,13 +152,12 @@ class VoiceCommandIT {
     }
 
     @ParameterizedTest
-    @EnumSource(
-            value = AiFailure.class,
-            names = {"CONNECTION_FAILURE", "RATE_LIMITED", "PROVIDER_ERROR"})
-    void should_returnServiceUnavailableWithRetryAfter_when_providerFailureIsTransient(AiFailure failure)
+    @MethodSource("transientFailures")
+    void should_returnServiceUnavailableWithRetryAfter_when_providerFailureIsTransient(AiStage stage, AiFailure failure)
             throws Exception {
         // given
-        aiStub.givenTranscriptionFailure(failure);
+        givenStagesBefore(stage);
+        aiStub.givenFailure(stage, failure);
 
         // when
         var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -172,10 +175,12 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH));
     }
 
-    @Test
-    void should_returnGenericInternalError_when_providerRejectsRequest() throws Exception {
+    @ParameterizedTest
+    @EnumSource(AiStage.class)
+    void should_returnGenericInternalError_when_providerRejectsRequest(AiStage stage) throws Exception {
         // given
-        aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
+        givenStagesBefore(stage);
+        aiStub.givenFailure(stage, AiFailure.REQUEST_REJECTED);
 
         // when
         var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -194,7 +199,7 @@ class VoiceCommandIT {
     @Test
     void should_logProviderUnavailableAsWarning_when_providerFailsTransiently(CapturedOutput output) throws Exception {
         // given
-        aiStub.givenTranscriptionFailure(AiFailure.RATE_LIMITED);
+        aiStub.givenFailure(AiStage.TRANSCRIPTION, AiFailure.RATE_LIMITED);
 
         // when
         var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -217,7 +222,7 @@ class VoiceCommandIT {
     void should_logUnexpectedErrorWithStackTrace_when_providerFailsDefinitively(CapturedOutput output)
             throws Exception {
         // given
-        aiStub.givenTranscriptionFailure(AiFailure.REQUEST_REJECTED);
+        aiStub.givenFailure(AiStage.TRANSCRIPTION, AiFailure.REQUEST_REJECTED);
 
         // when
         mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -344,6 +349,12 @@ class VoiceCommandIT {
         }
     }
 
+    static Stream<Arguments> transientFailures() {
+        var failures = EnumSet.of(AiFailure.CONNECTION_FAILURE, AiFailure.RATE_LIMITED, AiFailure.PROVIDER_ERROR);
+        return Arrays.stream(AiStage.values())
+                .flatMap(stage -> failures.stream().map(failure -> Arguments.of(stage, failure)));
+    }
+
     static Stream<String> invalidToolArguments() {
         return Stream.of(
                 toolArguments("\"\"", "80.00", "\"GROCERIES\""),
@@ -358,6 +369,16 @@ class VoiceCommandIT {
     private static String toolArguments(String description, String amount, String category) {
         return "{\"arguments\": {\"description\": %s, \"amount\": %s, \"category\": %s}}"
                 .formatted(description, amount, category);
+    }
+
+    // The stages before the failing one succeed, so the failure is the one under test
+    private void givenStagesBefore(AiStage stage) {
+        if (stage != AiStage.TRANSCRIPTION) {
+            aiStub.givenTranscription("gastei 80 reais no mercado");
+        }
+        if (stage == AiStage.SPEECH) {
+            aiStub.givenAnswer("Registrei 80 reais em mercado.");
+        }
     }
 
     private void givenPersistCommand(String argumentsJson) {

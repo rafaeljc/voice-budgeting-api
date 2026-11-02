@@ -35,7 +35,7 @@ public class OpenAiWireMockStub implements AiStub {
     }
 
     @Override
-    public void givenTranscriptionFailure(AiFailure failure) {
+    public void givenFailure(AiStage stage, AiFailure failure) {
         var response =
                 switch (failure) {
                     case CONNECTION_FAILURE -> aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER);
@@ -43,7 +43,7 @@ public class OpenAiWireMockStub implements AiStub {
                     case PROVIDER_ERROR -> aResponse().withStatus(500);
                     case REQUEST_REJECTED -> aResponse().withStatus(401);
                 };
-        server.stubFor(post(urlEqualTo("/v1/audio/transcriptions")).willReturn(response));
+        server.stubFor(post(urlEqualTo(path(stage))).willReturn(response));
     }
 
     // The first chat call asks for the tool; the second one carries the tool result and gets the final answer
@@ -77,6 +77,14 @@ public class OpenAiWireMockStub implements AiStub {
     public void reset() {
         server.resetAll();
         toolCallGiven = false;
+    }
+
+    private static String path(AiStage stage) {
+        return switch (stage) {
+            case TRANSCRIPTION -> "/v1/audio/transcriptions";
+            case ASSISTANT -> "/v1/chat/completions";
+            case SPEECH -> "/v1/audio/speech";
+        };
     }
 
     private static ResponseDefinitionBuilder json(String body) {
