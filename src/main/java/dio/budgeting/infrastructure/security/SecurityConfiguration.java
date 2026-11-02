@@ -1,6 +1,10 @@
 package dio.budgeting.infrastructure.security;
 
+import dio.budgeting.domain.UserId;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,6 +14,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtClaimNames;
+import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -28,7 +34,11 @@ public class SecurityConfiguration {
         var decoder = NimbusJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        decoder.setJwtValidator(JwtValidators.createDefault());
+        // The token carries only sub and exp, and both are mandatory
+        decoder.setJwtValidator(JwtValidators.createDefaultWithValidators(List.of(
+                new JwtClaimValidator<Instant>(JwtClaimNames.EXP, Objects::nonNull),
+                new JwtClaimValidator<String>(
+                        JwtClaimNames.SUB, sub -> UserId.parse(sub).isPresent()))));
         return decoder;
     }
 

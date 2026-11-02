@@ -163,7 +163,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (`JwtDecoder`, `SecurityFilterChain`, `AuthenticationEntryPoint`), `ProblemType.UNAUTHENTICATED`,
       `problem.unauthenticated.*`, o handler, o helper `support/security/AccessTokens`, o segredo de teste, e o
       cabeçalho `Authorization` em todos os `*IT` existentes
-- [ ] [TDD] `AuthenticationIT` (parametrizado): assinatura com outro segredo, expirado, sem `exp`, `sub` ausente,
+- [x] [TDD] `AuthenticationIT` (parametrizado): assinatura com outro segredo, expirado, sem `exp`, `sub` ausente,
       `sub` que não é UUID e token malformado (`abc`) → o mesmo 401 — implementa os `JwtClaimValidator`
 - [ ] [TDD] `AuthenticationIT`: rota inexistente sem token → 401 (negar por padrão); `GET /actuator/health` sem
       token → 200
