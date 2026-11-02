@@ -247,9 +247,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/arquitetura.md` (novo): um parágrafo curto antes de cada diagrama e os dois diagramas
+- [x] [verificação] `docs/arquitetura.md` (novo): um parágrafo curto antes de cada diagrama e os dois diagramas
       Mermaid abaixo (aprovados na entrevista; mudar só com aprovação)
 - [ ] [verificação] README: uma linha apontando para `docs/arquitetura.md` (perto da introdução ou da seção "API")
 - [ ] [verificação] `CLAUDE.md`: estrutura (portas `*Gateway` na raiz de `application/`; em `infrastructure/ai/`
