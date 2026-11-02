@@ -255,7 +255,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `CLAUDE.md`: estrutura (portas `*Gateway` na raiz de `application/`; em `infrastructure/ai/`
       os `SpringAi*Gateway`, `AssistantConfiguration` e `OpenAiExceptionTranslator`) e nomenclatura (porta
       `<X>Gateway` → adaptador `<Tecnologia><X>Gateway`, par do `Repository`)
-- [ ] [verificação] regras: `architecture.md` (exemplo de porta de gateway ao lado do de repositório; gateways na
+- [x] [verificação] regras: `architecture.md` (exemplo de porta de gateway ao lado do de repositório; gateways na
       raiz de `application/`); `ai-integration.md` (`ChatClient` no `AssistantConfiguration`, tradução de exceções
       nos adaptadores, `givenFailure(AiStage, AiFailure)`); `error-handling.md` (linhas de `OpenAIException` →
       `AiProviderUnavailableException` 503 e `AiProviderFailedException` 500); `testing.md` (`givenFailure` no

@@ -9,7 +9,9 @@ paths:
 ## Etapas
 
 Transcrição → interpretação com tools → síntese de voz.
-Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degradação.
+Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degradação, atrás de uma porta própria
+(`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`) orquestrada por `ProcessVoiceCommandUseCase`.
+Os adaptadores `SpringAi*Gateway` ficam em `infrastructure/ai/`.
 
 ## Prompts e tools
 
@@ -18,6 +20,11 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
 - Nome de tool em kebab-case (`persist-transaction`).
 - `@ToolParam` informa unidade e formato do valor (ex.: valor em reais com 2 casas decimais).
 - Opções dos modelos (modelo, temperatura, voz, idioma) em `application.properties`.
+- O `ChatClient` é um `@Bean` do `AssistantConfiguration` (prompt do sistema e `defaultTools`); o adaptador
+  `SpringAiAssistantGateway` só o recebe pronto. Um segundo assistente seria outro `@Bean` com `@Qualifier`.
+- A falha do provedor é traduzida por um aspecto (`OpenAiExceptionTranslationAspect`, `@Around` nas portas
+  `*Gateway`), a única classe que conhece os tipos do SDK; os adaptadores não tratam exceção do provedor. Trocar de
+  provedor é trocar o aspecto. Exceções de argumento de tool passam intactas.
 - As tools ficam em `infrastructure/ai/tool/` (adaptador de entrada); os argumentos são um `record` em
   `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
   adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave
@@ -44,11 +51,15 @@ Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degrad
   interface neutra `AiStub` (`support/ai/`), sem citar o provedor no `*IT`.
 - O protocolo do provedor fica só na implementação do stub (hoje WireMock) e em `src/test/resources/ai/<provedor>/`;
   trocar de provedor não reescreve os testes.
-- Falhas da IA (timeout, erro, conexão derrubada) são testadas com stubs do WireMock, estendendo o `AiStub`.
+- Falhas da IA (timeout, erro, conexão derrubada) são simuladas com `AiStub.givenFailure(AiStage, AiFailure)`, por
+  etapa (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`), implementado no stub do WireMock; o `VoiceCommandIT` cobre cada
+  etapa.
 
 ## Não fazer
 
 - Montar o `ChatClient` ou orquestrar etapas no controller.
+- Tipo do SDK do provedor (`com.openai.*`) fora do aspecto de tradução; tratar exceção do provedor no adaptador ou
+  no advice.
 - Prompt fixo em código Java.
 - Logging do Spring AI em `DEBUG` versionado.
 - Ligar as opções de observação do Spring AI que logam conteúdo (`log-prompt`, `log-completion`, `log-transcript`,
