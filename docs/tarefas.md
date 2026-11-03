@@ -24,7 +24,7 @@
 
 **Fase 5 — Fluxo de voz confiável**
 - [x] [T09 — Orquestração de IA na camada de aplicação](#t09)
-- [ ] [T10 — Timeouts e retries](#t10)
+- [x] [T10 — Timeouts e retries](#t10)
 - [ ] [T11 — Validação do áudio recebido](#t11)
 - [ ] [T12 — Confirmação em duas etapas](#t12)
 - [ ] [T13 — Ciclo de vida da proposta](#t13)
@@ -201,14 +201,13 @@ Mover a orquestração do fluxo de voz (transcrição → interpretação → re
 
 **Depende de:** T09
 
-Definir tempo máximo para todas as chamadas externas e repetir automaticamente as que falharem por erros transitórios, com backoff exponencial e jitter. Incluir testes que simulem lentidão e falhas.
+Definir tempo máximo para todas as chamadas externas e repetir automaticamente as que falharem por erros transitórios, com backoff exponencial e jitter.
 
 **Itens do escopo:**
 - RES-01 — Timeouts
 - RES-02 — Retries com backoff exponencial e jitter
-- QA-03 — Testes de falha (parcial)
 
-**Nota (T09):** os adaptadores `SpringAi*Gateway` (`infrastructure/ai/`) são o lugar do timeout e do retry de cada etapa. Retentar só `AiProviderUnavailableException`; `AiProviderFailedException` não se retenta. O SDK da OpenAI já tem retry próprio, que precisa ser considerado ou desligado para não multiplicar tentativas.
+**Nota (T09):** timeout e retry ficam no SDK da OpenAI, por etapa, não nos adaptadores `SpringAi*Gateway`.
 
 <a id="t11"></a>
 ### T11 — Validação do áudio recebido
@@ -281,6 +280,8 @@ Aplicar circuit breaker e limite de chamadas simultâneas a cada dependência de
 
 **Nota (T09):** um circuit breaker e um bulkhead por gateway (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`), pois as três dependências falham de forma independente.
 
+**Nota (T10):** o circuit breaker vê a falha depois dos retries do SDK; timeout e retry por etapa no `application.properties`.
+
 <a id="t16"></a>
 ### T16 — Degradação controlada
 
@@ -307,6 +308,8 @@ Garantir que o reenvio do mesmo comando não gere proposta duplicada nem nova co
 - RES-06 — Idempotência no envio de áudio
 - QA-03 — Testes de falha (parcial)
 - DOC-03 — ADRs (critério para identificar um reenvio)
+
+**Nota (T10):** com a escrita idempotente, o retry pode subir para o `AssistantGateway` (laço de tools).
 
 <a id="t18"></a>
 ### T18 — Health checks e encerramento gracioso
@@ -426,5 +429,5 @@ Concluir o README com a visão geral do projeto, tecnologias, melhorias implemen
 | Segurança e rastreabilidade | SEG-01 → T08 · SEG-02 → T08 · SEG-03 → T19 · SEG-04 → T20 · SEG-05 → T21 · SEG-06 → T04 · SEG-07 → T02, T27 · SEG-08 → T02 |
 | Custo e desempenho | CUS-01 → T23 · CUS-02 → T24 · CUS-03 → T25 |
 | Observabilidade | OBS-01 → T04 · OBS-02 → T22 · OBS-03 → T22 |
-| Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T10, T15, T16, T17, T21 · QA-05 → T02 |
+| Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T15, T16, T17, T21 · QA-05 → T02 |
 | Documentação e apresentação | DOC-01 → T02, T26 + transversal · DOC-02 → T26 · DOC-03 → T01, T12, T17, T20, T21, T25 · DOC-04 → T09, T12 + transversal · DOC-05 → T07 + transversal · DOC-06 → T07, T12 · DOC-07 → T01 + transversal · DOC-08 → T26 |
