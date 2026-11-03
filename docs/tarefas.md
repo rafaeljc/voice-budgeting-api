@@ -25,7 +25,7 @@
 **Fase 5 — Fluxo de voz confiável**
 - [x] [T09 — Orquestração de IA na camada de aplicação](#t09)
 - [x] [T10 — Timeouts e retries](#t10)
-- [ ] [T11 — Validação do áudio recebido](#t11)
+- [x] [T11 — Validação do áudio recebido](#t11)
 - [ ] [T12 — Confirmação em duas etapas](#t12)
 - [ ] [T13 — Ciclo de vida da proposta](#t13)
 - [ ] [T14 — Respostas claras e proteções da IA](#t14)

@@ -45,6 +45,8 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `AiProviderFailedException` (demais status)          | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 | Qualquer outra `Exception`                           | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 
+- O `validation-error` também cobre a parte `file` do áudio vazia ou fora de M4A/MP3/WAV (`@AudioFile`), com
+  `{parameter: "file", detail}`, sem chamada à IA.
 - Extensão `errors` nos `validation-error`: lista de `{pointer, detail}` para campo do corpo (JSON Pointer, ex.:
   `#/amount`) ou `{parameter, detail}` para caminho, query ou parte do multipart. JSON malformado não traz `errors`.
 - Um record de query params com `@Valid` (sem `@RequestBody`, como `ListTransactionsRequest`) chega ao handler como

@@ -63,14 +63,14 @@ as opções mais robustas para produção.
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] arquivo vazio e arquivo que não é M4A/MP4, MP3 ou WAV respondem 400 `validation-error` com
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] arquivo vazio e arquivo que não é M4A/MP4, MP3 ou WAV respondem 400 `validation-error` com
       `errors[0].parameter = file`, sem chamada à IA
-- [ ] áudio válido com nome e `Content-Type` enganosos é aceito, e a transcrição recebe `audio.<extensão>` do formato
+- [x] áudio válido com nome e `Content-Type` enganosos é aceito, e a transcrição recebe `audio.<extensão>` do formato
       detectado
-- [ ] nenhum uso de `getOriginalFilename`/`getContentType` do arquivo em `src/main`
-- [ ] limites de 1 MB explícitos no `application.properties`
-- [ ] `docs/openapi.yaml`, README, ADR 0004, FUT-17, descrição da T11 e regras atualizados; checkbox da T11 marcado
+- [x] nenhum uso de `getOriginalFilename`/`getContentType` do arquivo em `src/main`
+- [x] limites de 1 MB explícitos no `application.properties`
+- [x] `docs/openapi.yaml`, README, ADR 0004, FUT-17, descrição da T11 e regras atualizados; checkbox da T11 marcado
       em `docs/tarefas.md` no último commit
 
 ## Para futuros agentes
@@ -169,7 +169,7 @@ cobrado (`whisper-1` custa US$ 0,006 por minuto de áudio), então registrar a i
 
 ## Fase 2: ADR, escopo, tarefas e regras
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/adr/0004-validacao-basica-do-audio.md` (template MADR, `status: aceito`): contexto
       (FN-05, custo e abuso, sem cliente próprio); opções consideradas com o que protegem e o que custam — só o
@@ -183,7 +183,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       porquê de ficar para depois e referência ao ADR 0004
 - [x] [verificação] `docs/tarefas.md`: descrição da T11 ajustada (validação básica: vazio, tamanho e formato pelos
       bytes; duração e inaudível em FUT-17; ADR 0004); item DOC-03 (ADRs) na T11 e na rastreabilidade
-- [ ] [verificação] Regras: `api-conventions.md` (áudio: M4A, MP3 ou WAV até 1 MB, formato pelos bytes, nunca pelo
+- [x] [verificação] Regras: `api-conventions.md` (áudio: M4A, MP3 ou WAV até 1 MB, formato pelos bytes, nunca pelo
       `Content-Type` ou extensão); `ai-integration.md` (o gateway envia `audio.<extensão>` do `AudioFormat`);
       `error-handling.md` (o 400 `validation-error` também cobre a parte `file` vazia ou fora do formato)
 
@@ -198,8 +198,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+O ADR 0004 (aceito) registra a validação pela assinatura dos bytes como *sanity check*, com as opções consideradas
+(só o declarado, estrutura do contêiner com Tika ou código próprio, ffmpeg, transcrição vazia antes do chat) e as
+consequências: duração, silêncio e integridade não verificados, e a incerteza de cobrança do arquivo recusado pelo
+provedor (a documentação da OpenAI não a esclarece, então o ADR não promete economia nesse caso). O FUT-17 em
+`docs/escopo.md`, a descrição da T11 (com DOC-03 na tarefa e na rastreabilidade) e as três regras
+(`api-conventions.md`, `ai-integration.md`, `error-handling.md`) foram atualizados.
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; `head -4` do ADR mostra
+`status: aceito` e a data; FUT-17 na tabela de melhorias futuras; ADR 0004 referenciado em `tarefas.md` e
+`escopo.md`; DOC-03 na T11 e na rastreabilidade; `AudioFormat` e `audio.<extensão>` presentes em
+`ai-integration.md`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A API rejeita, antes de qualquer chamada à IA, o áudio vazio, acima de 1 MB (413) ou cujos bytes não sejam de
+M4A/MP4, MP3 ou WAV (400 `validation-error` na parte `file`). O formato vem só dos bytes: `Content-Type` e extensão
+do cliente são ignorados, e a transcrição recebe `audio.<extensão>` do formato detectado. A limitação (duração,
+silêncio, integridade, cobrança incerta do arquivo recusado pelo provedor) está no ADR 0004 e no FUT-17. Sem plano de
+deploy: a tarefa não o inclui.
