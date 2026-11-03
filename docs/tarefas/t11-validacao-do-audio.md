@@ -123,7 +123,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `@AudioFile` + `AudioFileValidator` em `infrastructure/http/request`: `VoiceCommandIT` → vazio → 400 "O
       arquivo está vazio."; não-áudio → 400 "Envie o áudio em M4A, MP3 ou WAV."; ambos com `errors[0].parameter = file`
       e sem chamada à IA
-- [ ] [TDD] `ProcessVoiceCommandInput`/`Audio` com `AudioFormat` no lugar de nome e tipo; `toInput()` com o formato
+- [x] [TDD] `ProcessVoiceCommandInput`/`Audio` com `AudioFormat` no lugar de nome e tipo; `toInput()` com o formato
       detectado; gateway envia `audio.<extensão>`: `VoiceCommandIT` envia a gravação M4A como `gravacao.bin` /
       `application/octet-stream` → 200 e `aiStub.transcribedAudioFilename()` = `audio.m4a`
       (`ProcessVoiceCommandUseCaseTest` ajustado)

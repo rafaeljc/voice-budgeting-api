@@ -1,7 +1,7 @@
 package dio.budgeting.application.input;
 
-public record ProcessVoiceCommandInput(byte[] audio, String filename, String contentType) {
+public record ProcessVoiceCommandInput(byte[] audio, AudioFormat format) {
     public Audio toAudio() {
-        return new Audio(audio, filename, contentType);
+        return new Audio(audio, format);
     }
 }

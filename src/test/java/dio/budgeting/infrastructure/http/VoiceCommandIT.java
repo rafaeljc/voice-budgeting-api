@@ -87,6 +87,23 @@ class VoiceCommandIT {
     }
 
     @Test
+    void should_acceptAndNameByDetectedFormat_when_recordingHasMisleadingNameAndContentType() throws Exception {
+        // given
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+        var misleading = new MockMultipartFile(
+                "file", "gravacao.bin", "application/octet-stream", recording().getBytes());
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(misleading));
+
+        // then
+        response.andExpect(status().isOk());
+        assertThat(aiStub.transcribedAudioFilename()).isEqualTo("audio.m4a");
+    }
+
+    @Test
     void should_persistForTokenUserOnly_when_commandRegistersExpense() throws Exception {
         // given
         var tokenUser = new UserId(UUID.randomUUID());

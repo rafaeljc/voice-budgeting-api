@@ -4,7 +4,6 @@ import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.application.ProcessVoiceCommandUseCase;
-import dio.budgeting.application.input.ProcessVoiceCommandInput;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
@@ -87,13 +86,12 @@ public class TransactionController {
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
     ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
             throws IOException {
-        var file = request.file();
         log.atInfo()
-                .addKeyValue("audioSizeBytes", file.getSize())
-                .addKeyValue("audioContentType", file.getContentType())
+                .addKeyValue("audioSizeBytes", request.file().getSize())
+                .addKeyValue("audioContentType", request.file().getContentType())
                 .log("Voice command received");
 
-        var input = new ProcessVoiceCommandInput(file.getBytes(), file.getOriginalFilename(), file.getContentType());
+        var input = request.toInput();
         var output = processVoiceCommandUseCase.execute(userId(jwt), input);
 
         return ResponseEntity.ok()

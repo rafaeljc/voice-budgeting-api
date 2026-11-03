@@ -10,6 +10,8 @@ public interface AiStub {
 
     void givenSpeech(byte[] audio);
 
+    String transcribedAudioFilename();
+
     void givenFailure(AiStage stage, AiFailure failure);
 
     void reset();
