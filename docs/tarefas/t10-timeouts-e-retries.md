@@ -114,9 +114,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Configuração e documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `application.properties`: timeout e `max-retries` por etapa (transcrição 10s/1, chat 12s/1,
+- [x] [verificação] `application.properties`: timeout e `max-retries` por etapa (transcrição 10s/1, chat 12s/1,
       voz 10s/1) junto das opções de cada modelo; timeouts do banco (Hikari 3000, `connectTimeout` 3000,
       `socketTimeout` 5000) numa seção `# Persistence`; comentário com a conta do teto (≈ 128 s);
       `application-test.properties` com `max-retries=0` por etapa no lugar da chave global
