@@ -179,7 +179,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       bytes; consequências: duração não verificada (tamanho não limita segundos: 1 MB a 8 kbps ≈ 16 min), inaudível
       não detectado, assinatura não garante áudio válido (recusa do provedor → 500), duração declarada no cabeçalho
       não protege contra cliente mal-intencionado
-- [ ] [verificação] `docs/escopo.md`: FUT-17 "Validação robusta do áudio" (duração, silêncio, integridade), com o
+- [x] [verificação] `docs/escopo.md`: FUT-17 "Validação robusta do áudio" (duração, silêncio, integridade), com o
       porquê de ficar para depois e referência ao ADR 0004
 - [ ] [verificação] `docs/tarefas.md`: descrição da T11 ajustada (validação básica: vazio, tamanho e formato pelos
       bytes; duração e inaudível em FUT-17; ADR 0004); item DOC-03 (ADRs) na T11 e na rastreabilidade
