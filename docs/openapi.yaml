@@ -208,7 +208,7 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Gravação do comando de voz, de até 1 MB.
+                  description: Gravação do comando de voz em M4A, MP3 ou WAV, de até 1 MB.
       responses:
         '200':
           description: Resposta falada ao comando.
@@ -224,20 +224,47 @@ paths:
                 type: string
                 format: binary
         '400':
-          description: Parte `file` ausente (`validation-error`, com `errors[].parameter`).
+          description: >-
+            Parte `file` ausente, vazia ou fora de M4A, MP3 ou WAV (`validation-error`, com
+            `errors[].parameter`).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ValidationProblem'
-              example:
-                type: urn:problem-type:budgeting:validation-error
-                title: Dados inválidos
-                status: 400
-                detail: Um ou mais campos são inválidos.
-                instance: /api/v1/transactions/ai
-                errors:
-                  - parameter: file
-                    detail: Campo obrigatório ausente.
+              examples:
+                missing:
+                  summary: Parte ausente
+                  value:
+                    type: urn:problem-type:budgeting:validation-error
+                    title: Dados inválidos
+                    status: 400
+                    detail: Um ou mais campos são inválidos.
+                    instance: /api/v1/transactions/ai
+                    errors:
+                      - parameter: file
+                        detail: Campo obrigatório ausente.
+                empty:
+                  summary: Arquivo vazio
+                  value:
+                    type: urn:problem-type:budgeting:validation-error
+                    title: Dados inválidos
+                    status: 400
+                    detail: Um ou mais campos são inválidos.
+                    instance: /api/v1/transactions/ai
+                    errors:
+                      - parameter: file
+                        detail: O arquivo está vazio.
+                unsupportedFormat:
+                  summary: Formato não aceito
+                  value:
+                    type: urn:problem-type:budgeting:validation-error
+                    title: Dados inválidos
+                    status: 400
+                    detail: Um ou mais campos são inválidos.
+                    instance: /api/v1/transactions/ai
+                    errors:
+                      - parameter: file
+                        detail: Envie o áudio em M4A, MP3 ou WAV.
         '413':
           description: Arquivo acima do tamanho máximo permitido.
           content:

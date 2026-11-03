@@ -59,6 +59,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
   flutuante.
 - Campos ausentes omitidos; listas nunca `null`.
 - Áudio com o tipo de mídia correto (`audio/mpeg` para MP3); upload em `multipart/form-data`.
+- Áudio recebido: M4A, MP3 ou WAV, até 1 MB. O formato vem da assinatura dos bytes (`AudioFormat.detect`), nunca do
+  `Content-Type` nem da extensão do cliente; vazio ou fora do formato é 400 `validation-error` na parte `file`.
 
 ## Listagens
 

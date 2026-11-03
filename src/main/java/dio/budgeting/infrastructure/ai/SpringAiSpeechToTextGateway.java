@@ -16,11 +16,11 @@ public class SpringAiSpeechToTextGateway implements SpeechToTextGateway {
 
     @Override
     public String transcribe(Audio audio) {
-        // The provider infers the audio format from the file extension, so the resource keeps the original name
+        // The provider infers the audio format from the file extension, so the name carries the detected format
         var resource = new ByteArrayResource(audio.content()) {
             @Override
             public String getFilename() {
-                return audio.filename();
+                return "audio." + audio.format().extension();
             }
         };
         return transcriptionModel.transcribe(resource);

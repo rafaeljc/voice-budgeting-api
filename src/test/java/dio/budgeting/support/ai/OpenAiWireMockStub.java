@@ -2,6 +2,7 @@ package dio.budgeting.support.ai;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -32,6 +33,16 @@ public class OpenAiWireMockStub implements AiStub {
     public void givenTranscription(String text) {
         server.stubFor(post(urlEqualTo("/v1/audio/transcriptions"))
                 .willReturn(aResponse().withHeader("Content-Type", "text/plain").withBody(text)));
+    }
+
+    @Override
+    public String transcribedAudioFilename() {
+        var requests = server.findAll(postRequestedFor(urlEqualTo("/v1/audio/transcriptions")));
+        return requests.getLast().getParts().stream()
+                .filter(part -> "file".equals(part.getName()))
+                .findFirst()
+                .orElseThrow()
+                .getFileName();
     }
 
     @Override

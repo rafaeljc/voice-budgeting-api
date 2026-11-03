@@ -12,6 +12,8 @@ Transcrição → interpretação com tools → síntese de voz.
 Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degradação, atrás de uma porta própria
 (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`) orquestrada por `ProcessVoiceCommandUseCase`.
 Os adaptadores `SpringAi*Gateway` ficam em `infrastructure/ai/`.
+O áudio chega com o `AudioFormat` detectado pelos bytes; o gateway de transcrição envia `audio.<extensão>` desse
+formato (a OpenAI deduz o formato pela extensão), nunca o nome do cliente.
 O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chaves por etapa no `application.properties`
 (`spring.ai.openai.audio.transcription.*`, `chat.*`, `audio.speech.*`), nunca pela chave global `spring.ai.openai.*`.
 
