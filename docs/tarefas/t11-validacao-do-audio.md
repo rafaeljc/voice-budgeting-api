@@ -118,7 +118,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandRequest(MultipartFile file)` com `@NotNull` no controller (`@Valid`), mantendo o 400 da
       parte ausente (`ErrorResponseIT`) e o fluxo feliz (`VoiceCommandIT`)
-- [ ] [TDD] `application/input/AudioFormat` com `extension()` e `detect(byte[])`: `AudioFormatTest` cobre M4A, MP3
+- [x] [TDD] `application/input/AudioFormat` com `extension()` e `detect(byte[])`: `AudioFormatTest` cobre M4A, MP3
       (ID3 e *frame sync*), WAV, vazio, curto demais, PDF/texto e ADTS
 - [ ] [TDD] `@AudioFile` + `AudioFileValidator` em `infrastructure/http/request`: `VoiceCommandIT` → vazio → 400 "O
       arquivo está vazio."; não-áudio → 400 "Envie o áudio em M4A, MP3 ou WAV."; ambos com `errors[0].parameter = file`
