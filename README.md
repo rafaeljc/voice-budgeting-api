@@ -46,7 +46,7 @@ Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); ve
 | `POST` | `/transactions`              | Cria uma transação (201 + `Location`)                              |
 | `GET`  | `/transactions`              | Lista paginada; filtros `category`, `page`, `size`, `sort`         |
 | `GET`  | `/transactions/{id}`         | Consulta uma transação (404 se não existir)                        |
-| `POST` | `/transactions/ai`           | Comando de voz: envia o áudio (`file`) e recebe a resposta em MP3  |
+| `POST` | `/transactions/ai`           | Comando de voz: `file` M4A, MP3 ou WAV (até 1 MB); resposta em MP3 |
 
 Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http). Com `curl`:
 

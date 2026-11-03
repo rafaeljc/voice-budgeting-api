@@ -114,7 +114,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Validação, formato detectado e contrato
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandRequest(MultipartFile file)` com `@NotNull` no controller (`@Valid`), mantendo o 400 da
       parte ausente (`ErrorResponseIT`) e o fluxo feliz (`VoiceCommandIT`)
@@ -131,7 +131,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (`VoiceCommandIT.should_logFlowEventsWithTraceId_when_commandIsProcessed`)
 - [x] [verificação] `application.properties`: `spring.servlet.multipart.max-file-size=1MB` e
       `max-request-size=1MB`, com comentário; comentário do `UploadLimitIT` passa a citar o limite configurado
-- [ ] [verificação] `docs/openapi.yaml`: parte `file` (M4A, MP3 ou WAV, até 1 MB, formato identificado pelo
+- [x] [verificação] `docs/openapi.yaml`: parte `file` (M4A, MP3 ou WAV, até 1 MB, formato identificado pelo
       conteúdo) e 400 com parte ausente, vazia ou fora do formato (exemplos); README, tabela da API
 
 ### Plano de verificação
@@ -147,7 +147,25 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+O endpoint de voz recebe `VoiceCommandRequest(@NotNull @AudioFile MultipartFile file)`. `AudioFormat.detect` decide
+o formato só pelos bytes (M4A `ftyp`, MP3 `ID3`/*frame sync* com *layer* ≠ 00, WAV `RIFF`+`WAVE`) e o
+`AudioFileValidator` responde 400 `validation-error` na parte `file` para vazio ("O arquivo está vazio.") e para
+formato fora de M4A/MP3/WAV ("Envie o áudio em M4A, MP3 ou WAV."), antes de qualquer chamada à IA. `Audio` e
+`ProcessVoiceCommandInput` carregam `AudioFormat` no lugar de nome e tipo do cliente; o gateway envia
+`audio.<extensão>` e o log `Voice command received` registra `audioFormat`. Limites de 1 MB por arquivo e por
+requisição explícitos no `application.properties`. `docs/openapi.yaml` e README atualizados.
+
+Decisões: o binding por construtor do `MultipartFile` em record funcionou, inclusive para a parte ausente, então o
+plano não mudou. O primeiro ciclo não teve RED (comportamento preservado, coberto por `ErrorResponseIT` e
+`VoiceCommandIT`).
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; `AudioFormatTest`,
+`VoiceCommandIT`, `ErrorResponseIT` e `UploadLimitIT` passam; `grep getOriginalFilename|getContentType src/main` →
+nenhuma linha; 2 linhas de limite de 1 MB; "M4A, MP3 ou WAV" presente no `file` e no exemplo do 400.
+
+Para uma sessão nova: falta a fase 2 (ADR 0004, FUT-17, descrição da T11 e regras). No ADR, não afirmar que a
+validação "evita custo" de forma absoluta: a documentação da OpenAI não diz se um arquivo recusado pelo provedor é
+cobrado (`whisper-1` custa US$ 0,006 por minuto de áudio), então registrar a incerteza.
 
 ## Fase 2: ADR, escopo, tarefas e regras
 
