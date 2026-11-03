@@ -169,9 +169,9 @@ cobrado (`whisper-1` custa US$ 0,006 por minuto de áudio), então registrar a i
 
 ## Fase 2: ADR, escopo, tarefas e regras
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/adr/0004-validacao-basica-do-audio.md` (template MADR, `status: aceito`): contexto
+- [x] [verificação] `docs/adr/0004-validacao-basica-do-audio.md` (template MADR, `status: aceito`): contexto
       (FN-05, custo e abuso, sem cliente próprio); opções consideradas com o que protegem e o que custam — só o
       declarado pelo cliente; assinatura dos bytes; estrutura do contêiner com duração declarada (Apache Tika 4.x ou
       código próprio, Java Sound para WAV); decodificação com ffmpeg (duração real, arquivo corrompido,
