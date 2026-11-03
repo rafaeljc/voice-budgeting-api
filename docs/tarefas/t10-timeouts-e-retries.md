@@ -73,12 +73,12 @@ timeouts do banco no Hikari e no driver MySQL, com teto de pior caso garantido p
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
-- [ ] `application.properties` com timeout e `max-retries` das três etapas, os três timeouts do banco e o comentário
+- [x] `./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), sem `OPENAI_API_KEY` nem `JWT_SECRET`
+- [x] `application.properties` com timeout e `max-retries` das três etapas, os três timeouts do banco e o comentário
       com a conta do teto
-- [ ] as chaves `spring.ai.openai.*` usadas existem nos metadados do Spring AI 2.0.2 (não são ignoradas em silêncio)
-- [ ] perfil `test` sem a chave global de retry e com `max-retries=0` por etapa
-- [ ] `ai-integration.md`, `testing.md` e `docs/tarefas.md` atualizados; checkbox da T10 marcado em `docs/tarefas.md`
+- [x] as chaves `spring.ai.openai.*` usadas existem nos metadados do Spring AI 2.0.2 (não são ignoradas em silêncio)
+- [x] perfil `test` sem a chave global de retry e com `max-retries=0` por etapa
+- [x] `ai-integration.md`, `testing.md` e `docs/tarefas.md` atualizados; checkbox da T10 marcado em `docs/tarefas.md`
       no último commit
 
 ## Para futuros agentes
@@ -114,7 +114,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Configuração e documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `application.properties`: timeout e `max-retries` por etapa (transcrição 10s/1, chat 12s/1,
       voz 10s/1) junto das opções de cada modelo; timeouts do banco (Hikari 3000, `connectTimeout` 3000,
@@ -122,7 +122,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `application-test.properties` com `max-retries=0` por etapa no lugar da chave global
 - [x] [verificação] `.claude/rules/ai-integration.md` ("Etapas" e "Não fazer") e `.claude/rules/testing.md`
       (retry desligado por etapa no perfil `test`)
-- [ ] [verificação] `docs/tarefas.md`: descrição e itens da T10 sem QA-03; rastreabilidade de QA-03; nota da T09
+- [x] [verificação] `docs/tarefas.md`: descrição e itens da T10 sem QA-03; rastreabilidade de QA-03; nota da T09
       na T10 reescrita; notas da T10 na T15 e na T17
 
 ### Plano de verificação
@@ -141,8 +141,15 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Timeout e `max-retries` por etapa (transcrição 10s/1, chat 12s/1, voz 10s/1) e os três timeouts do banco (Hikari
+3000, `connectTimeout` 3000, `socketTimeout` 5000) estão no `application.properties`, com o comentário da conta do
+teto (≈ 128 s). O perfil `test` troca a chave global de retry por `max-retries=0` em cada etapa. `ai-integration.md`,
+`testing.md` e `docs/tarefas.md` (T10 sem QA-03, rastreabilidade, notas na T10, T15 e T17) foram atualizados. Nenhum
+código Java nem teste novo, como previsto. Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` →
+`BUILD SUCCESSFUL`; as 6 chaves de IA e os 3 timeouts do banco aparecem no arquivo; as 6 chaves existem nos metadados
+do Spring AI 2.0.2; perfil `test` sem a chave global e com 3 chaves por etapa; notas da T10 na T15 e na T17.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+T10 entregue em uma fase: as chamadas externas têm timeout explícito e 1 retry por requisição com backoff e jitter
+do SDK, com teto de pior caso ≈ 128 s por construção. Sem mudança de código Java, de contrato HTTP ou de ADR.
