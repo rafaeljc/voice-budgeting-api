@@ -21,7 +21,7 @@ import tools.jackson.databind.json.JsonMapper;
 class UploadLimitIT {
 
     private static final String BOUNDARY = "audio-boundary";
-    // Just above the default 1 MB file limit and below Tomcat's 2 MB max-swallow-size
+    // Just above the configured 1 MB file limit and below Tomcat's 2 MB max-swallow-size
     private static final int OVERSIZED_FILE_BYTES = 1_200_000;
 
     @LocalServerPort

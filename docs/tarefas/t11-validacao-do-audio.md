@@ -129,7 +129,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (`ProcessVoiceCommandUseCaseTest` ajustado)
 - [x] [TDD] Log `Voice command received` com `audioFormat` (`M4A`) no lugar de `audioContentType`
       (`VoiceCommandIT.should_logFlowEventsWithTraceId_when_commandIsProcessed`)
-- [ ] [verificação] `application.properties`: `spring.servlet.multipart.max-file-size=1MB` e
+- [x] [verificação] `application.properties`: `spring.servlet.multipart.max-file-size=1MB` e
       `max-request-size=1MB`, com comentário; comentário do `UploadLimitIT` passa a citar o limite configurado
 - [ ] [verificação] `docs/openapi.yaml`: parte `file` (M4A, MP3 ou WAV, até 1 MB, formato identificado pelo
       conteúdo) e 400 com parte ausente, vazia ou fora do formato (exemplos); README, tabela da API
