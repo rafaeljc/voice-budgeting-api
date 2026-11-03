@@ -181,7 +181,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       não protege contra cliente mal-intencionado
 - [x] [verificação] `docs/escopo.md`: FUT-17 "Validação robusta do áudio" (duração, silêncio, integridade), com o
       porquê de ficar para depois e referência ao ADR 0004
-- [ ] [verificação] `docs/tarefas.md`: descrição da T11 ajustada (validação básica: vazio, tamanho e formato pelos
+- [x] [verificação] `docs/tarefas.md`: descrição da T11 ajustada (validação básica: vazio, tamanho e formato pelos
       bytes; duração e inaudível em FUT-17; ADR 0004); item DOC-03 (ADRs) na T11 e na rastreabilidade
 - [ ] [verificação] Regras: `api-conventions.md` (áudio: M4A, MP3 ou WAV até 1 MB, formato pelos bytes, nunca pelo
       `Content-Type` ou extensão); `ai-integration.md` (o gateway envia `audio.<extensão>` do `AudioFormat`);

@@ -214,10 +214,11 @@ Definir tempo máximo para todas as chamadas externas e repetir automaticamente 
 
 **Depende de:** —
 
-Rejeitar, antes de qualquer chamada à IA, áudios fora do formato, tamanho ou duração aceitos, além de áudios vazios ou inaudíveis.
+Rejeitar, antes de qualquer chamada à IA, o áudio vazio, acima de 1 MB ou cujos bytes não sejam de M4A/MP3/WAV (validação básica, *sanity check*). Duração, áudio inaudível e integridade ficam em FUT-17. Registrar em ADR a limitação e as opções mais robustas ([ADR 0004](adr/0004-validacao-basica-do-audio.md)).
 
 **Itens do escopo:**
-- FN-05 — Validação do áudio recebido
+- FN-05 — Validação do áudio recebido (versão básica)
+- DOC-03 — ADRs (validação básica do áudio)
 
 <a id="t12"></a>
 ### T12 — Confirmação em duas etapas
@@ -430,4 +431,4 @@ Concluir o README com a visão geral do projeto, tecnologias, melhorias implemen
 | Custo e desempenho | CUS-01 → T23 · CUS-02 → T24 · CUS-03 → T25 |
 | Observabilidade | OBS-01 → T04 · OBS-02 → T22 · OBS-03 → T22 |
 | Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T15, T16, T17, T21 · QA-05 → T02 |
-| Documentação e apresentação | DOC-01 → T02, T26 + transversal · DOC-02 → T26 · DOC-03 → T01, T12, T17, T20, T21, T25 · DOC-04 → T09, T12 + transversal · DOC-05 → T07 + transversal · DOC-06 → T07, T12 · DOC-07 → T01 + transversal · DOC-08 → T26 |
+| Documentação e apresentação | DOC-01 → T02, T26 + transversal · DOC-02 → T26 · DOC-03 → T01, T11, T12, T17, T20, T21, T25 · DOC-04 → T09, T12 + transversal · DOC-05 → T07 + transversal · DOC-06 → T07, T12 · DOC-07 → T01 + transversal · DOC-08 → T26 |
