@@ -86,12 +86,12 @@ public class TransactionController {
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
     ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
             throws IOException {
+        var input = request.toInput();
         log.atInfo()
-                .addKeyValue("audioSizeBytes", request.file().getSize())
-                .addKeyValue("audioContentType", request.file().getContentType())
+                .addKeyValue("audioSizeBytes", input.audio().length)
+                .addKeyValue("audioFormat", input.format())
                 .log("Voice command received");
 
-        var input = request.toInput();
         var output = processVoiceCommandUseCase.execute(userId(jwt), input);
 
         return ResponseEntity.ok()

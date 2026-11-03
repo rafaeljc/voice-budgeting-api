@@ -127,7 +127,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       detectado; gateway envia `audio.<extensão>`: `VoiceCommandIT` envia a gravação M4A como `gravacao.bin` /
       `application/octet-stream` → 200 e `aiStub.transcribedAudioFilename()` = `audio.m4a`
       (`ProcessVoiceCommandUseCaseTest` ajustado)
-- [ ] [TDD] Log `Voice command received` com `audioFormat` (`M4A`) no lugar de `audioContentType`
+- [x] [TDD] Log `Voice command received` com `audioFormat` (`M4A`) no lugar de `audioContentType`
       (`VoiceCommandIT.should_logFlowEventsWithTraceId_when_commandIsProcessed`)
 - [ ] [verificação] `application.properties`: `spring.servlet.multipart.max-file-size=1MB` e
       `max-request-size=1MB`, com comentário; comentário do `UploadLimitIT` passa a citar o limite configurado

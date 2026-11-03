@@ -161,7 +161,7 @@ class VoiceCommandIT {
                 .uuid()
                 .toString();
         assertEvent(output, requestId, "Voice command received", "audioSizeBytes", recording.getSize());
-        assertEvent(output, requestId, "Voice command received", "audioContentType", "audio/mp4");
+        assertEvent(output, requestId, "Voice command received", "audioFormat", "M4A");
         assertEvent(output, requestId, "Audio transcribed", "transcriptionLength", 26);
         assertEvent(output, requestId, "Assistant answered", "answerLength", 30);
         assertEvent(output, requestId, "Speech synthesized", "speechSizeBytes", 4);
