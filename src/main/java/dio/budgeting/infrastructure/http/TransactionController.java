@@ -8,6 +8,7 @@ import dio.budgeting.application.input.ProcessVoiceCommandInput;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
+import dio.budgeting.infrastructure.http.request.VoiceCommandRequest;
 import dio.budgeting.infrastructure.http.response.TransactionPageResponse;
 import dio.budgeting.infrastructure.http.response.TransactionResponse;
 import jakarta.validation.Valid;
@@ -28,9 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
@@ -86,8 +85,9 @@ public class TransactionController {
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
-    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @RequestParam("file") MultipartFile file)
+    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
             throws IOException {
+        var file = request.file();
         log.atInfo()
                 .addKeyValue("audioSizeBytes", file.getSize())
                 .addKeyValue("audioContentType", file.getContentType())

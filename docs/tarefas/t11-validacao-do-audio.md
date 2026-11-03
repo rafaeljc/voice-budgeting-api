@@ -114,9 +114,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Validação, formato detectado e contrato
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandRequest(MultipartFile file)` com `@NotNull` no controller (`@Valid`), mantendo o 400 da
+- [x] [TDD] `VoiceCommandRequest(MultipartFile file)` com `@NotNull` no controller (`@Valid`), mantendo o 400 da
       parte ausente (`ErrorResponseIT`) e o fluxo feliz (`VoiceCommandIT`)
 - [ ] [TDD] `application/input/AudioFormat` com `extension()` e `detect(byte[])`: `AudioFormatTest` cobre M4A, MP3
       (ID3 e *frame sync*), WAV, vazio, curto demais, PDF/texto e ADTS
