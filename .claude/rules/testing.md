@@ -25,7 +25,8 @@ paths:
   `support/security/AccessTokens` (`NimbusJwtEncoder` e o segredo do perfil `test`), não o `jwt()` do
   `spring-security-test`. `AccessTokens.authorization()` usa o usuário padrão; `authorization(userId)` e
   `validClaims`/`sign` cobrem outro usuário e tokens inválidos.
-- IA: o perfil `test` aponta a OpenAI para uma URL inválida, então um `*IT` que aciona a IA sem stub falha na hora.
+- IA: o perfil `test` aponta a OpenAI para uma URL inválida e desliga o retry do SDK em cada etapa, então um `*IT` que
+  aciona a IA sem stub falha na hora.
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
   `givenAnswer`, `givenSpeech` e `givenFailure(AiStage, AiFailure)` (falha por etapa). O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do

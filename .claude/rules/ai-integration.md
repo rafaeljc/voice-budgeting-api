@@ -12,6 +12,8 @@ Transcrição → interpretação com tools → síntese de voz.
 Cada etapa é uma chamada isolada, com timeout e retry, circuit breaker e degradação, atrás de uma porta própria
 (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`) orquestrada por `ProcessVoiceCommandUseCase`.
 Os adaptadores `SpringAi*Gateway` ficam em `infrastructure/ai/`.
+O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chaves por etapa no `application.properties`
+(`spring.ai.openai.audio.transcription.*`, `chat.*`, `audio.speech.*`), nunca pela chave global `spring.ai.openai.*`.
 
 ## Prompts e tools
 
@@ -60,6 +62,8 @@ Os adaptadores `SpringAi*Gateway` ficam em `infrastructure/ai/`.
 - Montar o `ChatClient` ou orquestrar etapas no controller.
 - Tipo do SDK do provedor (`com.openai.*`) fora do aspecto de tradução; tratar exceção do provedor no adaptador ou
   no advice.
+- Retry sobre o laço de tools (`interpret` inteiro) enquanto houver tool de escrita não idempotente: refaria a
+  conversa e gravaria em dobro.
 - Prompt fixo em código Java.
 - Logging do Spring AI em `DEBUG` versionado.
 - Ligar as opções de observação do Spring AI que logam conteúdo (`log-prompt`, `log-completion`, `log-transcript`,

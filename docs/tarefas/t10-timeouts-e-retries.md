@@ -120,7 +120,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       voz 10s/1) junto das opções de cada modelo; timeouts do banco (Hikari 3000, `connectTimeout` 3000,
       `socketTimeout` 5000) numa seção `# Persistence`; comentário com a conta do teto (≈ 128 s);
       `application-test.properties` com `max-retries=0` por etapa no lugar da chave global
-- [ ] [verificação] `.claude/rules/ai-integration.md` ("Etapas" e "Não fazer") e `.claude/rules/testing.md`
+- [x] [verificação] `.claude/rules/ai-integration.md` ("Etapas" e "Não fazer") e `.claude/rules/testing.md`
       (retry desligado por etapa no perfil `test`)
 - [ ] [verificação] `docs/tarefas.md`: descrição e itens da T10 sem QA-03; rastreabilidade de QA-03; nota da T09
       na T10 reescrita; notas da T10 na T15 e na T17
