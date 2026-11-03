@@ -151,6 +151,43 @@ class VoiceCommandIT {
         assertEvent(output, requestId, "Transaction persisted", "transactionId", transactionId);
     }
 
+    @Test
+    void should_returnValidationProblemWithoutCallingAi_when_audioFileIsEmpty() throws Exception {
+        // given
+        var empty = new MockMultipartFile("file", "empty.m4a", "audio/mp4", new byte[0]);
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(empty));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors[0].parameter").value("file"))
+                .andExpect(jsonPath("$.errors[0].detail").value("O arquivo está vazio."));
+    }
+
+    @Test
+    void should_returnValidationProblemWithoutCallingAi_when_audioFileIsNotSupportedAudio() throws Exception {
+        // given
+        var pdf = new MockMultipartFile(
+                "file", "recording.m4a", "audio/mp4", new byte[] {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34});
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(pdf));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors[0].parameter").value("file"))
+                .andExpect(jsonPath("$.errors[0].detail").value("Envie o áudio em M4A, MP3 ou WAV."));
+    }
+
     @ParameterizedTest
     @MethodSource("transientFailures")
     void should_returnServiceUnavailableWithRetryAfter_when_providerFailureIsTransient(AiStage stage, AiFailure failure)

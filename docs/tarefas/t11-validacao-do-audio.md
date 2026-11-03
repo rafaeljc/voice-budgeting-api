@@ -120,7 +120,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       parte ausente (`ErrorResponseIT`) e o fluxo feliz (`VoiceCommandIT`)
 - [x] [TDD] `application/input/AudioFormat` com `extension()` e `detect(byte[])`: `AudioFormatTest` cobre M4A, MP3
       (ID3 e *frame sync*), WAV, vazio, curto demais, PDF/texto e ADTS
-- [ ] [TDD] `@AudioFile` + `AudioFileValidator` em `infrastructure/http/request`: `VoiceCommandIT` → vazio → 400 "O
+- [x] [TDD] `@AudioFile` + `AudioFileValidator` em `infrastructure/http/request`: `VoiceCommandIT` → vazio → 400 "O
       arquivo está vazio."; não-áudio → 400 "Envie o áudio em M4A, MP3 ou WAV."; ambos com `errors[0].parameter = file`
       e sem chamada à IA
 - [ ] [TDD] `ProcessVoiceCommandInput`/`Audio` com `AudioFormat` no lugar de nome e tipo; `toInput()` com o formato
