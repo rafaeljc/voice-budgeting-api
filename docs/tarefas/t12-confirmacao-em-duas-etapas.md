@@ -273,9 +273,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: ADR, diagramas, regras e tarefas
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/adr/0005-proposta-de-transacao-em-entidade-propria.md` (template MADR, `status: aceito`):
+- [x] [verificação] `docs/adr/0005-proposta-de-transacao-em-entidade-propria.md` (template MADR, `status: aceito`):
       contexto (FN-03, RES-08, a IA nunca grava); opções: `status` na `Transaction`, tabela própria no MySQL, Redis
       com TTL; decisão: tabela própria no MySQL; consequências: 404 único depois da decisão, histórico da decisão como
       evento na T20/T22, expiração na T13
