@@ -279,7 +279,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       contexto (FN-03, RES-08, a IA nunca grava); opções: `status` na `Transaction`, tabela própria no MySQL, Redis
       com TTL; decisão: tabela própria no MySQL; consequências: 404 único depois da decisão, histórico da decisão como
       evento na T20/T22, expiração na T13
-- [ ] [verificação] `docs/arquitetura.md`: sequência do comando de voz atualizada (tool de proposta → voz → gravação
+- [x] [verificação] `docs/arquitetura.md`: sequência do comando de voz atualizada (tool de proposta → voz → gravação
       → resposta com fala e proposta) e nova sequência da decisão (confirmar e cancelar, com bloqueio); camada de
       domínio cita `TransactionProposal`
 - [ ] [verificação] Regras: `api-conventions.md` (ações de negócio fora do CRUD como `POST /{id}/<verbo>`, `201` +
