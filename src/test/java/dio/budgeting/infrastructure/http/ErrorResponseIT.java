@@ -1,6 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
+import static dio.budgeting.support.ApiPaths.TRANSACTION_PROPOSALS_PATH;
 import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -280,6 +281,24 @@ class ErrorResponseIT {
         assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
         assertThat(event.path("status").asInt()).isEqualTo(404);
         assertThat(event.path("problemType").asString()).isEqualTo("urn:problem-type:budgeting:transaction-not-found");
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+    }
+
+    @Test
+    void should_logRejectedRequestWithProblemType_when_transactionProposalIsNotFound(CapturedOutput output)
+            throws Exception {
+        // when
+        var response = mockMvc.perform(post(TRANSACTION_PROPOSALS_PATH + "/" + UUID.randomUUID() + "/confirm")
+                        .header(AUTHORIZATION, AccessTokens.authorization()))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Request rejected");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("INFO");
+        assertThat(event.path("status").asInt()).isEqualTo(404);
+        assertThat(event.path("problemType").asString())
+                .isEqualTo("urn:problem-type:budgeting:transaction-proposal-not-found");
         assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
     }
 

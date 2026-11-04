@@ -173,7 +173,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `TransactionProposalEndpointsIT` (propostas criadas pelo repositório) → `confirm` → `201`, `Location`
       `/api/v1/transactions/{tid}`, corpo da transação com `createdAt` da confirmação, transação gravada e proposta
       apagada; `confirm` de novo → 404; `cancel` → `204`, proposta apagada e nenhuma transação; `cancel` de novo → 404
-- [ ] [TDD] 404 `transaction-proposal-not-found` (`ProblemType`, `messages.properties`, `ApiExceptionHandler`):
+- [x] [TDD] 404 `transaction-proposal-not-found` (`ProblemType`, `messages.properties`, `ApiExceptionHandler`):
       `TransactionProposalEndpointsIT` → proposta de outro usuário e ID malformado → 404 com o mesmo corpo do
       inexistente; sem token → 401; `ErrorResponseIT` → log `Request rejected` com `problemType`
 - [ ] [TDD] Logs `Transaction proposal confirmed` (`transactionProposalId`, `transactionId`) e `Transaction proposal

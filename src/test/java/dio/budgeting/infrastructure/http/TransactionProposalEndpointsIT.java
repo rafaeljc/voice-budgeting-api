@@ -5,11 +5,13 @@ import static dio.budgeting.support.ApiPaths.TRANSACTION_PROPOSALS_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionProposalEntity;
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.infrastructure.persistence.repository.TransactionProposalEntityRepository;
@@ -18,9 +20,14 @@ import dio.budgeting.support.security.AccessTokens;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -109,6 +116,62 @@ class TransactionProposalEndpointsIT {
 
         // then
         response.andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest
+    @MethodSource("decisions")
+    void should_returnNotFoundProblem_when_proposalIdIsUnknownOrMalformed(String action, String id) throws Exception {
+        // when
+        var response = mockMvc.perform(post(TRANSACTION_PROPOSALS_PATH + "/{id}/" + action, id)
+                .header(AUTHORIZATION, AccessTokens.authorization()));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-proposal-not-found"))
+                .andExpect(jsonPath("$.title").value("Proposta de transação não encontrada"))
+                .andExpect(jsonPath("$.detail").value("A proposta de transação não existe ou já foi decidida."))
+                .andExpect(jsonPath("$.instance").value(TRANSACTION_PROPOSALS_PATH + "/" + id + "/" + action));
+    }
+
+    @ParameterizedTest
+    @MethodSource("decisions")
+    void should_returnSameNotFoundProblemAndKeepProposal_when_proposalBelongsToAnotherUser(
+            String action, String ignored) throws Exception {
+        // given
+        var proposalId = saveProposal();
+        var otherUser = new UserId(UUID.randomUUID());
+
+        // when
+        var response = mockMvc.perform(post(TRANSACTION_PROPOSALS_PATH + "/{id}/" + action, proposalId)
+                .header(AUTHORIZATION, AccessTokens.authorization(otherUser)));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-proposal-not-found"))
+                .andExpect(jsonPath("$.detail").value("A proposta de transação não existe ou já foi decidida."));
+        assertThat(proposalRepository.findById(proposalId)).isPresent();
+        assertThat(transactionRepository.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("decisions")
+    void should_returnUnauthorized_when_tokenIsMissing(String action, String id) throws Exception {
+        // when
+        var response = mockMvc.perform(post(TRANSACTION_PROPOSALS_PATH + "/{id}/" + action, id));
+
+        // then
+        response.andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:unauthenticated"));
+    }
+
+    static Stream<Arguments> decisions() {
+        var unknown = UUID.randomUUID().toString();
+        return Stream.of(
+                Arguments.of("confirm", unknown),
+                Arguments.of("confirm", "abc"),
+                Arguments.of("cancel", unknown),
+                Arguments.of("cancel", "abc"));
     }
 
     private UUID saveProposal() {
