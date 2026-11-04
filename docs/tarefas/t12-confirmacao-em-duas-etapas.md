@@ -228,7 +228,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       diferentes → 422 `invalid-command` e nenhuma proposta (exceção no `rethrowExceptions` e no handler do 422)
 - [x] [TDD] Falhas: `VoiceCommandIT` → 503 na síntese de voz e 422 de argumentos inválidos sem proposta gravada;
       `WhenToolFailsUnexpectedly` passa a falhar a tool de consulta e continua 500 genérico
-- [ ] [TDD] Log `Transaction proposal created` (`transactionProposalId`) no lugar de `Transaction persisted` no fluxo
+- [x] [TDD] Log `Transaction proposal created` (`transactionProposalId`) no lugar de `Transaction persisted` no fluxo
       de voz; conteúdo continua fora do log (`VoiceCommandIT`)
 - [ ] [verificação] Prompt `prompts/system-message.st`: um gasto por comando; dizer o que entendeu e pedir a
       confirmação; nunca dizer que registrou

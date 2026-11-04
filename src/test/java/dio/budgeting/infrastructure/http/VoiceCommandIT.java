@@ -244,6 +244,29 @@ class VoiceCommandIT {
     }
 
     @Test
+    void should_logProposalCreatedWithIdOnly_when_commandProposesTransaction(CapturedOutput output) throws Exception {
+        // given
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .header(AUTHORIZATION, AccessTokens.authorization())
+                        .file(recording()))
+                .andReturn()
+                .getResponse();
+
+        // then
+        var proposalId = JsonPath.<String>read(response.getContentAsString(), "$.transactionProposal.id");
+        assertEvent(
+                output,
+                response.getHeader("X-Request-Id"),
+                "Transaction proposal created",
+                "transactionProposalId",
+                proposalId);
+        assertThat(output.getAll()).doesNotContain("Mercado").doesNotContain("Transaction persisted");
+    }
+
+    @Test
     void should_returnValidationProblemWithoutCallingAi_when_audioFileIsEmpty() throws Exception {
         // given
         var empty = new MockMultipartFile("file", "empty.m4a", "audio/mp4", new byte[0]);
