@@ -226,7 +226,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       o usuário do token, nenhuma transação criada; consulta (sem tool de escrita) → só `speech`, nada gravado
 - [x] [TDD] Idempotência dentro do comando: `VoiceCommandIT` → duas chamadas idênticas → `200` e uma proposta; duas
       diferentes → 422 `invalid-command` e nenhuma proposta (exceção no `rethrowExceptions` e no handler do 422)
-- [ ] [TDD] Falhas: `VoiceCommandIT` → 503 na síntese de voz e 422 de argumentos inválidos sem proposta gravada;
+- [x] [TDD] Falhas: `VoiceCommandIT` → 503 na síntese de voz e 422 de argumentos inválidos sem proposta gravada;
       `WhenToolFailsUnexpectedly` passa a falhar a tool de consulta e continua 500 genérico
 - [ ] [TDD] Log `Transaction proposal created` (`transactionProposalId`) no lugar de `Transaction persisted` no fluxo
       de voz; conteúdo continua fora do log (`VoiceCommandIT`)

@@ -304,6 +304,23 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH));
     }
 
+    @Test
+    void should_returnServiceUnavailableAndSaveNoProposal_when_speechSynthesisFails() throws Exception {
+        // given
+        givenExpenseCommand(new byte[] {1, 2, 3, 4});
+        aiStub.givenFailure(AiStage.SPEECH, AiFailure.PROVIDER_ERROR);
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
+
+        // then
+        response.andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:assistant-unavailable"));
+        assertThat(proposalRepository.count()).isZero();
+    }
+
     @ParameterizedTest
     @EnumSource(AiStage.class)
     void should_returnGenericInternalError_when_providerRejectsRequest(AiStage stage) throws Exception {
@@ -387,8 +404,7 @@ class VoiceCommandIT {
                                 + " Envie um novo comando de voz."))
                 .andExpect(jsonPath("$.instance").value(VOICE_COMMAND_PATH))
                 .andExpect(jsonPath("$.errors").doesNotExist());
-        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
-                .isEmpty();
+        assertThat(proposalRepository.count()).isZero();
     }
 
     @ParameterizedTest
@@ -405,8 +421,7 @@ class VoiceCommandIT {
         // then
         response.andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"));
-        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
-                .isEmpty();
+        assertThat(proposalRepository.count()).isZero();
     }
 
     @Test
