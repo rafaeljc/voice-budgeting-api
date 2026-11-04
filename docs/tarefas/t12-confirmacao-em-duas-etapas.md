@@ -166,7 +166,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `ConfirmTransactionProposalUseCase`: `ConfirmTransactionProposalUseCaseTest` → proposta do usuário →
       grava a transação com `Instant.now(clock)`, apaga a proposta e devolve o `TransactionOutput`; proposta não
       encontrada → `TransactionProposalNotFoundException`, nada gravado
-- [ ] [TDD] `CancelTransactionProposalUseCase`: `CancelTransactionProposalUseCaseTest` → apaga a proposta; não
+- [x] [TDD] `CancelTransactionProposalUseCase`: `CancelTransactionProposalUseCaseTest` → apaga a proposta; não
       encontrada → `TransactionProposalNotFoundException`
 - [ ] [TDD] Persistência (`TransactionProposalEntity`, `TransactionProposalEntityRepository` com
       `@Lock(PESSIMISTIC_WRITE)`, `JpaTransactionProposalRepository`) e `TransactionProposalController`:

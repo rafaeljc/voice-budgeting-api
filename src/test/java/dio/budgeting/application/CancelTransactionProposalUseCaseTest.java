@@ -1,0 +1,61 @@
+package dio.budgeting.application;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
+import dio.budgeting.domain.TransactionProposal;
+import dio.budgeting.domain.TransactionProposalId;
+import dio.budgeting.domain.TransactionProposalNotFoundException;
+import dio.budgeting.domain.TransactionProposalRepository;
+import dio.budgeting.domain.UserId;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class CancelTransactionProposalUseCaseTest {
+    private static final UserId USER_ID = new UserId(UUID.randomUUID());
+
+    @Mock
+    private TransactionProposalRepository repository;
+
+    @InjectMocks
+    private CancelTransactionProposalUseCase useCase;
+
+    @Test
+    void should_deleteProposal_when_proposalExists() {
+        // given
+        var proposal = new TransactionProposal(
+                USER_ID,
+                "Mercado",
+                new Money(new BigDecimal("80.00")),
+                Category.GROCERIES,
+                Instant.parse("2026-03-01T12:30:45.123Z"));
+        when(repository.findByIdAndUserIdForUpdate(proposal.getId(), USER_ID)).thenReturn(Optional.of(proposal));
+
+        // when
+        useCase.execute(USER_ID, proposal.getId());
+
+        // then
+        verify(repository).delete(proposal);
+    }
+
+    @Test
+    void should_throwNotFound_when_proposalDoesNotExist() {
+        // given
+        var id = new TransactionProposalId();
+        when(repository.findByIdAndUserIdForUpdate(id, USER_ID)).thenReturn(Optional.empty());
+
+        // when / then
+        assertThatThrownBy(() -> useCase.execute(USER_ID, id)).isInstanceOf(TransactionProposalNotFoundException.class);
+    }
+}
