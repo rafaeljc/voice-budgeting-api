@@ -158,7 +158,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Proposta persistida, confirmação e cancelamento
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] Domínio `TransactionProposal`, `TransactionProposalId` e `TransactionProposalNotFoundException`:
       `TransactionProposalTest` cobre as invariantes do construtor de criação (como `TransactionTest`) e
@@ -178,7 +178,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       inexistente; sem token → 401; `ErrorResponseIT` → log `Request rejected` com `problemType`
 - [x] [TDD] Logs `Transaction proposal confirmed` (`transactionProposalId`, `transactionId`) e `Transaction proposal
       canceled` (`transactionProposalId`) com `traceId` (`TransactionProposalEndpointsIT`)
-- [ ] [verificação] `docs/openapi.yaml`: `POST /api/v1/transaction-proposals/{id}/confirm` (201, `Location`, 404,
+- [x] [verificação] `docs/openapi.yaml`: `POST /api/v1/transaction-proposals/{id}/confirm` (201, `Location`, 404,
       401, 500) e `/cancel` (204, 404, 401, 500), com `bearerAuth` e descrições em pt-BR
 
 ### Plano de verificação
@@ -192,7 +192,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Feito: domínio `TransactionProposal` (com `toTransaction(Instant)`), `TransactionProposalId`,
+  `TransactionProposalNotFoundException` e a porta `TransactionProposalRepository`; `ConfirmTransactionProposalUseCase` e
+  `CancelTransactionProposalUseCase` (ambos `@Transactional`, com busca bloqueante); adaptador JPA da proposta
+  (`TransactionProposalEntity`, `@Lock(PESSIMISTIC_WRITE)` no Spring Data); `TransactionProposalController` com
+  `POST /{id}/confirm` (201 + `Location` para `/api/v1/transactions/{id}`) e `/cancel` (204); 404
+  `transaction-proposal-not-found` no `ApiExceptionHandler`; logs `confirmed` e `canceled`; contrato no
+  `docs/openapi.yaml`.
+- Decisões (registradas em Decisões): os use cases recebem o ID tipado e o `parse` com o 404 fica no controller
+  (`GetTransactionUseCase` ajustado igual, em commit `refactor:` próprio); o adaptador JPA e o 404 no handler foram
+  antecipados para os itens 2 e 4, porque sem eles o contexto Spring não sobe ou o "de novo → 404" daria 500. O
+  item 5 cobre só os testes do corpo do 404, do 401 e do log, que passaram de primeira.
+- Verificação: `build` (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo), testes unitários da proposta,
+  `TransactionProposalEndpointsIT` e `ErrorResponseIT` passam; o `grep` do `openapi.yaml` acha os 2 caminhos. O
+  YAML do contrato não foi validado por parser (sem `pyyaml` no ambiente).
+- Para uma sessão nova: a fase 2 troca a tool `persist-transaction` por `propose-transaction` e grava a proposta pelo
+  `TransactionProposalRepository` (`save`) no `ProcessVoiceCommandUseCase`; `Location` e o 404 já existem. A tabela
+  nasce por `ddl-auto=update`.
 
 ## Fase 2: Comando de voz gera a proposta
 
