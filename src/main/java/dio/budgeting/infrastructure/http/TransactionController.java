@@ -4,6 +4,8 @@ import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.application.ProcessVoiceCommandUseCase;
+import dio.budgeting.domain.TransactionId;
+import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
@@ -80,7 +82,9 @@ public class TransactionController {
 
     @GetMapping("/{id}")
     public TransactionResponse getTransaction(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
-        return TransactionResponse.from(getTransactionUseCase.execute(userId(jwt), id));
+        // A malformed ID is as unknown as any other: the edge rejects it before the use case
+        var transactionId = TransactionId.parse(id).orElseThrow(TransactionNotFoundException::new);
+        return TransactionResponse.from(getTransactionUseCase.execute(userId(jwt), transactionId));
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")

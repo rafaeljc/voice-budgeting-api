@@ -17,10 +17,10 @@ public class GetTransactionUseCase {
     }
 
     @Transactional(readOnly = true)
-    public TransactionOutput execute(UserId userId, String id) {
-        // A malformed ID, an unknown one and another user's transaction all end the same way: not found
-        return TransactionId.parse(id)
-                .flatMap(transactionId -> transactionRepository.findByIdAndUserId(transactionId, userId))
+    public TransactionOutput execute(UserId userId, TransactionId id) {
+        // An unknown ID and another user's transaction end the same way: not found
+        return transactionRepository
+                .findByIdAndUserId(id, userId)
                 .map(TransactionOutput::from)
                 .orElseThrow(TransactionNotFoundException::new);
     }
