@@ -126,7 +126,7 @@ Contexto para uma sessão nova:
     `toTransaction(Instant)`), `TransactionProposalId` (record, `parse` como o `TransactionId`),
     `TransactionProposalRepository` (`save`, `findByIdAndUserIdForUpdate`, `delete`),
     `TransactionProposalNotFoundException`
-  - `application/`: `ProposeTransactionInput` (descrição, valor, categoria), `output/AssistantAnswer(String text,
+  - `application/`: `ProposeTransactionInput` (descrição, valor, categoria), `output/AssistantOutput(String text,
     Optional<ProposeTransactionInput> proposal)` como retorno do `AssistantGateway.interpret`,
     `output/TransactionProposalOutput`, `VoiceCommandOutput(byte[] speech, Optional<TransactionProposalOutput>)`,
     `ConfirmTransactionProposalUseCase` (`@Transactional`, devolve `TransactionOutput`) e
@@ -216,7 +216,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `AiStub.givenToolCalls(String tool, String... argumentsJson)` no `OpenAiWireMockStub` (várias
       `tool_calls` na mesma resposta do chat), usado pelos testes abaixo
-- [ ] [TDD] `ProcessVoiceCommandUseCase` com `AssistantAnswer` e gravação por último:
+- [x] [TDD] `ProcessVoiceCommandUseCase` com `AssistantOutput` e gravação por último:
       `ProcessVoiceCommandUseCaseTest` → com proposta, grava a `TransactionProposal` (com `Instant.now(clock)`)
       depois da síntese (`InOrder`) e a devolve no output; sem proposta, não grava; síntese falha → nada gravado
       (comentário do porquê da ordem no use case)
