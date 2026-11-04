@@ -168,7 +168,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       encontrada → `TransactionProposalNotFoundException`, nada gravado
 - [x] [TDD] `CancelTransactionProposalUseCase`: `CancelTransactionProposalUseCaseTest` → apaga a proposta; não
       encontrada → `TransactionProposalNotFoundException`
-- [ ] [TDD] Persistência (`TransactionProposalEntity`, `TransactionProposalEntityRepository` com
+- [x] [TDD] Persistência (`TransactionProposalEntity`, `TransactionProposalEntityRepository` com
       `@Lock(PESSIMISTIC_WRITE)`, `JpaTransactionProposalRepository`) e `TransactionProposalController`:
       `TransactionProposalEndpointsIT` (propostas criadas pelo repositório) → `confirm` → `201`, `Location`
       `/api/v1/transactions/{tid}`, corpo da transação com `createdAt` da confirmação, transação gravada e proposta

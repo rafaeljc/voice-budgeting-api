@@ -8,6 +8,7 @@ enum ProblemType {
     ASSISTANT_UNAVAILABLE("assistant-unavailable"),
     INVALID_COMMAND("invalid-command"),
     TRANSACTION_NOT_FOUND("transaction-not-found"),
+    TRANSACTION_PROPOSAL_NOT_FOUND("transaction-proposal-not-found"),
     UNAUTHENTICATED("unauthenticated");
 
     private static final String URN_PREFIX = "urn:problem-type:budgeting:";

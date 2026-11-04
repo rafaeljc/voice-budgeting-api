@@ -2,6 +2,7 @@ package dio.budgeting.infrastructure.http.error;
 
 import dio.budgeting.application.AiProviderUnavailableException;
 import dio.budgeting.domain.TransactionNotFoundException;
+import dio.budgeting.domain.TransactionProposalNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
@@ -107,6 +108,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         var status = HttpStatus.NOT_FOUND;
         return handleExceptionInternal(
                 ex, problem(ProblemType.TRANSACTION_NOT_FOUND, status, null), new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(TransactionProposalNotFoundException.class)
+    ResponseEntity<Object> handleTransactionProposalNotFound(
+            TransactionProposalNotFoundException ex, WebRequest request) {
+        var status = HttpStatus.NOT_FOUND;
+        return handleExceptionInternal(
+                ex,
+                problem(ProblemType.TRANSACTION_PROPOSAL_NOT_FOUND, status, null),
+                new HttpHeaders(),
+                status,
+                request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
