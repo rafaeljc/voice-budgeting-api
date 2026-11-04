@@ -76,6 +76,12 @@ uma transação.
 - Diagramas de sequência (voz atualizado e decisão novo), não de estados — sem status, não há estados a desenhar; o
   item DOC-04 da T12 é ajustado (decisão do usuário)
 - Exemplo de voz aponta para `src/test/resources/audio/recording-1.m4a` (decisão do usuário)
+- Os use cases recebem o ID tipado (`TransactionProposalId`, `TransactionId`); quem valida o ID da URL é a borda: o
+  controller faz o `parse` do `@PathVariable String` e lança a exceção de "não encontrado" se malformado, para manter
+  o 404 do contrato. O `GetTransactionUseCase` foi ajustado da mesma forma (decisão do usuário, durante a execução)
+- O adaptador de persistência da proposta (entidade, repositório Spring Data e `JpaTransactionProposalRepository`) foi
+  antecipado para o commit do `ConfirmTransactionProposalUseCase`: sem ele o contexto Spring não sobe e todo `*IT`
+  falha. Os testes de integração dele continuam no item de persistência (decisão do usuário)
 - Três fases; tipo `feat` (muda o contrato do endpoint de voz)
 - ADR 0005 só para a proposta em entidade própria (opções `status` na `Transaction`, MySQL, Redis com TTL) — um ADR
   por decisão; confirmação pela API, apagar na decisão e `SELECT ... FOR UPDATE` ficam no plano, no código e nas
@@ -157,11 +163,11 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] Domínio `TransactionProposal`, `TransactionProposalId` e `TransactionProposalNotFoundException`:
       `TransactionProposalTest` cobre as invariantes do construtor de criação (como `TransactionTest`) e
       `toTransaction(Instant)` com os dados da proposta e o instante recebido; `TransactionProposalIdTest` cobre `parse`
-- [ ] [TDD] `ConfirmTransactionProposalUseCase`: `ConfirmTransactionProposalUseCaseTest` → proposta do usuário →
-      grava a transação com `Instant.now(clock)`, apaga a proposta e devolve o `TransactionOutput`; ID malformado ou
-      proposta não encontrada → `TransactionProposalNotFoundException`, nada gravado
+- [x] [TDD] `ConfirmTransactionProposalUseCase`: `ConfirmTransactionProposalUseCaseTest` → proposta do usuário →
+      grava a transação com `Instant.now(clock)`, apaga a proposta e devolve o `TransactionOutput`; proposta não
+      encontrada → `TransactionProposalNotFoundException`, nada gravado
 - [ ] [TDD] `CancelTransactionProposalUseCase`: `CancelTransactionProposalUseCaseTest` → apaga a proposta; não
-      encontrada ou malformada → `TransactionProposalNotFoundException`
+      encontrada → `TransactionProposalNotFoundException`
 - [ ] [TDD] Persistência (`TransactionProposalEntity`, `TransactionProposalEntityRepository` com
       `@Lock(PESSIMISTIC_WRITE)`, `JpaTransactionProposalRepository`) e `TransactionProposalController`:
       `TransactionProposalEndpointsIT` (propostas criadas pelo repositório) → `confirm` → `201`, `Location`
