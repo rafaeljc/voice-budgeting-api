@@ -230,7 +230,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `WhenToolFailsUnexpectedly` passa a falhar a tool de consulta e continua 500 genérico
 - [x] [TDD] Log `Transaction proposal created` (`transactionProposalId`) no lugar de `Transaction persisted` no fluxo
       de voz; conteúdo continua fora do log (`VoiceCommandIT`)
-- [ ] [verificação] Prompt `prompts/system-message.st`: um gasto por comando; dizer o que entendeu e pedir a
+- [x] [verificação] Prompt `prompts/system-message.st`: um gasto por comando; dizer o que entendeu e pedir a
       confirmação; nunca dizer que registrou
 - [ ] [verificação] `docs/openapi.yaml` (resposta `200` JSON do `/transactions/ai`, schemas `VoiceCommand`, `Speech`
       e `TransactionProposal`, 422 com mais de uma transação no comando), README (tabela da API e `curl` do fluxo de
