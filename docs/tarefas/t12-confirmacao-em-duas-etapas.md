@@ -220,7 +220,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `ProcessVoiceCommandUseCaseTest` → com proposta, grava a `TransactionProposal` (com `Instant.now(clock)`)
       depois da síntese (`InOrder`) e a devolve no output; sem proposta, não grava; síntese falha → nada gravado
       (comentário do porquê da ordem no use case)
-- [ ] [TDD] Tool `propose-transaction` com o coletor no `toolContext` e a resposta mínima ao modelo; resposta HTTP
+- [x] [TDD] Tool `propose-transaction` com o coletor no `toolContext` e a resposta mínima ao modelo; resposta HTTP
       `200` JSON (`VoiceCommandResponse`): `VoiceCommandIT` → registro → `speech.contentType = audio/mpeg`,
       `speech.content` = base64 da fala do stub, `transactionProposal` com os dados e o `id` da proposta gravada para
       o usuário do token, nenhuma transação criada; consulta (sem tool de escrita) → só `speech`, nada gravado

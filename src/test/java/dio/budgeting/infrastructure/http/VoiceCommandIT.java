@@ -13,10 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.domain.Category;
-import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.infrastructure.persistence.repository.TransactionProposalEntityRepository;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStage;
@@ -25,10 +26,10 @@ import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -56,15 +57,21 @@ class VoiceCommandIT {
     private final MockMvc mockMvc;
     private final AiStub aiStub;
     private final TransactionRepository transactionRepository;
+    private final TransactionProposalEntityRepository proposalRepository;
 
-    VoiceCommandIT(MockMvc mockMvc, AiStub aiStub, TransactionRepository transactionRepository) {
+    VoiceCommandIT(
+            MockMvc mockMvc,
+            AiStub aiStub,
+            TransactionRepository transactionRepository,
+            TransactionProposalEntityRepository proposalRepository) {
         this.mockMvc = mockMvc;
         this.aiStub = aiStub;
         this.transactionRepository = transactionRepository;
+        this.proposalRepository = proposalRepository;
     }
 
     @Test
-    void should_persistTransactionAndReturnSpeech_when_commandRegistersExpense() throws Exception {
+    void should_returnSpeechAndProposalWithoutCreatingTransaction_when_commandRegistersExpense() throws Exception {
         // given
         var speech = new byte[] {1, 2, 3, 4};
         givenExpenseCommand(speech);
@@ -75,15 +82,45 @@ class VoiceCommandIT {
                 .file(recording()));
 
         // then
-        response.andExpect(status().isOk())
-                .andExpect(content().contentType("audio/mpeg"))
-                .andExpect(content().bytes(speech));
+        var result = response.andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.speech.contentType").value("audio/mpeg"))
+                .andExpect(
+                        jsonPath("$.speech.content").value(Base64.getEncoder().encodeToString(speech)))
+                .andExpect(jsonPath("$.transactionProposal.description").value("Mercado"))
+                .andExpect(jsonPath("$.transactionProposal.amount").value("80.00"))
+                .andExpect(jsonPath("$.transactionProposal.currency").value("BRL"))
+                .andExpect(jsonPath("$.transactionProposal.category").value("GROCERIES"))
+                .andReturn();
+        var proposalId = JsonPath.<String>read(result.getResponse().getContentAsString(), "$.transactionProposal.id");
+        assertThat(proposalRepository.findById(UUID.fromString(proposalId)))
+                .hasValueSatisfying(saved -> assertThat(saved.getUserId()).isEqualTo(AccessTokens.DEFAULT_USER.uuid()));
         assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
-                .singleElement()
-                .satisfies(transaction -> {
-                    assertThat(transaction.getDescription()).isEqualTo("Mercado");
-                    assertThat(transaction.getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
-                });
+                .isEmpty();
+    }
+
+    @Test
+    void should_returnOnlySpeechAndSaveNothing_when_commandIsAQuery() throws Exception {
+        // given
+        var speech = new byte[] {1, 2, 3, 4};
+        aiStub.givenTranscription("quanto gastei com mercado");
+        aiStub.givenToolCall("list-transactions-by-category", """
+                {"category": "GROCERIES"}
+                """);
+        aiStub.givenAnswer("Você não gastou nada com mercado.");
+        aiStub.givenSpeech(speech);
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.speech.content").value(Base64.getEncoder().encodeToString(speech)))
+                .andExpect(jsonPath("$.transactionProposal").doesNotExist());
+        assertThat(proposalRepository.count()).isZero();
     }
 
     @Test
@@ -104,7 +141,7 @@ class VoiceCommandIT {
     }
 
     @Test
-    void should_persistForTokenUserOnly_when_commandRegistersExpense() throws Exception {
+    void should_proposeForTokenUserOnly_when_commandRegistersExpense() throws Exception {
         // given
         var tokenUser = new UserId(UUID.randomUUID());
         givenExpenseCommand(new byte[] {1, 2, 3, 4});
@@ -116,10 +153,8 @@ class VoiceCommandIT {
                 .andExpect(status().isOk());
 
         // then
-        assertThat(transactionRepository.findAllByUserIdAndCategory(tokenUser, Category.GROCERIES))
-                .hasSize(1);
-        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
-                .isEmpty();
+        assertThat(proposalRepository.findAll()).singleElement().satisfies(saved -> assertThat(saved.getUserId())
+                .isEqualTo(tokenUser.uuid()));
     }
 
     @Test
@@ -154,18 +189,11 @@ class VoiceCommandIT {
                 .getHeader("X-Request-Id");
 
         // then
-        var transactionId = transactionRepository
-                .findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
-                .getFirst()
-                .getId()
-                .uuid()
-                .toString();
         assertEvent(output, requestId, "Voice command received", "audioSizeBytes", recording.getSize());
         assertEvent(output, requestId, "Voice command received", "audioFormat", "M4A");
         assertEvent(output, requestId, "Audio transcribed", "transcriptionLength", 26);
         assertEvent(output, requestId, "Assistant answered", "answerLength", 30);
         assertEvent(output, requestId, "Speech synthesized", "speechSizeBytes", 4);
-        assertEvent(output, requestId, "Transaction persisted", "transactionId", transactionId);
     }
 
     @Test
@@ -292,7 +320,7 @@ class VoiceCommandIT {
     @Test
     void should_returnInvalidCommandProblem_when_toolAmountIsNegative() throws Exception {
         // given
-        givenPersistCommand("""
+        givenProposeCommand("""
                 {"arguments": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
                 """);
 
@@ -320,7 +348,7 @@ class VoiceCommandIT {
     @MethodSource("invalidToolArguments")
     void should_returnInvalidCommandProblem_when_toolArgumentsAreInvalid(String arguments) throws Exception {
         // given
-        givenPersistCommand(arguments);
+        givenProposeCommand(arguments);
 
         // when
         var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -338,7 +366,7 @@ class VoiceCommandIT {
     void should_returnInvalidCommandProblemWithoutLoggingValue_when_toolCategoryDoesNotExist(CapturedOutput output)
             throws Exception {
         // given
-        givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
+        givenProposeCommand(toolArguments("\"Mercado\"", "80.00", "\"FOO\""));
 
         // when
         var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -355,7 +383,7 @@ class VoiceCommandIT {
     void should_logRejectedRequestWithInvalidFields_when_toolArgumentsAreInvalid(CapturedOutput output)
             throws Exception {
         // given
-        givenPersistCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
+        givenProposeCommand(toolArguments("\"Mercado\"", "-10", "\"GROCERIES\""));
 
         // when
         var requestId = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -386,8 +414,12 @@ class VoiceCommandIT {
         @Test
         void should_returnGenericInternalError_when_toolFailsUnexpectedly() throws Exception {
             // given
-            when(failingRepository.save(any())).thenThrow(new RuntimeException(INTERNAL_MARKER));
-            givenPersistCommand(toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
+            when(failingRepository.findAllByUserIdAndCategory(any(), any()))
+                    .thenThrow(new RuntimeException(INTERNAL_MARKER));
+            aiStub.givenTranscription("quanto gastei com mercado");
+            aiStub.givenToolCall("list-transactions-by-category", """
+                    {"category": "GROCERIES"}
+                    """);
 
             // when
             var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
@@ -435,16 +467,16 @@ class VoiceCommandIT {
         }
     }
 
-    private void givenPersistCommand(String argumentsJson) {
+    private void givenProposeCommand(String argumentsJson) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
-        aiStub.givenToolCall("persist-transaction", argumentsJson);
+        aiStub.givenToolCall("propose-transaction", argumentsJson);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
     }
 
     private void givenExpenseCommand(byte[] speech) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
-        aiStub.givenToolCall("persist-transaction", """
+        aiStub.givenToolCall("propose-transaction", """
                 {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
         aiStub.givenAnswer("Registrei 80 reais em mercado.");
