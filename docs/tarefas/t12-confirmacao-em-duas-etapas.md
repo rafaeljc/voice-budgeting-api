@@ -176,7 +176,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] 404 `transaction-proposal-not-found` (`ProblemType`, `messages.properties`, `ApiExceptionHandler`):
       `TransactionProposalEndpointsIT` → proposta de outro usuário e ID malformado → 404 com o mesmo corpo do
       inexistente; sem token → 401; `ErrorResponseIT` → log `Request rejected` com `problemType`
-- [ ] [TDD] Logs `Transaction proposal confirmed` (`transactionProposalId`, `transactionId`) e `Transaction proposal
+- [x] [TDD] Logs `Transaction proposal confirmed` (`transactionProposalId`, `transactionId`) e `Transaction proposal
       canceled` (`transactionProposalId`) com `traceId` (`TransactionProposalEndpointsIT`)
 - [ ] [verificação] `docs/openapi.yaml`: `POST /api/v1/transaction-proposals/{id}/confirm` (201, `Location`, 404,
       401, 500) e `/cancel` (204, 404, 401, 500), com `bearerAuth` e descrições em pt-BR

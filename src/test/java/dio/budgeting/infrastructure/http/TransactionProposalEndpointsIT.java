@@ -16,15 +16,19 @@ import dio.budgeting.infrastructure.persistence.entity.TransactionProposalEntity
 import dio.budgeting.infrastructure.persistence.repository.TransactionEntityRepository;
 import dio.budgeting.infrastructure.persistence.repository.TransactionProposalEntityRepository;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,6 +37,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@ExtendWith(OutputCaptureExtension.class)
 class TransactionProposalEndpointsIT {
     private static final UUID USER_ID = AccessTokens.DEFAULT_USER.uuid();
     private static final Instant PROPOSED_AT = Instant.parse("2026-03-01T10:00:00Z");
@@ -116,6 +121,38 @@ class TransactionProposalEndpointsIT {
 
         // then
         response.andExpect(status().isNotFound());
+    }
+
+    @Test
+    void should_logConfirmationWithIdsOnlyAndTraceId_when_confirming(CapturedOutput output) throws Exception {
+        // given
+        var proposalId = saveProposal();
+
+        // when
+        var response = confirm(proposalId).andReturn().getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Transaction proposal confirmed");
+        assertThat(event.path("transactionProposalId").asString()).isEqualTo(proposalId.toString());
+        assertThat(event.path("transactionId").asString())
+                .isEqualTo(JsonPath.<String>read(response.getContentAsString(), "$.id"));
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+        assertThat(output.getAll()).doesNotContain("Mercado");
+    }
+
+    @Test
+    void should_logCancelationWithIdOnlyAndTraceId_when_canceling(CapturedOutput output) throws Exception {
+        // given
+        var proposalId = saveProposal();
+
+        // when
+        var response = cancel(proposalId).andReturn().getResponse();
+
+        // then
+        var event = LogEvents.withMessage(output, "Transaction proposal canceled");
+        assertThat(event.path("transactionProposalId").asString()).isEqualTo(proposalId.toString());
+        assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+        assertThat(output.getAll()).doesNotContain("Mercado");
     }
 
     @ParameterizedTest
