@@ -26,7 +26,7 @@
 - [x] [T09 — Orquestração de IA na camada de aplicação](#t09)
 - [x] [T10 — Timeouts e retries](#t10)
 - [x] [T11 — Validação do áudio recebido](#t11)
-- [ ] [T12 — Confirmação em duas etapas](#t12)
+- [x] [T12 — Confirmação em duas etapas](#t12)
 - [ ] [T13 — Ciclo de vida da proposta](#t13)
 - [ ] [T14 — Respostas claras e proteções da IA](#t14)
 
@@ -225,19 +225,19 @@ Rejeitar, antes de qualquer chamada à IA, o áudio vazio, acima de 1 MB ou cujo
 
 **Depende de:** —
 
-Fazer com que comandos de registro gerem uma proposta persistida, que o cliente apenas confirma ou cancela; consultas continuam em etapa única. Modelar o comando de voz e a proposta como recursos da API. Registrar em ADR o modelo da proposta e do fluxo de confirmação, criar o diagrama de estados da proposta e adicionar exemplos de requisição e áudios para o fluxo de voz.
+Fazer com que comandos de registro gerem uma proposta persistida, que o cliente apenas confirma ou cancela por chamada explícita à API, sem IA; consultas continuam em etapa única. A proposta é um recurso com as ações `confirm` e `cancel`, e o comando de voz continua no endpoint atual. Registrar em ADR (0005) o modelo da proposta, criar os diagramas de sequência do comando de voz e da decisão e adicionar exemplos de requisição para o fluxo de voz.
 
 **Itens do escopo:**
 - FN-03 — Confirmação em duas etapas
 - RES-08 — Estado persistido
 - API-01 — Adequação às boas práticas REST (fluxo de voz)
-- DOC-03 — ADRs (modelo da proposta e do fluxo de confirmação)
-- DOC-04 — Diagramas (estados da proposta)
+- DOC-03 — ADRs (modelo da proposta: [ADR 0005](adr/0005-proposta-de-transacao-em-entidade-propria.md))
+- DOC-04 — Diagramas (sequência da decisão sobre a proposta, no lugar dos estados: a proposta não tem status)
 - DOC-06 — Exemplos de requisição e áudio (fluxo de voz)
 
-**Nota (T06):** a tool de escrita ainda devolve o `TransactionOutput` ao modelo. Ao redesenhá-la para gerar a proposta, avaliar o que ela devolve ao modelo (um `ToolResponse` com só o necessário para a resposta falada).
+**Nota (T06):** a tool de escrita (`propose-transaction`) devolve ao modelo um `ProposeTransactionToolResult` com só o necessário para a resposta falada, sem o `TransactionOutput`.
 
-**Nota (T07):** ao remodelar o fluxo de voz como recursos, atualizar `docs/openapi.yaml` (hoje `POST /api/v1/transactions/ai`), os exemplos em `docs/exemplos/transacoes.http` e a seção "API" do README.
+**Nota (T07):** o `docs/openapi.yaml`, a seção "API" do README e `docs/exemplos/voz.http` foram atualizados para o fluxo de proposta.
 
 <a id="t13"></a>
 ### T13 — Ciclo de vida da proposta
@@ -249,6 +249,8 @@ Expirar propostas não confirmadas após um tempo definido e garantir que confir
 **Itens do escopo:**
 - FN-04 — Expiração de propostas
 - RES-07 — Idempotência na confirmação
+
+**Nota (T12):** a proposta é apagada na decisão, então expirar é apagar a proposta vencida (uma rotina agendada). Confirmar e cancelar já buscam a proposta com bloqueio (`SELECT ... FOR UPDATE`) e a apagam: uma segunda decisão encontra 404 e nenhuma transação nasce em dobro. Falta o teste de confirmação concorrente.
 
 <a id="t14"></a>
 ### T14 — Respostas claras e proteções da IA
@@ -295,6 +297,8 @@ Definir a resposta para cada cenário de falha: texto quando a geração de voz 
 - QA-03 — Testes de falha (parcial)
 
 **Nota (T09):** o use case de voz (`ProcessVoiceCommandUseCase`) captura a falha do `TextToSpeechGateway` para responder em texto quando a voz falhar; as falhas da transcrição e do assistente seguem como `AiProviderUnavailableException` (503).
+
+**Nota (T12):** ao responder em texto quando a voz falhar, manter a ordem voz → gravação da proposta: a proposta só é gravada depois de a resposta (em texto, nesse caso) estar pronta.
 
 **Nota (T06):** o 422 `invalid-command` (argumentos inválidos da tool) não gera voz hoje e responde só com Problem Details; servir uma mensagem falada como áudio estático.
 
@@ -346,6 +350,8 @@ Registrar, em um banco NoSQL separado do transacional, os eventos do fluxo: auto
 - SEG-04 — Auditoria em banco NoSQL
 - DOC-03 — ADRs (auditoria em banco separado do transacional)
 
+**Nota (T12):** a proposta é apagada na decisão, então a decisão (confirmada, cancelada ou expirada) precisa ser registrada aqui como evento; o banco transacional não guarda o histórico.
+
 <a id="t21"></a>
 ### T21 — Garantia de entrega da auditoria
 
@@ -370,6 +376,8 @@ Expor métricas técnicas (latência por etapa, taxa de erros, estado dos circui
 **Itens do escopo:**
 - OBS-02 — Métricas técnicas
 - OBS-03 — Métricas de negócio
+
+**Nota (T12):** a proposta é apagada na decisão, então as taxas de confirmada, cancelada e expirada vêm do evento da decisão (T20) ou de contadores incrementados na decisão, e não de uma contagem por status.
 
 <a id="t23"></a>
 ### T23 — Medição de consumo de IA

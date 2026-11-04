@@ -67,7 +67,12 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 - Dono dos dados: toda transação tem `userId`. A porta nomeia o usuário em toda leitura
   (`findByIdAndUserId(TransactionId, UserId)`, `findAllByUserId(UserId, TransactionFilter, TransactionSort, PageQuery)`,
   `findAllByUserIdAndCategory(UserId, Category)`); `UserId` é `record` sobre `UUID`, com `parse` como o `TransactionId`.
-- Exceções de negócio (`TransactionNotFoundException`) ficam em `domain/`, são unchecked e não importam Spring.
+- A proposta de transação é uma entidade própria (`TransactionProposal`, sem status: se existe, está pendente), com
+  a porta `TransactionProposalRepository`. A busca da decisão é bloqueante
+  (`findByIdAndUserIdForUpdate`, `SELECT ... FOR UPDATE`) e exige a transação do use case; a decisão apaga a
+  proposta.
+- Exceções de negócio (`TransactionNotFoundException`, `TransactionProposalNotFoundException`) ficam em `domain/`,
+  são unchecked e não importam Spring.
 - Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,
   `PageResult<T>` (com `totalPages()` e `map`), `TransactionSort` (campos e direções fechados) e
   `TransactionFilter`, uma lista de `TransactionCriterion` (`sealed interface`, hoje `CategoryIs`). `Pageable` e
@@ -79,7 +84,8 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 ## Validação
 
 - Todo dado externo é validado na fronteira em que entra — Bean Validation no `Request` do controller ou nos
-  argumentos da tool (`@Validated` + `@Valid` no adaptador). O use case recebe dado válido.
+  argumentos da tool (`@Validated` + `@Valid` no adaptador). O use case recebe dado válido: o ID do caminho é
+  convertido no controller (`<X>Id.parse`), e o use case recebe o ID tipado, nunca o texto.
 - As invariantes do domínio (construtor de criação e value objects, `IllegalArgumentException`) são a rede de
   proteção: uma entrada nova que esqueça a validação falha alto (500) em vez de gravar dado inválido. O construtor
   de reidratação não valida.

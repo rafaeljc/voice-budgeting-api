@@ -9,16 +9,7 @@
       "message": {
         "role": "assistant",
         "content": null,
-        "tool_calls": [
-          {
-            "id": "call_1",
-            "type": "function",
-            "function": {
-              "name": ${tool},
-              "arguments": ${arguments}
-            }
-          }
-        ]
+        "tool_calls": ${toolCalls}
       },
       "finish_reason": "tool_calls"
     }

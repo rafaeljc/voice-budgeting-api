@@ -30,6 +30,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 |------------------------------------------------------|--------|--------------------------------------------------|-------------------------------------------------------------|------------------------------|
 | `AuthenticationException` (token ausente ou inválido)  | 401    | `urn:problem-type:budgeting:unauthenticated`     | `problem.unauthenticated.*`, com `WWW-Authenticate: Bearer` | `WARN` `Authentication failed` |
 | `TransactionNotFoundException` (ID inexistente, malformado ou de outro usuário) | 404 | `urn:problem-type:budgeting:transaction-not-found` | `problem.transaction-not-found.*` | `INFO` `Request rejected`    |
+| `TransactionProposalNotFoundException` (ID inexistente, malformado, de outro usuário, já confirmada ou já cancelada) | 404 | `urn:problem-type:budgeting:transaction-proposal-not-found` | `problem.transaction-proposal-not-found.*` | `INFO` `Request rejected` |
 | `MethodArgumentNotValidException`                    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
 | `HttpMessageNotReadableException` (enum inválido)    | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
 | `HttpMessageNotReadableException` (JSON malformado)  | 400    | `urn:problem-type:budgeting:malformed-request`   | `problem.malformed-request.*`                               | `INFO` `Request rejected`    |
@@ -37,6 +38,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `MissingServletRequestPartException`                 | 400    | `urn:problem-type:budgeting:validation-error`    | `problem.validation-error.*`                                | `INFO` `Request rejected`    |
 | `ConstraintViolationException` (argumentos de tool)  | 422    | `urn:problem-type:budgeting:invalid-command`     | `problem.invalid-command.*`                                 | `INFO` `Request rejected`, com `invalidFields` |
 | `DatabindException` (argumentos de tool)             | 422    | `urn:problem-type:budgeting:invalid-command`     | `problem.invalid-command.*`                                 | `INFO` `Request rejected`, com `invalidFields` |
+| `MultipleTransactionProposalsException` (comando com mais de uma proposta diferente) | 422 | `urn:problem-type:budgeting:invalid-command` | `problem.invalid-command.*` | `INFO` `Request rejected`, sem `invalidFields` |
 | `NoResourceFoundException`                           | 404    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `HttpRequestMethodNotSupportedException`             | 405    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `HttpMediaTypeNotSupportedException`                 | 415    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
@@ -55,11 +57,15 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
   `problem.invalid-value`, sem repetir o valor rejeitado.
 - A mensagem de `TransactionNotFoundException` não vai ao corpo nem ao log; o 404 é o mesmo para o ID malformado e
   para a transação de outro usuário.
+- `transaction-proposal-not-found` (404): um só corpo para a proposta inexistente, malformada, de outro usuário, já
+  confirmada ou já cancelada (a proposta é apagada na decisão). A mensagem da exceção não vai ao corpo nem ao log.
+  O controller faz o `parse` do ID e lança a exceção quando ele é malformado.
 - `unauthenticated` (401): um só corpo para token ausente, malformado, com assinatura errada, expirado, sem `exp` ou
   com `sub` que não é UUID. O `AuthenticationEntryPoint` repassa a exceção ao `HandlerExceptionResolver`, e o
   `ApiExceptionHandler` monta a resposta; o log leva `status` e `problemType`, nunca o token.
 - `invalid-command` (422): o modelo enviou argumentos inválidos à tool (valor não positivo, descrição vazia ou
-  longa, valor com mais de 2 casas, categoria ausente ou inexistente). Sem `errors`; `title` e `detail` fixos. Não há
+  longa, valor com mais de 2 casas, categoria ausente ou inexistente) ou mais de uma proposta diferente no mesmo
+  comando. Sem `errors`; `title` e `detail` fixos. Não há
   segunda chamada ao modelo nem síntese de voz. As exceções chegam sem invólucro porque o
   `ToolExecutionExceptionProcessor` (`infrastructure/ai/tool/`) as relança; qualquer outra falha de tool vira 500 e
   nunca volta ao modelo como texto.

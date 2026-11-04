@@ -19,6 +19,8 @@ tags:
     description: Cadastro e consulta de transações.
   - name: Voz
     description: Comandos de voz.
+  - name: Propostas
+    description: Decisão do usuário sobre uma proposta de transação.
 paths:
   /api/v1/transactions:
     post:
@@ -189,14 +191,97 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/transaction-proposals/{id}/confirm:
+    post:
+      tags: [Propostas]
+      operationId: confirmTransactionProposal
+      summary: Confirma uma proposta de transação
+      description: |
+        Cria a transação da proposta, com a data e a hora da confirmação, e apaga a proposta. A decisão é uma chamada
+        explícita à API, sem IA. Confirmar de novo, ou cancelar depois de confirmar, responde 404.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da proposta de transação.
+          schema:
+            type: string
+            example: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+      responses:
+        '201':
+          description: Transação criada a partir da proposta.
+          headers:
+            Location:
+              description: URL absoluta da transação criada.
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/api/v1/transactions/6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          description: |
+            Proposta inexistente, de outro usuário, já confirmada, já cancelada ou identificador malformado.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:transaction-proposal-not-found
+                title: Proposta de transação não encontrada
+                status: 404
+                detail: A proposta de transação não existe ou já foi decidida.
+                instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/confirm
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/transaction-proposals/{id}/cancel:
+    post:
+      tags: [Propostas]
+      operationId: cancelTransactionProposal
+      summary: Cancela uma proposta de transação
+      description: |
+        Apaga a proposta sem criar nenhuma transação. Cancelar de novo, ou confirmar depois de cancelar, responde 404.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador da proposta de transação.
+          schema:
+            type: string
+            example: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+      responses:
+        '204':
+          description: Proposta cancelada.
+        '404':
+          description: |
+            Proposta inexistente, de outro usuário, já confirmada, já cancelada ou identificador malformado.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:transaction-proposal-not-found
+                title: Proposta de transação não encontrada
+                status: 404
+                detail: A proposta de transação não existe ou já foi decidida.
+                instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/cancel
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/transactions/ai:
     post:
       tags: [Voz]
       operationId: sendVoiceCommand
       summary: Envia um comando de voz
       description: |
-        Transcreve o áudio, interpreta o comando e responde falado. Consultas respondem direto; o registro de
-        uma transação só é feito depois da confirmação do usuário.
+        Transcreve o áudio, interpreta o comando e responde falado. Consultas respondem direto. Um comando de
+        registro só gera uma **proposta** de transação, devolvida junto da fala; nenhuma transação é criada até o
+        usuário confirmá-la em `POST /transaction-proposals/{id}/confirm`. Um comando propõe no máximo uma transação.
       requestBody:
         required: true
         content:
@@ -211,18 +296,32 @@ paths:
                   description: Gravação do comando de voz em M4A, MP3 ou WAV, de até 1 MB.
       responses:
         '200':
-          description: Resposta falada ao comando.
-          headers:
-            Content-Disposition:
-              description: Nome sugerido para o arquivo de áudio.
-              schema:
-                type: string
-                example: attachment; filename="audio.mp3"
+          description: |
+            Resposta falada ao comando. `transactionProposal` só aparece quando o comando gerou uma proposta;
+            uma consulta, ou um conteúdo fora do escopo, devolve só `speech`.
           content:
-            audio/mpeg:
+            application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/VoiceCommandResponse'
+              examples:
+                proposal:
+                  summary: Comando de registro
+                  value:
+                    speech:
+                      contentType: audio/mpeg
+                      content: SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA
+                    transactionProposal:
+                      id: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+                      description: Mercado
+                      amount: '80.00'
+                      currency: BRL
+                      category: GROCERIES
+                query:
+                  summary: Consulta
+                  value:
+                    speech:
+                      contentType: audio/mpeg
+                      content: SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA
         '400':
           description: >-
             Parte `file` ausente, vazia ou fora de M4A, MP3 ou WAV (`validation-error`, com
@@ -280,7 +379,8 @@ paths:
         '422':
           description: |
             O áudio foi entendido, mas o comando não pôde ser processado com os dados interpretados (valor não
-            positivo, descrição vazia ou longa, categoria inexistente). Envie um novo comando de voz.
+            positivo, descrição vazia ou longa, categoria inexistente) ou com mais de uma transação diferente no
+            mesmo comando. Nenhuma proposta é gravada. Envie um novo comando de voz.
           content:
             application/problem+json:
               schema:
@@ -391,6 +491,52 @@ components:
           type: string
           enum: [BRL]
           description: Moeda; apenas `BRL`.
+    VoiceCommandResponse:
+      type: object
+      required: [speech]
+      properties:
+        speech:
+          $ref: '#/components/schemas/Speech'
+        transactionProposal:
+          $ref: '#/components/schemas/TransactionProposal'
+    Speech:
+      type: object
+      required: [contentType, content]
+      properties:
+        contentType:
+          type: string
+          description: Tipo de mídia da fala.
+          example: audio/mpeg
+        content:
+          type: string
+          format: byte
+          description: Áudio da resposta falada, em base64.
+    TransactionProposal:
+      type: object
+      description: |
+        Transação entendida pela IA, ainda não registrada. Vira transação em `POST /transaction-proposals/{id}/confirm`
+        e some em `.../cancel`.
+      required: [id, description, amount, currency, category]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador da proposta.
+        description:
+          type: string
+          description: Descrição do gasto.
+          example: Mercado
+        amount:
+          type: string
+          pattern: '^\d{1,16}\.\d{2}$'
+          description: Valor do gasto, com duas casas decimais.
+          example: '80.00'
+        currency:
+          type: string
+          description: Moeda do valor.
+          example: BRL
+        category:
+          $ref: '#/components/schemas/Category'
     TransactionResponse:
       type: object
       required: [id, category, description, amount, currency, createdAt]

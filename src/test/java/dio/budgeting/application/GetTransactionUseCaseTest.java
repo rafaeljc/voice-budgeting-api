@@ -2,7 +2,6 @@ package dio.budgeting.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import dio.budgeting.domain.Category;
@@ -45,7 +44,7 @@ class GetTransactionUseCaseTest {
         when(repository.findByIdAndUserId(transaction.getId(), USER_ID)).thenReturn(Optional.of(transaction));
 
         // when
-        var output = useCase.execute(USER_ID, transaction.getId().uuid().toString());
+        var output = useCase.execute(USER_ID, transaction.getId());
 
         // then
         assertThat(output.id()).isEqualTo(transaction.getId().uuid().toString());
@@ -61,14 +60,6 @@ class GetTransactionUseCaseTest {
         when(repository.findByIdAndUserId(id, USER_ID)).thenReturn(Optional.empty());
 
         // when / then
-        assertThatThrownBy(() -> useCase.execute(USER_ID, id.uuid().toString()))
-                .isInstanceOf(TransactionNotFoundException.class);
-    }
-
-    @Test
-    void should_throwNotFoundWithoutQuerying_when_idIsMalformed() {
-        // when / then
-        assertThatThrownBy(() -> useCase.execute(USER_ID, "abc")).isInstanceOf(TransactionNotFoundException.class);
-        verifyNoInteractions(repository);
+        assertThatThrownBy(() -> useCase.execute(USER_ID, id)).isInstanceOf(TransactionNotFoundException.class);
     }
 }

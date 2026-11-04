@@ -1,0 +1,34 @@
+# Exemplos do fluxo de voz (HTTP Client do IntelliJ / REST Client do VS Code).
+# Com a API no ar (./gradlew bootRun). Rode "Enviar comando de voz" antes de confirmar ou cancelar.
+# Toda requisição leva um token: gere um e cole em @token (veja docs/autenticacao.md):
+#   set -a && source .env && set +a && python3 scripts/generate_token.py
+# A resposta traz a fala (speech.content, MP3 em base64) e a transactionProposal; nenhuma transação é criada
+# até a confirmação. Um comando de registro propõe uma transação; uma consulta devolve só a fala.
+
+@baseUrl = http://localhost:8080/api/v1
+@token = cole-o-token-aqui
+
+### Enviar comando de voz (gera a proposta)
+# @name sendVoiceCommand
+POST {{baseUrl}}/transactions/ai
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="recording-1.m4a"
+Content-Type: audio/mp4
+
+< ../../src/test/resources/audio/recording-1.m4a
+--boundary--
+
+### Confirmar a proposta (usa o id da proposta acima): 201 + Location da transação criada
+POST {{baseUrl}}/transaction-proposals/{{sendVoiceCommand.response.body.$.transactionProposal.id}}/confirm
+Authorization: Bearer {{token}}
+
+### Cancelar a proposta (envie um novo comando de voz antes): 204
+POST {{baseUrl}}/transaction-proposals/{{sendVoiceCommand.response.body.$.transactionProposal.id}}/cancel
+Authorization: Bearer {{token}}
+
+### Decidir de novo uma proposta já decidida: 404 transaction-proposal-not-found
+POST {{baseUrl}}/transaction-proposals/{{sendVoiceCommand.response.body.$.transactionProposal.id}}/confirm
+Authorization: Bearer {{token}}

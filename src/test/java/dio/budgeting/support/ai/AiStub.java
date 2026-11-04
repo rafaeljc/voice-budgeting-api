@@ -6,6 +6,8 @@ public interface AiStub {
 
     void givenToolCall(String tool, String argumentsJson);
 
+    void givenToolCalls(String tool, String... argumentsJson);
+
     void givenAnswer(String text);
 
     void givenSpeech(byte[] audio);

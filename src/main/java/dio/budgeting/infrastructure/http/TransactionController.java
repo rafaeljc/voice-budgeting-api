@@ -4,21 +4,20 @@ import dio.budgeting.application.GetTransactionUseCase;
 import dio.budgeting.application.ListTransactionsUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.application.ProcessVoiceCommandUseCase;
+import dio.budgeting.domain.TransactionId;
+import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.http.request.ListTransactionsRequest;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
 import dio.budgeting.infrastructure.http.request.VoiceCommandRequest;
 import dio.budgeting.infrastructure.http.response.TransactionPageResponse;
 import dio.budgeting.infrastructure.http.response.TransactionResponse;
+import dio.budgeting.infrastructure.http.response.VoiceCommandResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -80,11 +79,16 @@ public class TransactionController {
 
     @GetMapping("/{id}")
     public TransactionResponse getTransaction(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
-        return TransactionResponse.from(getTransactionUseCase.execute(userId(jwt), id));
+        // A malformed ID is as unknown as any other: the edge rejects it before the use case
+        var transactionId = TransactionId.parse(id).orElseThrow(TransactionNotFoundException::new);
+        return TransactionResponse.from(getTransactionUseCase.execute(userId(jwt), transactionId));
     }
 
-    @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mpeg")
-    ResponseEntity<Resource> transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
+    @PostMapping(
+            value = "/ai",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    VoiceCommandResponse transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
             throws IOException {
         var input = request.toInput();
         log.atInfo()
@@ -92,15 +96,6 @@ public class TransactionController {
                 .addKeyValue("audioFormat", input.format())
                 .log("Voice command received");
 
-        var output = processVoiceCommandUseCase.execute(userId(jwt), input);
-
-        return ResponseEntity.ok()
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment()
-                                .filename("audio.mp3")
-                                .build()
-                                .toString())
-                .body(new ByteArrayResource(output.speech()));
+        return VoiceCommandResponse.from(processVoiceCommandUseCase.execute(userId(jwt), input));
     }
 }

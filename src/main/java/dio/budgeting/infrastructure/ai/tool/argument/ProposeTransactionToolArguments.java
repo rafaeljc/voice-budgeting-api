@@ -1,6 +1,6 @@
 package dio.budgeting.infrastructure.ai.tool.argument;
 
-import dio.budgeting.application.input.PersistTransactionInput;
+import dio.budgeting.application.input.ProposeTransactionInput;
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Transaction;
 import jakarta.validation.constraints.Digits;
@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import org.springframework.ai.tool.annotation.ToolParam;
 
-public record PersistTransactionToolArguments(
+public record ProposeTransactionToolArguments(
         @NotBlank @Size(max = Transaction.DESCRIPTION_MAX_LENGTH) @ToolParam(description = "Descrição do gasto")
         String description,
 
@@ -24,7 +24,7 @@ public record PersistTransactionToolArguments(
 
         @NotNull @ToolParam(description = "Categoria de uma transação")
         Category category) {
-    public PersistTransactionInput toInput() {
-        return new PersistTransactionInput(description, amount, category);
+    public ProposeTransactionInput toInput() {
+        return new ProposeTransactionInput(description, amount, category);
     }
 }
