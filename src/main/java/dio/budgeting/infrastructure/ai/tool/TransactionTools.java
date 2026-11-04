@@ -32,8 +32,7 @@ public class TransactionTools {
                     + " do usuário")
     public ProposeTransactionToolResult proposeTransaction(
             @Valid ProposeTransactionToolArguments arguments, ToolContext toolContext) {
-        var proposal = arguments.toInput();
-        collector(toolContext).collect(proposal);
+        var proposal = collector(toolContext).collect(arguments.toInput());
         return ProposeTransactionToolResult.awaitingConfirmation(proposal);
     }
 

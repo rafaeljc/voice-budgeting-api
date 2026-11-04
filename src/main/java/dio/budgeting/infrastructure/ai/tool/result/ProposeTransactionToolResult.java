@@ -9,7 +9,7 @@ public record ProposeTransactionToolResult(String description, BigDecimal amount
 
     public static ProposeTransactionToolResult awaitingConfirmation(ProposeTransactionInput proposal) {
         return new ProposeTransactionToolResult(
-                proposal.description().strip(),
+                proposal.description(),
                 proposal.toMoney().value(),
                 proposal.category().name(),
                 AWAITING_CONFIRMATION);

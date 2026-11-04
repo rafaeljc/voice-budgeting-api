@@ -224,7 +224,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `200` JSON (`VoiceCommandResponse`): `VoiceCommandIT` → registro → `speech.contentType = audio/mpeg`,
       `speech.content` = base64 da fala do stub, `transactionProposal` com os dados e o `id` da proposta gravada para
       o usuário do token, nenhuma transação criada; consulta (sem tool de escrita) → só `speech`, nada gravado
-- [ ] [TDD] Idempotência dentro do comando: `VoiceCommandIT` → duas chamadas idênticas → `200` e uma proposta; duas
+- [x] [TDD] Idempotência dentro do comando: `VoiceCommandIT` → duas chamadas idênticas → `200` e uma proposta; duas
       diferentes → 422 `invalid-command` e nenhuma proposta (exceção no `rethrowExceptions` e no handler do 422)
 - [ ] [TDD] Falhas: `VoiceCommandIT` → 503 na síntese de voz e 422 de argumentos inválidos sem proposta gravada;
       `WhenToolFailsUnexpectedly` passa a falhar a tool de consulta e continua 500 genérico

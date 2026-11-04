@@ -3,6 +3,7 @@ package dio.budgeting.infrastructure.http.error;
 import dio.budgeting.application.AiProviderUnavailableException;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
+import dio.budgeting.infrastructure.ai.tool.MultipleTransactionProposalsException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
@@ -95,8 +96,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.VALIDATION_ERROR, status, errors), headers, status, request);
     }
 
-    // Tool arguments the model got wrong: the request is valid, the interpreted content is not
-    @ExceptionHandler({ConstraintViolationException.class, DatabindException.class})
+    // What the model understood is wrong or unusable (invalid arguments, more than one transaction): the request is
+    // valid, the interpreted content is not
+    @ExceptionHandler({
+        ConstraintViolationException.class,
+        DatabindException.class,
+        MultipleTransactionProposalsException.class
+    })
     ResponseEntity<Object> handleInvalidCommand(Exception ex, WebRequest request) {
         var status = HttpStatus.UNPROCESSABLE_CONTENT;
         return handleExceptionInternal(

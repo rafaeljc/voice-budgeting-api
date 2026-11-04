@@ -124,6 +124,53 @@ class VoiceCommandIT {
     }
 
     @Test
+    void should_keepOneProposal_when_modelRepeatsTheSameProposalInTheCommand() throws Exception {
+        // given
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCalls(
+                "propose-transaction",
+                toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\" Mercado \"", "80", "\"GROCERIES\""));
+        aiStub.givenAnswer("Entendi um gasto de 80 reais em mercado. Confirma?");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactionProposal.description").value("Mercado"))
+                .andExpect(jsonPath("$.transactionProposal.amount").value("80.00"));
+        assertThat(proposalRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void should_returnInvalidCommandProblemAndSaveNothing_when_modelProposesDifferentTransactions() throws Exception {
+        // given
+        aiStub.givenTranscription("gastei 80 no mercado e 30 na farmácia");
+        aiStub.givenToolCalls(
+                "propose-transaction",
+                toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"Farmácia\"", "30.00", "\"PHARMA\""));
+        aiStub.givenAnswer("Entendi dois gastos. Confirma?");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:invalid-command"))
+                .andExpect(jsonPath("$.errors").doesNotExist());
+        assertThat(proposalRepository.count()).isZero();
+    }
+
+    @Test
     void should_acceptAndNameByDetectedFormat_when_recordingHasMisleadingNameAndContentType() throws Exception {
         // given
         givenExpenseCommand(new byte[] {1, 2, 3, 4});
