@@ -65,7 +65,7 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 
 | ID | Item | O que é | Benefícios | Prioridade | Esforço |
 |---|---|---|---|---|---|
-| API-01 | Adequação às boas práticas REST | Recursos modelados corretamente (comando de voz e proposta como recursos próprios), filtros como parâmetros de consulta, status HTTP corretos, cabeçalho `Location` em criações, tipo de mídia de áudio correto. | API previsível e alinhada a convenções de mercado; mais fácil de consumir e evoluir. | Alto | M |
+| API-01 | Adequação às boas práticas REST | Recursos modelados corretamente (a proposta como recurso das ações de confirmar e cancelar; o comando de voz no endpoint atual), filtros como parâmetros de consulta, status HTTP corretos, cabeçalho `Location` em criações, tipo de mídia de áudio correto. | API previsível e alinhada a convenções de mercado; mais fácil de consumir e evoluir. | Alto | M |
 | API-02 | Valores monetários sem ponto flutuante | Representar dinheiro de forma exata e com unidade consistente entre entrada e saída. | Elimina erros de arredondamento — requisito básico de aplicações financeiras. | **Crítico** | P |
 | API-03 | Paginação e ordenação | Limitar e ordenar resultados de consultas. | Desempenho previsível conforme o volume cresce; respostas menores. | Médio | P |
 | API-04 | Contrato de erro padronizado | Todos os erros (incluindo falhas da IA) no formato *Problem Details* (RFC 9457). | Clientes tratam erros de forma uniforme; mensagens úteis sem expor detalhes internos. | Alto | P |
@@ -133,7 +133,7 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 | DOC-01 | README completo | O que o projeto faz, como executar, melhorias implementadas, tecnologias, como testar o fluxo principal e aprendizados (requisitos do desafio). | Cumpre o desafio; permite que qualquer avaliador rode e entenda o projeto. | **Crítico** | M |
 | DOC-02 | Contexto de negócio | Seção que conecta as decisões técnicas às necessidades e aos valores declarados publicamente pelo Itaú, citando as fontes (sem identidade visual e sem sugerir vínculo oficial). | Demonstra visão de negócio, não apenas técnica. | Alto | P |
 | DOC-03 | ADRs | Registros das decisões arquiteturais: contexto, alternativas consideradas, decisão e consequências. | Mostra o raciocínio por trás das escolhas e os trade-offs avaliados. | Alto | M |
-| DOC-04 | Diagramas | Arquitetura, sequência do fluxo de voz e estados da proposta. | Compreensão rápida do sistema por quem não leu o código. | Alto | P |
+| DOC-04 | Diagramas | Arquitetura, sequência do fluxo de voz e sequência da decisão sobre a proposta. | Compreensão rápida do sistema por quem não leu o código. | Alto | P |
 | DOC-05 | Documentação OpenAPI | Especificação navegável dos endpoints. | Contrato da API explorável e testável sem ler o código. | Médio | P |
 | DOC-06 | Exemplos de requisição e áudio | Coleção de requisições prontas e áudios de exemplo. | Avaliadores testam o fluxo em minutos. | Médio | P |
 | DOC-07 | Processo de desenvolvimento com agentes | Plano de cada entrega, com critérios de aceite e verificação, instruções para os agentes, revisão e validação explícitas e histórico de commits que conta a evolução. | Demonstra desenvolvimento assistido por IA com disciplina e responsabilidade humana sobre as decisões. | Alto | M |

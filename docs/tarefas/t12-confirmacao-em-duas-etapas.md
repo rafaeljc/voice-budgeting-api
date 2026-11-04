@@ -92,17 +92,17 @@ uma transação.
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] comando de registro → `200` com `speech` e `transactionProposal`, proposta gravada, nenhuma transação criada
-- [ ] consulta → `200` só com `speech`, nada gravado
-- [ ] segunda chamada idêntica da tool → uma proposta; diferente → 422, nada gravado
-- [ ] falha na síntese de voz → 503 e nenhuma proposta gravada
-- [ ] confirmar → `201` + `Location` + transação com `createdAt` da confirmação, proposta apagada; confirmar ou
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] comando de registro → `200` com `speech` e `transactionProposal`, proposta gravada, nenhuma transação criada
+- [x] consulta → `200` só com `speech`, nada gravado
+- [x] segunda chamada idêntica da tool → uma proposta; diferente → 422, nada gravado
+- [x] falha na síntese de voz → 503 e nenhuma proposta gravada
+- [x] confirmar → `201` + `Location` + transação com `createdAt` da confirmação, proposta apagada; confirmar ou
       cancelar de novo → 404
-- [ ] cancelar → `204`, proposta apagada, nenhuma transação
-- [ ] proposta de outro usuário ou ID malformado → 404 `transaction-proposal-not-found`
-- [ ] nenhuma ocorrência de `persist-transaction` em `src/` e `docs/` (exceto plan files antigos)
-- [ ] `docs/openapi.yaml`, README, `docs/exemplos/voz.http`, ADR 0005, `docs/arquitetura.md`, regras, `docs/tarefas.md`
+- [x] cancelar → `204`, proposta apagada, nenhuma transação
+- [x] proposta de outro usuário ou ID malformado → 404 `transaction-proposal-not-found`
+- [x] nenhuma ocorrência de `persist-transaction` em `src/` e `docs/` (exceto plan files antigos)
+- [x] `docs/openapi.yaml`, README, `docs/exemplos/voz.http`, ADR 0005, `docs/arquitetura.md`, regras, `docs/tarefas.md`
       e `docs/escopo.md` atualizados; checkbox da T12 marcado no último commit
 
 ## Para futuros agentes
@@ -276,7 +276,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: ADR, diagramas, regras e tarefas
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/adr/0005-proposta-de-transacao-em-entidade-propria.md` (template MADR, `status: aceito`):
       contexto (FN-03, RES-08, a IA nunca grava); opções: `status` na `Transaction`, tabela própria no MySQL, Redis
@@ -290,7 +290,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `ai-integration.md` (tool `propose-transaction`, coletor no `toolContext`, uma proposta por comando com
       idempotência, gravação por último); `error-handling.md` (linha do `transaction-proposal-not-found` e da segunda
       proposta diferente no 422); `architecture.md` (porta `TransactionProposalRepository` com busca bloqueante)
-- [ ] [verificação] `docs/tarefas.md`: descrição da T12 e item DOC-04 (sequência da confirmação no lugar de estados
+- [x] [verificação] `docs/tarefas.md`: descrição da T12 e item DOC-04 (sequência da confirmação no lugar de estados
       da proposta); notas na T13 (expiração apaga a proposta; teste de confirmação concorrente; o bloqueio já existe),
       T16 (ordem voz → gravação ao responder em texto), T20 e T22 (decisão registrada como evento, porque a proposta é
       apagada); `docs/escopo.md`: API-01 (proposta como recurso das ações; comando de voz no endpoint atual) e DOC-04
@@ -306,8 +306,44 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Feito: ADR 0005 (proposta em entidade própria no MySQL; opções `status` na `Transaction` e Redis com TTL, com o
+  argumento de que o Redis exigiria um controle próprio de atomicidade); `docs/arquitetura.md` com a sequência do
+  comando de voz atualizada e a nova sequência da decisão (uma ação por seta, sem detalhe de transação de banco) e
+  `TransactionProposal` na camada de domínio; regras (`api-conventions.md`, `ai-integration.md`,
+  `error-handling.md`, `architecture.md`) e `CLAUDE.md` (`ai/tool/result/`); `docs/tarefas.md` (T12, DOC-04, notas
+  nas T13, T16, T20 e T22) e `docs/escopo.md` (API-01 e DOC-04).
+- Decisões: o resultado da tool de proposta leva "Proposta de transação anotada com sucesso." em vez do rótulo
+  "aguardando confirmação do usuário" (commit `refactor:` próprio); o ID do caminho é convertido no controller, regra
+  acrescentada a `architecture.md` e `error-handling.md`; o diagrama da decisão mostra só o caminho feliz.
+- Verificação: `build` completo passa; `head -4` do ADR mostra `status: aceito` e a data; 2 `sequenceDiagram` em
+  `docs/arquitetura.md`; `0005` referenciado na T12 em `docs/tarefas.md`; `propose-transaction` em
+  `ai-integration.md` e `transaction-proposal-not-found` em `error-handling.md`; nenhuma ocorrência de
+  `persist-transaction` fora de `docs/tarefas/`.
+- Para uma sessão nova: tarefa pronta para PR (`/pr`); não há mais fases.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+- Comandos de registro geram uma proposta persistida; o usuário a confirma (`POST /api/v1/transaction-proposals/{id}/confirm`,
+  201 + `Location` + transação) ou a cancela (`.../cancel`, 204) por chamada explícita à API, sem IA. A IA nunca grava
+  uma transação: a tool `propose-transaction` só anota a proposta, e o `ProcessVoiceCommandUseCase` a grava por
+  último, depois da síntese de voz. Consultas seguem em etapa única, só com a fala.
+- O endpoint de voz responde `200` JSON com `speech` (MP3 em base64) e, só no registro, `transactionProposal`. Uma
+  proposta por comando, com idempotência dentro dele; propostas diferentes no mesmo comando são 422 `invalid-command`.
+- A proposta é uma entidade própria (`TransactionProposal`, sem status) em tabela própria; confirmar e cancelar
+  buscam com `SELECT ... FOR UPDATE` e a apagam, e depois da decisão qualquer ação é 404
+  `transaction-proposal-not-found`. ADR 0005 registra a escolha.
+- Desvios do plano, todos registrados em Decisões: use cases recebem o ID tipado e o controller faz o `parse`
+  (`GetTransactionUseCase` ajustado igual); adaptador JPA e mapeamento do 404 antecipados; `AssistantOutput` no lugar
+  de `AssistantAnswer`; `ai/tool/result/`; mensagem de sucesso no resultado da tool; prompt sem prescrever ação para
+  mais de uma transação.
+- Limitações conhecidas: o comportamento do modelo diante do prompt e do resultado da tool nunca foi validado com o
+  provedor real (nenhum teste chama a OpenAI); o texto falado correto depende do modelo até a T14 (frases fixas);
+  o teste de confirmação concorrente e a expiração ficam na T13; o YAML do `openapi.yaml` não foi validado por parser.
+
+### Definição de pronto conferida
+
+Cada critério da seção "Definição de pronto" foi conferido e marcado: `build` completo; registro com `speech` e
+`transactionProposal` e nenhuma transação criada; consulta só com `speech`; idempotência e 422; 503 sem proposta
+gravada; confirmar (201, `Location`, `createdAt` da confirmação, proposta apagada, 404 ao repetir); cancelar (204);
+404 para outro usuário e ID malformado; nenhuma ocorrência de `persist-transaction`; documentação e regras
+atualizadas e checkbox da T12 marcado no último commit. Não há seção de plano de deploy (deploy fora do escopo).
