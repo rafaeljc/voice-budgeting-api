@@ -33,7 +33,7 @@ public class TransactionTools {
     public ProposeTransactionToolResult proposeTransaction(
             @Valid ProposeTransactionToolArguments arguments, ToolContext toolContext) {
         var proposal = collector(toolContext).collect(arguments.toInput());
-        return ProposeTransactionToolResult.awaitingConfirmation(proposal);
+        return ProposeTransactionToolResult.noted(proposal);
     }
 
     @Tool(name = "list-transactions-by-category", description = "Lista transações financeiras por categoria")

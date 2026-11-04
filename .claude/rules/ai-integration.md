@@ -39,8 +39,9 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
   para ele.
 - A tool de escrita (`propose-transaction`) não grava: anota a proposta num `TransactionProposalCollector`, criado
   por comando e passado pelo `toolContext` ao lado do `UserId`, e devolve ao modelo só descrição, valor, categoria
-  e "aguardando confirmação do usuário", sem ID. O `AssistantGateway` devolve o texto e a proposta anotada
-  (`AssistantOutput`).
+  e a mensagem "Proposta de transação anotada com sucesso.", sem ID. O resultado relata o que a tool fez, sem
+  instruir o modelo: o comportamento depois da proposta fica no prompt. O `AssistantGateway` devolve o texto e a
+  proposta anotada (`AssistantOutput`).
 - Uma proposta por comando, com idempotência dentro dele: a segunda chamada com os mesmos argumentos (depois da
   normalização do domínio: `strip` da descrição, valor com 2 casas) é a mesma proposta; com argumentos diferentes
   → 422 `invalid-command`, nada gravado.

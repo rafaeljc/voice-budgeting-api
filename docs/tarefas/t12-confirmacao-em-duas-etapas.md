@@ -16,8 +16,8 @@ uma transação.
 - Tool `persist-transaction` → `propose-transaction`:
   - valida os argumentos como hoje (inválido → 422 `invalid-command`)
   - não grava: anota a proposta num coletor do comando, passado pelo `toolContext` junto do `UserId`
-  - devolve ao modelo só descrição, valor, categoria e "aguardando confirmação do usuário" (sem ID e sem
-    `TransactionOutput`)
+  - devolve ao modelo só descrição, valor, categoria e a mensagem "Proposta de transação anotada com sucesso."
+    (sem ID e sem `TransactionOutput`)
   - uma proposta por comando, com idempotência dentro do comando: segunda chamada com os mesmos argumentos (após a
     normalização do domínio: `strip` da descrição, valor com 2 casas) → mesma proposta, mesma resposta ao modelo;
     com argumentos diferentes → 422 `invalid-command`, nada gravado
@@ -82,6 +82,9 @@ uma transação.
 - O adaptador de persistência da proposta (entidade, repositório Spring Data e `JpaTransactionProposalRepository`) foi
   antecipado para o commit do `ConfirmTransactionProposalUseCase`: sem ele o contexto Spring não sobe e todo `*IT`
   falha. Os testes de integração dele continuam no item de persistência (decisão do usuário)
+- O resultado da tool de proposta leva a mensagem "Proposta de transação anotada com sucesso.", e não um rótulo de
+  estado ("aguardando confirmação do usuário"): o retorno relata o que a tool fez e não instrui o modelo, e o
+  comportamento depois da proposta fica no prompt (decisão do usuário, durante a execução da fase 3)
 - Três fases; tipo `feat` (muda o contrato do endpoint de voz)
 - ADR 0005 só para a proposta em entidade própria (opções `status` na `Transaction`, MySQL, Redis com TTL) — um ADR
   por decisão; confirmação pela API, apagar na decisão e `SELECT ... FOR UPDATE` ficam no plano, no código e nas

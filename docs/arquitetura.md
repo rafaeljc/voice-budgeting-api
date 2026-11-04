@@ -32,7 +32,7 @@ flowchart TB
 
 O cliente envia o áudio de um comando. A aplicação o transcreve e pede ao provedor de IA que interprete o texto. Quando
 o modelo pede uma tool, ela é executada: uma consulta devolve o resultado ao modelo; um registro **não grava**, só anota
-a proposta do modelo, e o modelo recebe apenas "aguardando confirmação do usuário". A resposta em texto é sintetizada
+a proposta do modelo, e o modelo recebe apenas a confirmação de que ela foi anotada. A resposta em texto é sintetizada
 em voz e, só depois de a voz estar pronta, a proposta é gravada. O cliente recebe a fala e a proposta (`id`,
 descrição, valor e categoria). Uma consulta, ou um conteúdo fora do escopo, recebe só a fala.
 
