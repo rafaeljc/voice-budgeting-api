@@ -212,7 +212,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Comando de voz gera a proposta
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `AiStub.givenToolCalls(String tool, String... argumentsJson)` no `OpenAiWireMockStub` (várias
       `tool_calls` na mesma resposta do chat), usado pelos testes abaixo
@@ -232,7 +232,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       de voz; conteúdo continua fora do log (`VoiceCommandIT`)
 - [x] [verificação] Prompt `prompts/system-message.st`: um gasto por comando; dizer o que entendeu e pedir a
       confirmação; nunca dizer que registrou
-- [ ] [verificação] `docs/openapi.yaml` (resposta `200` JSON do `/transactions/ai`, schemas `VoiceCommand`, `Speech`
+- [x] [verificação] `docs/openapi.yaml` (resposta `200` JSON do `/transactions/ai`, schemas `VoiceCommand`, `Speech`
       e `TransactionProposal`, 422 com mais de uma transação no comando), README (tabela da API e `curl` do fluxo de
       voz) e `docs/exemplos/voz.http` (enviar `recording-1.m4a`, confirmar e cancelar pelo `id` da resposta, 404)
 
@@ -247,7 +247,29 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Feito: `AiStub.givenToolCalls` (várias `tool_calls` na mesma resposta); `ProcessVoiceCommandUseCase` com
+  `AssistantOutput` (retorno do `AssistantGateway`) e gravação da proposta por último, depois da voz;
+  `VoiceCommandOutput(speech, Optional<TransactionProposalOutput>)`; tool `propose-transaction`
+  (`ProposeTransactionToolArguments`) que só anota no `TransactionProposalCollector` (chave
+  `TransactionTools.PROPOSAL_COLLECTOR` no `toolContext`) e responde ao modelo com `ProposeTransactionToolResult`
+  (`ai/tool/result/`, sem ID); idempotência no coletor (descrição com `strip`, valor com 2 casas) e
+  `MultipleTransactionProposalsException` para a segunda proposta diferente (422 `invalid-command`, no
+  `rethrowExceptions` e no handler); resposta `200` JSON do endpoint de voz (`VoiceCommandResponse`,
+  `SpeechResponse`, `TransactionProposalResponse`); log `Transaction proposal created`; prompt; `openapi.yaml`, README
+  e `docs/exemplos/voz.http`.
+- Decisões: o record de retorno do gateway se chama `AssistantOutput` (não `AssistantAnswer`, do plano) pela
+  convenção `<Substantivo>Output`; o resultado da tool fica em `ai/tool/result/`, espelhando `argument/`; o prompt
+  só declara que mais de uma transação na mesma mensagem é inválido, sem prescrever uma ação ao assistente (o
+  sistema responde 422). Dois ajustes de teste foram antecipados para o item 3 para o `VoiceCommandIT` não ficar
+  vermelho (`WhenToolFailsUnexpectedly` falha a tool de consulta; a asserção de `Transaction persisted` saiu e a de
+  `Transaction proposal created` entrou no item 6). Os testes dos itens 4, 5 e 6 passaram de primeira, porque o
+  comportamento já existia (coletor da última chamada, ordem do use case e log do item 2).
+- Verificação: `build` completo, `ProcessVoiceCommandUseCaseTest` e `VoiceCommandIT` passam; nenhuma ocorrência de
+  `persist-transaction` em `src` e `docs` (fora de `docs/tarefas`); `audio/mpeg` no `openapi.yaml` só como
+  `contentType` da fala. O YAML do contrato não foi validado por parser (sem `pyyaml` no ambiente).
+- Para uma sessão nova: a fase 3 só escreve documentação (ADR 0005, diagramas, regras, `tarefas.md`, `escopo.md`).
+  `.claude/rules/ai-integration.md` ainda cita `persist-transaction`; `CLAUDE.md` e `ai-integration.md` precisam citar
+  `ai/tool/result/`; a `api-conventions.md` ainda proíbe verbo no caminho e precisa aceitar `POST /{id}/<verbo>`.
 
 ## Fase 3: ADR, diagramas, regras e tarefas
 

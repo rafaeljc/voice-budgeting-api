@@ -46,9 +46,15 @@ Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); ve
 | `POST` | `/transactions`              | Cria uma transação (201 + `Location`)                              |
 | `GET`  | `/transactions`              | Lista paginada; filtros `category`, `page`, `size`, `sort`         |
 | `GET`  | `/transactions/{id}`         | Consulta uma transação (404 se não existir)                        |
-| `POST` | `/transactions/ai`           | Comando de voz: `file` M4A, MP3 ou WAV (até 1 MB); resposta em MP3 |
+| `POST` | `/transactions/ai`           | Comando de voz: `file` M4A, MP3 ou WAV (até 1 MB); resposta JSON com a fala (MP3 em base64) e, no registro, a proposta |
+| `POST` | `/transaction-proposals/{id}/confirm` | Confirma a proposta e cria a transação (201 + `Location`) |
+| `POST` | `/transaction-proposals/{id}/cancel`   | Cancela a proposta (204)                                           |
 
-Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http). Com `curl`:
+Um comando de voz de registro não grava a transação: a resposta traz a fala e uma `transactionProposal`, e quem
+decide é o usuário, por `confirm` ou `cancel`. Consultas respondem direto, só com a fala.
+
+Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http) e
+[`docs/exemplos/voz.http`](docs/exemplos/voz.http). Com `curl`:
 
 ```bash
 TOKEN=$(python3 scripts/generate_token.py)
@@ -59,6 +65,14 @@ curl -i -X POST http://localhost:8080/api/v1/transactions \
   -d '{"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}'
 
 curl -H "Authorization: Bearer $TOKEN" 'http://localhost:8080/api/v1/transactions?category=GROCERIES&sort=amount,desc'
+
+# comando de voz: devolve a fala (base64) e a proposta; confirme ou cancele pelo id da proposta
+PROPOSAL_ID=$(curl -s -X POST http://localhost:8080/api/v1/transactions/ai \
+  -H "Authorization: Bearer $TOKEN" \
+  -F file=@src/test/resources/audio/recording-1.m4a | jq -r .transactionProposal.id)
+
+curl -i -X POST "http://localhost:8080/api/v1/transaction-proposals/$PROPOSAL_ID/confirm" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ## Logs e rastreamento
