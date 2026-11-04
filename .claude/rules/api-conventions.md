@@ -11,7 +11,9 @@ Regras que os endpoints HTTP seguem. O contrato publicado é documentado em Open
 
 - Versão do contrato no caminho (`/api/v1`); mudança incompatível gera nova versão.
 - Recursos no plural, minúsculos, kebab-case.
-- Sem verbos no caminho; transição de estado é um sub-recurso com substantivo (`/{id}/confirmation`, não `/{id}/confirm`).
+- Sem verbos no caminho, exceto a ação de negócio que não é CRUD sobre o recurso: `POST /{id}/<verbo>` no recurso
+  que a recebe (`/transaction-proposals/{id}/confirm`, `/transaction-proposals/{id}/cancel`). O recurso é um
+  substantivo no plural, e o verbo vem só depois do `{id}`.
 - Filtros, paginação e ordenação como query params, nunca como segmento do caminho.
 - Recurso de outro usuário responde 404, como se não existisse.
 - Identificador malformado é recurso inexistente: o mesmo 404 do ID que não existe, nunca 400.
@@ -22,7 +24,7 @@ Regras que os endpoints HTTP seguem. O contrato publicado é documentado em Open
 |--------|-----------------------------------|-----------------------------------|
 | GET    | leitura e listagem                | 200                               |
 | POST   | criação                           | 201 + `Location` + recurso criado |
-| POST   | transição de estado (sub-recurso) | 200 + recurso atualizado          |
+| POST   | ação de negócio (`/{id}/<verbo>`) | 201 + `Location` + recurso criado, se cria um recurso (ex.: confirmar uma proposta); 204, se não devolve nada |
 | PUT    | substituição completa             | 200 + recurso atualizado          |
 | PATCH  | atualização parcial               | 200 + recurso atualizado          |
 | DELETE | remoção                           | 204                               |
@@ -58,7 +60,9 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - Valor monetário como string decimal `^\d{1,16}\.\d{2}$` mais `currency` (`BRL`), lado a lado; nunca em ponto
   flutuante.
 - Campos ausentes omitidos; listas nunca `null`.
-- Áudio com o tipo de mídia correto (`audio/mpeg` para MP3); upload em `multipart/form-data`.
+- Áudio recebido em `multipart/form-data`. O comando de voz responde `200` JSON com a fala dentro do corpo
+  (`speech.contentType` = `audio/mpeg` para MP3, `speech.content` em base64) e, só quando nasce uma proposta,
+  `transactionProposal`; nunca o áudio cru como corpo.
 - Áudio recebido: M4A, MP3 ou WAV, até 1 MB. O formato vem da assinatura dos bytes (`AudioFormat.detect`), nunca do
   `Content-Type` nem da extensão do cliente; vazio ou fora do formato é 400 `validation-error` na parte `file`.
 
@@ -98,7 +102,7 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 
 - Expor entidade de domínio ou JPA na resposta; serializar `Page` do Spring Data direto.
 - Montar corpo de erro no controller; responder 200 com corpo de erro.
-- Verbo no caminho.
+- Verbo no caminho fora da ação de negócio `POST /{id}/<verbo>`.
 - Data e hora sem fuso no contrato.
 - 403 para recurso de outro usuário (revela que ele existe).
 - Endpoint novo sem `bearerAuth` e sem a resposta 401 no `docs/openapi.yaml`.

@@ -32,7 +32,7 @@ DDD em camadas. Dependências apontam para dentro: `infrastructure` → `applica
 ```
 src/main/java/dio/budgeting/
   BudgetingApplication.java
-  domain/                       # Transaction, TransactionId, UserId, Money, Category, TransactionRepository
+  domain/                       # Transaction, TransactionProposal, *Id, UserId, Money, Category, *Repository
   application/                  # *UseCase, portas *Gateway (serviços externos), exceções neutras da IA
     input/  output/
   infrastructure/
@@ -40,7 +40,7 @@ src/main/java/dio/budgeting/
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
     ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect
       tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
-        argument/               # *ToolArguments
+        argument/  result/      # *ToolArguments, *ToolResult
     config/                     # *Configuration (ex.: Clock)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
     persistence/

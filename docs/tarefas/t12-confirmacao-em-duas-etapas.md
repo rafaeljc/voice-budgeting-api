@@ -282,7 +282,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/arquitetura.md`: sequência do comando de voz atualizada (tool de proposta → voz → gravação
       → resposta com fala e proposta) e nova sequência da decisão (confirmar e cancelar, com bloqueio); camada de
       domínio cita `TransactionProposal`
-- [ ] [verificação] Regras: `api-conventions.md` (ações de negócio fora do CRUD como `POST /{id}/<verbo>`, `201` +
+- [x] [verificação] Regras: `api-conventions.md` (ações de negócio fora do CRUD como `POST /{id}/<verbo>`, `201` +
       `Location` do recurso criado; resposta do comando de voz em JSON com a fala em base64);
       `ai-integration.md` (tool `propose-transaction`, coletor no `toolContext`, uma proposta por comando com
       idempotência, gravação por último); `error-handling.md` (linha do `transaction-proposal-not-found` e da segunda

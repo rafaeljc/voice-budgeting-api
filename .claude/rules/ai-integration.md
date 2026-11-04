@@ -21,7 +21,7 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 
 - Prompts em `src/main/resources/prompts/*.st`, lidos em UTF-8.
 - Prompts, descrições de tools e de parâmetros em pt-BR.
-- Nome de tool em kebab-case (`persist-transaction`).
+- Nome de tool em kebab-case (`propose-transaction`).
 - `@ToolParam` informa unidade e formato do valor (ex.: valor em reais com 2 casas decimais).
 - Opções dos modelos (modelo, temperatura, voz, idioma) em `application.properties`.
 - O `ChatClient` é um `@Bean` do `AssistantConfiguration` (prompt do sistema e `defaultTools`); o adaptador
@@ -32,10 +32,21 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - As tools ficam em `infrastructure/ai/tool/` (adaptador de entrada); os argumentos são um `record` em
   `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
   adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave
-  do JSON enviada pelo modelo.
+  do JSON enviada pelo modelo. O que a tool devolve ao modelo é um `record` em `ai/tool/result/`
+  (`<Verbo><Substantivo>ToolResult`), com só o necessário para a resposta falada.
 - O usuário chega à tool pelo `ToolContext` (parâmetro do método, excluído do schema enviado ao modelo), montado no
   `toolContext(...)` do `ChatClient` com o `UserId` autenticado; a tool nunca pede o usuário ao modelo e opera só
   para ele.
+- A tool de escrita (`propose-transaction`) não grava: anota a proposta num `TransactionProposalCollector`, criado
+  por comando e passado pelo `toolContext` ao lado do `UserId`, e devolve ao modelo só descrição, valor, categoria
+  e "aguardando confirmação do usuário", sem ID. O `AssistantGateway` devolve o texto e a proposta anotada
+  (`AssistantOutput`).
+- Uma proposta por comando, com idempotência dentro dele: a segunda chamada com os mesmos argumentos (depois da
+  normalização do domínio: `strip` da descrição, valor com 2 casas) é a mesma proposta; com argumentos diferentes
+  → 422 `invalid-command`, nada gravado.
+- A proposta é gravada por último, depois da síntese de voz (`ProcessVoiceCommandUseCase`): nada é registrado antes
+  de a resposta que o anuncia estar pronta, e uma falha de voz não deixa proposta órfã. A síntese nunca fica dentro
+  de uma transação de banco.
 - Argumentos inválidos da tool (inclusive categoria inexistente) → 422 `invalid-command` sem resposta do modelo e sem
   voz (ver `error-handling.md`). Falhas de tool nunca voltam ao modelo como texto: o
   `ToolExecutionExceptionProcessor` relança, e qualquer outra falha vira 500.
@@ -44,7 +55,8 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 
 ## Regras de produto
 
-- A IA nunca grava: tools de escrita só criam propostas; a gravação depende da confirmação do usuário.
+- A IA nunca grava: a tool de escrita só anota uma proposta; a transação só nasce quando o usuário a confirma por
+  chamada explícita à API (`POST /transaction-proposals/{id}/confirm`), sem IA.
 - Respostas faladas padronizadas: frases fixas, formato único de valores em R$, sem dados que identifiquem
   o usuário.
 
