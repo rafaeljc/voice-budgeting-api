@@ -1,0 +1,8 @@
+{
+  "id": ${id},
+  "type": "function",
+  "function": {
+    "name": ${tool},
+    "arguments": ${arguments}
+  }
+}

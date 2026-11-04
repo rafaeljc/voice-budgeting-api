@@ -12,6 +12,8 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.springframework.core.io.ClassPathResource;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -57,12 +59,22 @@ public class OpenAiWireMockStub implements AiStub {
         server.stubFor(post(urlEqualTo(path(stage))).willReturn(response));
     }
 
-    // The first chat call asks for the tool; the second one carries the tool result and gets the final answer
     @Override
     public void givenToolCall(String tool, String argumentsJson) {
-        var body = payload("chat-tool-call.json")
-                .replace("${tool}", quoted(tool))
-                .replace("${arguments}", quoted(argumentsJson));
+        givenToolCalls(tool, argumentsJson);
+    }
+
+    // The first chat call asks for the tool, once per arguments; the second one carries the results and gets the
+    // final answer
+    @Override
+    public void givenToolCalls(String tool, String... argumentsJson) {
+        var toolCalls = IntStream.range(0, argumentsJson.length)
+                .mapToObj(index -> payload("tool-call.json")
+                        .replace("${id}", quoted("call_" + (index + 1)))
+                        .replace("${tool}", quoted(tool))
+                        .replace("${arguments}", quoted(argumentsJson[index])))
+                .collect(Collectors.joining(",", "[", "]"));
+        var body = payload("chat-tool-call.json").replace("${toolCalls}", toolCalls);
         server.stubFor(post(urlEqualTo("/v1/chat/completions"))
                 .inScenario(CHAT_SCENARIO)
                 .whenScenarioStateIs(Scenario.STARTED)

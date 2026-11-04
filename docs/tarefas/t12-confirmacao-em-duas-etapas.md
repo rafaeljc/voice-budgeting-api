@@ -212,9 +212,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Comando de voz gera a proposta
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `AiStub.givenToolCalls(String tool, String... argumentsJson)` no `OpenAiWireMockStub` (várias
+- [x] [TDD] `AiStub.givenToolCalls(String tool, String... argumentsJson)` no `OpenAiWireMockStub` (várias
       `tool_calls` na mesma resposta do chat), usado pelos testes abaixo
 - [ ] [TDD] `ProcessVoiceCommandUseCase` com `AssistantAnswer` e gravação por último:
       `ProcessVoiceCommandUseCaseTest` → com proposta, grava a `TransactionProposal` (com `Instant.now(clock)`)
