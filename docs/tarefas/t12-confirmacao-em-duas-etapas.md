@@ -152,9 +152,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Proposta persistida, confirmação e cancelamento
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] Domínio `TransactionProposal`, `TransactionProposalId` e `TransactionProposalNotFoundException`:
+- [x] [TDD] Domínio `TransactionProposal`, `TransactionProposalId` e `TransactionProposalNotFoundException`:
       `TransactionProposalTest` cobre as invariantes do construtor de criação (como `TransactionTest`) e
       `toTransaction(Instant)` com os dados da proposta e o instante recebido; `TransactionProposalIdTest` cobre `parse`
 - [ ] [TDD] `ConfirmTransactionProposalUseCase`: `ConfirmTransactionProposalUseCaseTest` → proposta do usuário →
