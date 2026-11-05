@@ -1,6 +1,7 @@
 package dio.budgeting.infrastructure.ai.tool;
 
 import dio.budgeting.application.ListTransactionsByCategoryUseCase;
+import dio.budgeting.application.output.AssistantOutput;
 import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.UserId;
@@ -18,7 +19,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class TransactionTools {
     public static final String USER_ID = "userId";
-    public static final String PROPOSAL_COLLECTOR = "proposalCollector";
+    public static final String INTERPRETATION_COLLECTOR = "interpretationCollector";
 
     private final ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase;
 
@@ -32,7 +33,8 @@ public class TransactionTools {
                     + " do usuário")
     public ProposeTransactionToolResult proposeTransaction(
             @Valid ProposeTransactionToolArguments arguments, ToolContext toolContext) {
-        var proposal = collector(toolContext).collect(arguments.toInput());
+        var proposal = arguments.toInput();
+        collector(toolContext).note(new AssistantOutput.Proposal(proposal));
         return ProposeTransactionToolResult.noted(proposal);
     }
 
@@ -47,7 +49,7 @@ public class TransactionTools {
         return (UserId) toolContext.getContext().get(USER_ID);
     }
 
-    private static TransactionProposalCollector collector(ToolContext toolContext) {
-        return (TransactionProposalCollector) toolContext.getContext().get(PROPOSAL_COLLECTOR);
+    private static InterpretationCollector collector(ToolContext toolContext) {
+        return (InterpretationCollector) toolContext.getContext().get(INTERPRETATION_COLLECTOR);
     }
 }

@@ -11,16 +11,14 @@ import tools.jackson.databind.DatabindException;
 @Configuration
 public class ToolExecutionConfiguration {
 
-    // Invalid arguments and a second, different proposal reach the advice unwrapped; any other tool failure is never
+    // Invalid arguments and a second tool call reach the advice unwrapped; any other tool failure is never
     // handed to the model as text
     @Bean
     public ToolExecutionExceptionProcessor toolExecutionExceptionProcessor() {
         return DefaultToolExecutionExceptionProcessor.builder()
                 .alwaysThrow(true)
                 .rethrowExceptions(List.of(
-                        ConstraintViolationException.class,
-                        DatabindException.class,
-                        MultipleTransactionProposalsException.class))
+                        ConstraintViolationException.class, DatabindException.class, MultipleToolCallsException.class))
                 .build();
     }
 }

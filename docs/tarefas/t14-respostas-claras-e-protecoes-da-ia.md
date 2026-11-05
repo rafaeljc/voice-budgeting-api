@@ -201,7 +201,7 @@ Status: Em andamento
       `ProcessVoiceCommandUseCase` monta a frase com `SpokenAnswers`, sintetiza e grava a proposta por último; log
       `Assistant answered` com `interpretation`; `ProcessVoiceCommandUseCaseTest` (síntese recebe a frase exata em cada
       caso; só a proposta é gravada)
-- [ ] [TDD] `InterpretationCollector` estrito (segunda anotação → `MultipleToolCallsException`), substituindo
+- [x] [TDD] `InterpretationCollector` estrito (segunda anotação → `MultipleToolCallsException`), substituindo
       `TransactionProposalCollector` e `MultipleTransactionProposalsException` (atualizar `ToolExecutionConfiguration`
       e `ApiExceptionHandler`); `InterpretationCollectorTest`
 - [ ] [TDD] `TransactionTools`: `propose-transaction` e `summarize-transactions-by-category` com

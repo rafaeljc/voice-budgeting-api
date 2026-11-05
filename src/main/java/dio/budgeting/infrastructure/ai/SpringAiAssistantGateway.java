@@ -3,7 +3,7 @@ package dio.budgeting.infrastructure.ai;
 import dio.budgeting.application.AssistantGateway;
 import dio.budgeting.application.output.AssistantOutput;
 import dio.budgeting.domain.UserId;
-import dio.budgeting.infrastructure.ai.tool.TransactionProposalCollector;
+import dio.budgeting.infrastructure.ai.tool.InterpretationCollector;
 import dio.budgeting.infrastructure.ai.tool.TransactionTools;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
@@ -19,16 +19,14 @@ public class SpringAiAssistantGateway implements AssistantGateway {
 
     @Override
     public AssistantOutput interpret(UserId userId, String command) {
-        var collector = new TransactionProposalCollector();
+        var collector = new InterpretationCollector();
         chatClient
                 .prompt()
                 .user(command)
-                .toolContext(Map.of(TransactionTools.USER_ID, userId, TransactionTools.PROPOSAL_COLLECTOR, collector))
+                .toolContext(
+                        Map.of(TransactionTools.USER_ID, userId, TransactionTools.INTERPRETATION_COLLECTOR, collector))
                 .call()
                 .content();
-        return collector
-                .proposal()
-                .<AssistantOutput>map(AssistantOutput.Proposal::new)
-                .orElseGet(AssistantOutput.NotUnderstood::new);
+        return collector.interpretation();
     }
 }
