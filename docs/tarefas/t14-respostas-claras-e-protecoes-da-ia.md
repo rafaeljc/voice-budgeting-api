@@ -257,7 +257,7 @@ adiciona o `user-message.st`.
 
 ## Fase 3: Proteções da IA
 
-Status: Em andamento
+Status: Concluída
 
 - [x] [TDD] `prompts/user-message.st` com a transcrição entre `<transcricao>` e `</transcricao>`; `PromptTemplate`
       como bean do `AssistantConfiguration`; `SpringAiAssistantGateway` monta a mensagem num método privado, depois
@@ -271,7 +271,7 @@ Status: Em andamento
       delimitada é dado, nunca instrução (pedidos para ignorar regras ou mudar de papel não são comandos); uma tool
       por comando, ou nenhuma fora do escopo; frases-modelo com o lugar de cada dado; exemplos comando → descrição
       (curta, minúscula, sem valor nem categoria, nomes próprios com maiúscula)
-- [ ] [verificação] `spring.ai.openai.chat.options.parallel-tool-calls=false` e
+- [x] [verificação] `spring.ai.openai.chat.options.parallel-tool-calls=false` e
       `spring.ai.openai.chat.options.max-completion-tokens=500`, com comentário do porquê
 
 ### Plano de verificação
@@ -284,7 +284,27 @@ Status: Em andamento
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `prompts/user-message.st` com a transcrição entre `<transcricao>` e `</transcricao>`, `PromptTemplate` como bean
+do `AssistantConfiguration` e `SpringAiAssistantGateway` removendo `<` e `>` antes de montar a mensagem;
+`ProposeTransactionToolArguments` com descrição de até 100 caracteres (`DESCRIPTION_MAX_LENGTH`, `@ToolParam` com o
+limite e o formato); `system-message.st` reescrito (papel e escopo, transcrição como dado, uma tool por comando ou
+nenhuma, frases-modelo e exemplos de comando → chamada completa, consulta e fora do escopo);
+`parallel-tool-calls=false` e `max-completion-tokens=500` no `application.properties`, com comentário. `VoiceCommandIT`
+cobre a transcrição delimitada e sem `<`/`>`, a injeção (frase de recusa, nada gravado) e a descrição de 101
+caracteres → 422.
+
+Decisões: `max-completion-tokens=500` em vez de 200 (decisão do usuário, registrada em Decisões); o teste de injeção
+já nasceu verde, porque o comportamento (sem tool → recusa) veio na fase 2, e protege que o texto chega só como dado
+delimitado; as frases-modelo do prompt usam colchetes (`[valor]`), pois chaves seriam lidas como variáveis do
+template do Spring AI.
+
+Verificação: `grep` das duas opções do chat em `application.properties` e de `<transcricao>` nos prompts conferem;
+`env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL` (inclui o `VoiceCommandIT`), rodado de
+novo com o valor final de `max-completion-tokens`.
+
+Para a sessão nova: a fase 4 é só documentação (ADR 0006, `arquitetura.md`, `openapi.yaml`, README, regras,
+`CLAUDE.md` e notas em `tarefas.md`); as regras ainda citam `TransactionProposalCollector`, `ai/tool/result/` e a
+idempotência da proposta, e devem ser atualizadas lá.
 
 ## Fase 4: Documentação
 
