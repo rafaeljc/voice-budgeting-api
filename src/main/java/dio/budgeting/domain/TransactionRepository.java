@@ -11,5 +11,7 @@ public interface TransactionRepository {
     PageResult<Transaction> findAllByUserId(
             UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page);
 
+    TransactionSummary summarizeByUserIdAndCategory(UserId userId, Category category);
+
     List<Transaction> findAllByUserIdAndCategory(UserId userId, Category category);
 }

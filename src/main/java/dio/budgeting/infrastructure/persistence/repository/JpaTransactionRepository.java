@@ -1,6 +1,7 @@
 package dio.budgeting.infrastructure.persistence.repository;
 
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
 import dio.budgeting.domain.PageQuery;
 import dio.budgeting.domain.PageResult;
 import dio.budgeting.domain.Transaction;
@@ -8,8 +9,10 @@ import dio.budgeting.domain.TransactionFilter;
 import dio.budgeting.domain.TransactionId;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.TransactionSort;
+import dio.budgeting.domain.TransactionSummary;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
@@ -53,6 +56,13 @@ public class JpaTransactionRepository implements TransactionRepository {
         var direction = Sort.Direction.valueOf(sort.direction().name());
         var property = sort.field() == TransactionSort.Field.AMOUNT ? "amount" : "createdAt";
         return Sort.by(direction, property).and(Sort.by(direction, "id"));
+    }
+
+    @Override
+    public TransactionSummary summarizeByUserIdAndCategory(UserId userId, Category category) {
+        var totals = transactionEntityRepository.summarizeByUserIdAndCategory(userId.uuid(), category);
+        var total = totals.total() == null ? BigDecimal.ZERO : totals.total();
+        return new TransactionSummary(totals.count(), Money.of(total));
     }
 
     @Override

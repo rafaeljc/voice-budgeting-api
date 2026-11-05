@@ -159,9 +159,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Consulta agregada no banco
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionRepository.summarizeByUserIdAndCategory(UserId, Category)` → `TransactionSummary`, com
+- [x] [TDD] `TransactionRepository.summarizeByUserIdAndCategory(UserId, Category)` → `TransactionSummary`, com
       implementação em `JpaTransactionRepository` e `TransactionEntityRepository`; `JpaTransactionRepositoryIT`:
       conta e soma só o usuário e a categoria pedidos; sem gastos → 0 e `0.00`
 - [ ] [TDD] `SummarizeTransactionsByCategoryUseCase` (`@Transactional(readOnly = true)`, log `Transactions summarized`
