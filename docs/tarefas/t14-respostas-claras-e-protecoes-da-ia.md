@@ -24,7 +24,7 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
   - consulta com gastos: `Você tem 1 gasto na categoria {mercado}, somando R$ 80,00.` /
     `Você tem 3 gastos na categoria {mercado}, somando R$ 240,00.`
   - consulta sem gastos: `Você não tem gastos na categoria {mercado}.`
-  - não entendido: `Posso registrar um gasto ou dizer quanto você gastou em uma categoria. Tente de novo.`
+  - não entendido: `Não entendi, tente novamente.`
   - valor em "R$ 1.234,56" (`NumberFormat.getCurrencyInstance` pt-BR, espaço não separável depois de "R$")
   - categoria por `switch` exaustivo sem `default`: `GROCERIES` → mercado, `PHARMA` → farmácia, `AUTO` → automóvel
   - nenhum dado que identifique o usuário; sem prazo da proposta na fala
@@ -61,6 +61,7 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
   chamada ao chat em vez de duas; registrado no ADR 0006 (decisão do usuário)
 - Consulta só por categoria, todo o período, agregada no banco — troca a consulta que existe, como anotado na T07,
   sem criar uma nova (decisão do usuário)
+- Frase de "não entendido" simplificada para `Não entendi, tente novamente.` (decisão do usuário, na execução)
 - Frase da proposta sem "Entendi:" e terminando em "Você confirma?"; sem prazo na fala (decisão do usuário)
 - Prompt mostra as frases-modelo e exemplos de descrição, para o modelo saber onde cada dado será encaixado
   (decisão do usuário)
@@ -192,9 +193,9 @@ Para a sessão nova: a fase 2 troca a tool de consulta por esse use case e remov
 
 ## Fase 2: Interpretação e frases fixas
 
-Status: Não iniciada
+Status: Em andamento
 
-- [ ] [TDD] `SpokenAnswers` em `application/`: frase da proposta, da consulta (0, 1 e N gastos), da recusa; valor
+- [x] [TDD] `SpokenAnswers` em `application/`: frase da proposta, da consulta (0, 1 e N gastos), da recusa; valor
       "R$ 1.234,56"; nome falado de cada `Category`; `SpokenAnswersTest`
 - [ ] [TDD] `AssistantOutput` vira `sealed interface` (`Proposal`, `Summary`, `NotUnderstood`);
       `ProcessVoiceCommandUseCase` monta a frase com `SpokenAnswers`, sintetiza e grava a proposta por último; log
