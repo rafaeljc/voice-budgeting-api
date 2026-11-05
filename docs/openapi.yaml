@@ -198,7 +198,7 @@ paths:
       summary: Confirma uma proposta de transação
       description: |
         Cria a transação da proposta, com a data e a hora da confirmação, e apaga a proposta. A decisão é uma chamada
-        explícita à API, sem IA. Confirmar de novo, ou cancelar depois de confirmar, responde 404.
+        explícita à API, sem IA. Confirmar de novo, cancelar depois de confirmar, ou confirmar depois de `expiresAt`, responde 404.
       parameters:
         - name: id
           in: path
@@ -223,7 +223,7 @@ paths:
                 $ref: '#/components/schemas/TransactionResponse'
         '404':
           description: |
-            Proposta inexistente, de outro usuário, já confirmada, já cancelada ou identificador malformado.
+            Proposta inexistente, de outro usuário, já confirmada, já cancelada, expirada ou identificador malformado.
           content:
             application/problem+json:
               schema:
@@ -232,7 +232,7 @@ paths:
                 type: urn:problem-type:budgeting:transaction-proposal-not-found
                 title: Proposta de transação não encontrada
                 status: 404
-                detail: A proposta de transação não existe ou já foi decidida.
+                detail: A proposta de transação não existe, já foi decidida ou expirou.
                 instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/confirm
         '401':
           $ref: '#/components/responses/Unauthenticated'
@@ -244,7 +244,7 @@ paths:
       operationId: cancelTransactionProposal
       summary: Cancela uma proposta de transação
       description: |
-        Apaga a proposta sem criar nenhuma transação. Cancelar de novo, ou confirmar depois de cancelar, responde 404.
+        Apaga a proposta sem criar nenhuma transação. Cancelar de novo, confirmar depois de cancelar, ou cancelar depois de `expiresAt`, responde 404.
       parameters:
         - name: id
           in: path
@@ -258,7 +258,7 @@ paths:
           description: Proposta cancelada.
         '404':
           description: |
-            Proposta inexistente, de outro usuário, já confirmada, já cancelada ou identificador malformado.
+            Proposta inexistente, de outro usuário, já confirmada, já cancelada, expirada ou identificador malformado.
           content:
             application/problem+json:
               schema:
@@ -267,7 +267,7 @@ paths:
                 type: urn:problem-type:budgeting:transaction-proposal-not-found
                 title: Proposta de transação não encontrada
                 status: 404
-                detail: A proposta de transação não existe ou já foi decidida.
+                detail: A proposta de transação não existe, já foi decidida ou expirou.
                 instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/cancel
         '401':
           $ref: '#/components/responses/Unauthenticated'
@@ -316,6 +316,7 @@ paths:
                       amount: '80.00'
                       currency: BRL
                       category: GROCERIES
+                      expiresAt: '2026-03-01T12:35:45.123Z'
                 query:
                   summary: Consulta
                   value:
@@ -516,7 +517,7 @@ components:
       description: |
         Transação entendida pela IA, ainda não registrada. Vira transação em `POST /transaction-proposals/{id}/confirm`
         e some em `.../cancel`.
-      required: [id, description, amount, currency, category]
+      required: [id, description, amount, currency, category, expiresAt]
       properties:
         id:
           type: string
@@ -537,6 +538,12 @@ components:
           example: BRL
         category:
           $ref: '#/components/schemas/Category'
+        expiresAt:
+          type: string
+          format: date-time
+          description: |
+            Instante, em UTC, a partir do qual a proposta expira. Daí em diante, confirmar ou cancelar responde 404.
+          example: '2026-03-01T12:35:45.123Z'
     TransactionResponse:
       type: object
       required: [id, category, description, amount, currency, createdAt]

@@ -169,7 +169,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Vencimento da proposta
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionProposalTimeToLive` e vencimento na `TransactionProposal`: `TransactionProposalTimeToLiveTest`
       → nulo, zero e negativo recusados; `TransactionProposalTest` → `expiresAt = createdAt + prazo`, prazo nulo
@@ -187,7 +187,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `cancel` → 404 com o novo `detail`, nenhuma transação, proposta mantida
 - [x] [TDD] Novo `detail` em `messages.properties` ("A proposta de transação não existe, já foi decidida ou
       expirou."); asserções do `TransactionProposalEndpointsIT` atualizadas
-- [ ] [verificação] `docs/openapi.yaml`: `expiresAt` (`date-time`, obrigatório) no schema `TransactionProposal`;
+- [x] [verificação] `docs/openapi.yaml`: `expiresAt` (`date-time`, obrigatório) no schema `TransactionProposal`;
       404 de `confirm` e `cancel` citando a proposta expirada, com o novo `detail` nos exemplos; descrição do
       `/transactions/ai` dizendo que a proposta vale até `expiresAt`
 
@@ -203,7 +203,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `TransactionProposalTimeToLive` e `expiresAt` na `TransactionProposal` (`isPendingAt`); confirmar e cancelar
+recusam a proposta vencida (404, linha mantida); `ProcessVoiceCommandUseCase` grava o vencimento e a resposta traz
+`expiresAt`; `expires_at` `NOT NULL` com índice; `TransactionProposalProperties` (com as quatro chaves) e bean do prazo;
+novo `detail` do 404; `docs/openapi.yaml` atualizado.
+
+Decisões: os itens de código e teste dependiam uns dos outros para compilar (o construtor mudou), então entraram juntos
+em um commit; o contrato e o fechamento da fase, em outro. `expiresAt` = `createdAt` original + prazo, truncado a
+milissegundos como o `createdAt`; sem checagem extra, pois o prazo positivo já garante `expiresAt > createdAt`. Índice
+sem nome e com o nome da coluna, como os da `TransactionEntity` (decisão do usuário); conferido no MySQL: índice em
+`expires_at` e coluna `datetime(6) NOT NULL`.
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL` (inclui `*Test` e `*IT`);
+`grep expiresAt docs/openapi.yaml` presente; `grep` do `detail` antigo fora de `docs/tarefas` → nenhuma linha.
+
+Para uma sessão nova: as chaves da faxina (`expiration-sweep-*`, `expiration-batch-size`) já estão em
+`application.properties` e em `TransactionProposalProperties`, mas sem uso; `application-test.properties` ainda não
+desliga a faxina (Fase 2).
 
 ## Fase 2: Faxina em lotes
 
