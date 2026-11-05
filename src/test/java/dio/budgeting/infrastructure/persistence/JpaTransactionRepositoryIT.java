@@ -24,22 +24,6 @@ class JpaTransactionRepositoryIT {
     }
 
     @Test
-    void should_returnOnlyOwnTransactions_when_listingByCategory() {
-        // given
-        var owner = new UserId(UUID.randomUUID());
-        var other = new UserId(UUID.randomUUID());
-        var own = repository.save(transaction(owner, "Mercado", Category.GROCERIES));
-        repository.save(transaction(owner, "Remédio", Category.PHARMA));
-        repository.save(transaction(other, "Feira", Category.GROCERIES));
-
-        // when
-        var found = repository.findAllByUserIdAndCategory(owner, Category.GROCERIES);
-
-        // then
-        assertThat(found).extracting(transaction -> transaction.getId()).containsExactly(own.getId());
-    }
-
-    @Test
     void should_countAndSumOnlyOwnTransactionsOfCategory_when_summarizing() {
         // given
         var owner = new UserId(UUID.randomUUID());

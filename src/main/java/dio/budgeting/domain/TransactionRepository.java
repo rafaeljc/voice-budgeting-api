@@ -1,6 +1,5 @@
 package dio.budgeting.domain;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface TransactionRepository {
@@ -12,6 +11,4 @@ public interface TransactionRepository {
             UserId userId, TransactionFilter filter, TransactionSort sort, PageQuery page);
 
     TransactionSummary summarizeByUserIdAndCategory(UserId userId, Category category);
-
-    List<Transaction> findAllByUserIdAndCategory(UserId userId, Category category);
 }

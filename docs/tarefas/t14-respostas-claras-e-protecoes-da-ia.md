@@ -204,7 +204,7 @@ Status: Em andamento
 - [x] [TDD] `InterpretationCollector` estrito (segunda anotação → `MultipleToolCallsException`), substituindo
       `TransactionProposalCollector` e `MultipleTransactionProposalsException` (atualizar `ToolExecutionConfiguration`
       e `ApiExceptionHandler`); `InterpretationCollectorTest`
-- [ ] [TDD] `TransactionTools`: `propose-transaction` e `summarize-transactions-by-category` com
+- [x] [TDD] `TransactionTools`: `propose-transaction` e `summarize-transactions-by-category` com
       `returnDirect = true`, `void`, anotando no coletor; a tool de consulta chama
       `SummarizeTransactionsByCategoryUseCase`; `SpringAiAssistantGateway` devolve `collector.interpretation()`;
       remover `list-transactions-by-category`, `ListTransactionsByCategoryUseCase`, `findAllByUserIdAndCategory`

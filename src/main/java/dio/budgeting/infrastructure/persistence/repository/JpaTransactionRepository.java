@@ -13,7 +13,6 @@ import dio.budgeting.domain.TransactionSummary;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -63,12 +62,5 @@ public class JpaTransactionRepository implements TransactionRepository {
         var totals = transactionEntityRepository.summarizeByUserIdAndCategory(userId.uuid(), category);
         var total = totals.total() == null ? BigDecimal.ZERO : totals.total();
         return new TransactionSummary(totals.count(), Money.of(total));
-    }
-
-    @Override
-    public List<Transaction> findAllByUserIdAndCategory(UserId userId, Category category) {
-        return transactionEntityRepository.findAllByUserIdAndCategory(userId.uuid(), category).stream()
-                .map(entity -> entity.toDomain())
-                .toList();
     }
 }

@@ -2,7 +2,6 @@ package dio.budgeting.infrastructure.persistence.repository;
 
 import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -19,6 +18,4 @@ public interface TransactionEntityRepository
             where t.userId = :userId and t.category = :category
             """)
     TransactionTotals summarizeByUserIdAndCategory(UUID userId, Category category);
-
-    List<TransactionEntity> findAllByUserIdAndCategory(UUID userId, Category category);
 }

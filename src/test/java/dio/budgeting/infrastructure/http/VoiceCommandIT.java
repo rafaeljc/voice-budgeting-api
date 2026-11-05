@@ -102,8 +102,10 @@ class VoiceCommandIT {
             assertThat(saved.getExpiresAt()).isEqualTo(expiresAt);
             assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plus(Duration.ofMinutes(5)));
         });
-        assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
-                .isEmpty();
+        assertThat(transactionRepository
+                        .summarizeByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
+                        .count())
+                .isZero();
     }
 
     @Test
@@ -506,7 +508,7 @@ class VoiceCommandIT {
         @Test
         void should_returnGenericInternalError_when_toolFailsUnexpectedly() throws Exception {
             // given
-            when(failingRepository.findAllByUserIdAndCategory(any(), any()))
+            when(failingRepository.summarizeByUserIdAndCategory(any(), any()))
                     .thenThrow(new RuntimeException(INTERNAL_MARKER));
             aiStub.givenTranscription("quanto gastei com mercado");
             aiStub.givenToolCall("list-transactions-by-category", """

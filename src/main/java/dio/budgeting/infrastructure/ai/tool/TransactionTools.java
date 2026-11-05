@@ -1,47 +1,47 @@
 package dio.budgeting.infrastructure.ai.tool;
 
-import dio.budgeting.application.ListTransactionsByCategoryUseCase;
+import dio.budgeting.application.SummarizeTransactionsByCategoryUseCase;
 import dio.budgeting.application.output.AssistantOutput;
-import dio.budgeting.application.output.TransactionOutput;
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.ai.tool.argument.ProposeTransactionToolArguments;
-import dio.budgeting.infrastructure.ai.tool.result.ProposeTransactionToolResult;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+/** The model only extracts the intent: nothing a tool does returns to it, since `returnDirect` ends the call. */
 @Component
 @Validated
 public class TransactionTools {
     public static final String USER_ID = "userId";
     public static final String INTERPRETATION_COLLECTOR = "interpretationCollector";
 
-    private final ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase;
+    private final SummarizeTransactionsByCategoryUseCase summarizeTransactionsByCategoryUseCase;
 
-    public TransactionTools(ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase) {
-        this.listTransactionsByCategoryUseCase = listTransactionsByCategoryUseCase;
+    public TransactionTools(SummarizeTransactionsByCategoryUseCase summarizeTransactionsByCategoryUseCase) {
+        this.summarizeTransactionsByCategoryUseCase = summarizeTransactionsByCategoryUseCase;
     }
 
     @Tool(
             name = "propose-transaction",
             description = "Propõe o registro de uma nova transação financeira, que só vale depois da confirmação"
-                    + " do usuário")
-    public ProposeTransactionToolResult proposeTransaction(
-            @Valid ProposeTransactionToolArguments arguments, ToolContext toolContext) {
-        var proposal = arguments.toInput();
-        collector(toolContext).note(new AssistantOutput.Proposal(proposal));
-        return ProposeTransactionToolResult.noted(proposal);
+                    + " do usuário",
+            returnDirect = true)
+    public void proposeTransaction(@Valid ProposeTransactionToolArguments arguments, ToolContext toolContext) {
+        collector(toolContext).note(new AssistantOutput.Proposal(arguments.toInput()));
     }
 
-    @Tool(name = "list-transactions-by-category", description = "Lista transações financeiras por categoria")
-    public List<TransactionOutput> listTransactionsByCategory(
+    @Tool(
+            name = "summarize-transactions-by-category",
+            description = "Consulta quantos gastos o usuário tem em uma categoria e quanto eles somam",
+            returnDirect = true)
+    public void summarizeTransactionsByCategory(
             @ToolParam(description = "Categoria de uma transação") Category category, ToolContext toolContext) {
-        return listTransactionsByCategoryUseCase.execute(userId(toolContext), category);
+        var summary = summarizeTransactionsByCategoryUseCase.execute(userId(toolContext), category);
+        collector(toolContext).note(new AssistantOutput.Summary(summary));
     }
 
     // The user comes from the authenticated request, never from the model, so it is not part of the tool schema
