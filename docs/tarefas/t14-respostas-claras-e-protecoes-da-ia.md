@@ -193,7 +193,7 @@ Para a sessão nova: a fase 2 troca a tool de consulta por esse use case e remov
 
 ## Fase 2: Interpretação e frases fixas
 
-Status: Em andamento
+Status: Concluída
 
 - [x] [TDD] `SpokenAnswers` em `application/`: frase da proposta, da consulta (0, 1 e N gastos), da recusa; valor
       "R$ 1.234,56"; nome falado de cada `Category`; `SpokenAnswersTest`
@@ -220,7 +220,7 @@ Status: Em andamento
       - logs do fluxo com `interpretation`
 - [x] [verificação] `system-message.st`: tirar as instruções de fala ("diga em uma frase…", "nunca diga que
       registrou…"), que não se aplicam mais; reescrita completa na fase 3
-- [ ] [verificação] comentário de pior caso de tempo no `application.properties` (chat com uma requisição, 96 s)
+- [x] [verificação] comentário de pior caso de tempo no `application.properties` (chat com uma requisição, 96 s)
 
 ### Plano de verificação
 
@@ -231,7 +231,27 @@ Status: Em andamento
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `SpokenAnswers` (frases fixas, valor em pt-BR com espaço não separável, `switch` exaustivo das categorias);
+`AssistantOutput` como `sealed interface` (`Proposal`, `Summary`, `NotUnderstood`) e `ProcessVoiceCommandUseCase`
+montando a frase, sintetizando e gravando a proposta por último, com o log `Assistant answered` trazendo
+`interpretation`; `InterpretationCollector` estrito (segunda chamada de tool → `MultipleToolCallsException` → 422);
+`TransactionTools` com `propose-transaction` e `summarize-transactions-by-category` (`returnDirect = true`, `void`);
+remoção da listagem por categoria (`list-transactions-by-category`, use case, `findAllByUserIdAndCategory`) e de
+`ai/tool/result/`; `AiStub` com uma resposta de chat por comando, `speechText()`, `assistantCommand()`,
+`assistantCallCount()` e `AiToolCall`; `VoiceCommandIT` reescrito; prompt sem as instruções de fala; comentário de
+pior caso de tempo (96 s) no `application.properties`.
+
+Decisões: frase de "não entendido" é `Não entendi, tente novamente.` (decisão do usuário, registrada em Decisões);
+`SpokenAnswers` é package-private (só o use case o usa); sem `strip` da descrição na fala, já que o domínio
+normaliza só ao gravar; o stub extrai os três caminhos da OpenAI em constantes.
+
+Verificação: `grep` dos símbolos removidos em `src/` sem ocorrências; `env -u OPENAI_API_KEY -u JWT_SECRET
+./gradlew build` → `BUILD SUCCESSFUL` (inclui `*Test` e `*IT`). `test` e `VoiceCommandIT` rodados antes, após o item 5
+(37 testes, 0 falhas), e não repetidos à parte porque o `build` os cobre.
+
+Para a sessão nova: entre os commits dos itens 2 e 5 o `VoiceCommandIT` do fluxo de voz esteve quebrado (o item 4
+removeu código que ele usava); está verde desde o item 5. A fase 3 reescreve o `system-message.st` por completo e
+adiciona o `user-message.st`.
 
 ## Fase 3: Proteções da IA
 
