@@ -308,9 +308,9 @@ idempotência da proposta, e devem ser atualizadas lá.
 
 ## Fase 4: Documentação
 
-Status: Não iniciada
+Status: Em andamento
 
-- [ ] [verificação] ADR `docs/adr/0006-resposta-falada-montada-pela-aplicacao.md` a partir do `template.md`
+- [x] [verificação] ADR `docs/adr/0006-resposta-falada-montada-pela-aplicacao.md` a partir do `template.md`
       (opções: modelo escreve; modelo guiado por frases no prompt; modelo extrai a intenção e a aplicação monta a
       frase — escolhida)
 - [ ] [verificação] `docs/arquitetura.md`: texto e diagrama de sequência do comando de voz (uma chamada ao chat, tool
