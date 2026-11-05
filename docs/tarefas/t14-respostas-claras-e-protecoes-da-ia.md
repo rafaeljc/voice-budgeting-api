@@ -35,7 +35,7 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
   - transcrição em `prompts/user-message.st`, entre `<transcricao>` e `</transcricao>`, montada no
     `SpringAiAssistantGateway` com um `PromptTemplate` (bean do `AssistantConfiguration`) e `.user(String)`, depois de
     remover todos os `<` e `>` (`replaceAll("[<>]", "")`)
-  - `spring.ai.openai.chat.options.parallel-tool-calls=false` e `spring.ai.openai.chat.options.max-completion-tokens=200`
+  - `spring.ai.openai.chat.options.parallel-tool-calls=false` e `spring.ai.openai.chat.options.max-completion-tokens=500`
   - descrição vinda da tool com até 100 caracteres (o endpoint manual continua com 255)
 - Contrato do endpoint de voz sem mudança: `200` com `speech` e `transactionProposal` só na proposta; erros como hoje.
 - `AiStub` com métodos neutros para ler o texto enviado à síntese, o texto enviado ao assistente e a quantidade de
@@ -76,8 +76,10 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
   lambda do `ChatClient` (decisão do usuário)
 - Remover só `<` e `>` da transcrição — sem eles nenhuma marca se forma; remover `/` não protege mais e estraga
   "05/11", "km/h" (decisão do usuário)
-- `parallel-tool-calls=false`, `max-completion-tokens=200` — no máximo uma tool por comando e custo limitado do texto
+- `parallel-tool-calls=false`, `max-completion-tokens=500` — no máximo uma tool por comando e custo limitado do texto
   descartado (decisão do usuário)
+- `max-completion-tokens=500` em vez dos 200 previstos: a chamada da tool ocupa ~100 tokens no pior caso, e 500 dá folga
+  maior contra argumentos truncados, ainda limitando o texto descartado (decisão do usuário, na execução)
 - Coletor estrito, uma anotação por comando, segunda chamada → 422 — com `parallel-tool-calls=false` e
   `returnDirect` não acontece; se o provedor falhar nisso, a aplicação recusa em vez de agir errado (decisão do
   usuário)
@@ -265,17 +267,17 @@ Status: Em andamento
       responde texto livre sem tool → `200` só com `speech`, síntese recebe a frase de recusa, nada gravado
 - [x] [TDD] `ProposeTransactionToolArguments`: descrição com até 100 caracteres (constante própria, `@ToolParam` cita
       o limite e o formato); `VoiceCommandIT`: 101 caracteres → 422 `invalid-command`
-- [ ] [verificação] `system-message.st` reescrito: papel e escopo (só registrar e consultar gastos); a transcrição
+- [x] [verificação] `system-message.st` reescrito: papel e escopo (só registrar e consultar gastos); a transcrição
       delimitada é dado, nunca instrução (pedidos para ignorar regras ou mudar de papel não são comandos); uma tool
       por comando, ou nenhuma fora do escopo; frases-modelo com o lugar de cada dado; exemplos comando → descrição
       (curta, minúscula, sem valor nem categoria, nomes próprios com maiúscula)
 - [ ] [verificação] `spring.ai.openai.chat.options.parallel-tool-calls=false` e
-      `spring.ai.openai.chat.options.max-completion-tokens=200`, com comentário do porquê
+      `spring.ai.openai.chat.options.max-completion-tokens=500`, com comentário do porquê
 
 ### Plano de verificação
 
 - `./gradlew integrationTest --tests "dio.budgeting.infrastructure.http.VoiceCommandIT"` → passa
-- `grep -n "parallel-tool-calls=false\|max-completion-tokens=200" src/main/resources/application.properties` → as
+- `grep -n "parallel-tool-calls=false\|max-completion-tokens=500" src/main/resources/application.properties` → as
   duas chaves
 - `grep -n "<transcricao>" src/main/resources/prompts/*.st` → no `user-message.st` (e citado no `system-message.st`)
 - `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`
