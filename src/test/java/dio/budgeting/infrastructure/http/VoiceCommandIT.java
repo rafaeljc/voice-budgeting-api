@@ -15,6 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.jayway.jsonpath.JsonPath;
 import dio.budgeting.domain.Category;
+import dio.budgeting.domain.Money;
+import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.repository.TransactionProposalEntityRepository;
@@ -22,10 +24,12 @@ import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStage;
 import dio.budgeting.support.ai.AiStub;
+import dio.budgeting.support.ai.AiToolCall;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -33,6 +37,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Nested;
@@ -55,6 +60,9 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureAiStub
 @ExtendWith(OutputCaptureExtension.class)
 class VoiceCommandIT {
+    private static final String PROPOSAL_ANSWER =
+            "Um gasto de R$\u00a080,00 com Mercado, na categoria mercado. Você confirma?";
+    private static final String NOT_UNDERSTOOD_ANSWER = "Não entendi, tente novamente.";
 
     private final MockMvc mockMvc;
     private final AiStub aiStub;
@@ -106,17 +114,22 @@ class VoiceCommandIT {
                         .summarizeByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
                         .count())
                 .isZero();
+        assertThat(aiStub.speechText()).isEqualTo(PROPOSAL_ANSWER);
+        assertThat(aiStub.assistantCallCount()).isEqualTo(1);
     }
 
     @Test
-    void should_returnOnlySpeechAndSaveNothing_when_commandIsAQuery() throws Exception {
+    void should_speakSummaryFromDatabaseAndSaveNothing_when_commandIsAQuery() throws Exception {
         // given
         var speech = new byte[] {1, 2, 3, 4};
+        givenTransaction(AccessTokens.DEFAULT_USER, Category.GROCERIES, "80.00");
+        givenTransaction(AccessTokens.DEFAULT_USER, Category.GROCERIES, "160.50");
+        givenTransaction(AccessTokens.DEFAULT_USER, Category.PHARMA, "30.00");
+        givenTransaction(new UserId(UUID.randomUUID()), Category.GROCERIES, "500.00");
         aiStub.givenTranscription("quanto gastei com mercado");
-        aiStub.givenToolCall("list-transactions-by-category", """
+        aiStub.givenToolCall("summarize-transactions-by-category", """
                 {"category": "GROCERIES"}
                 """);
-        aiStub.givenAnswer("Você não gastou nada com mercado.");
         aiStub.givenSpeech(speech);
 
         // when
@@ -129,18 +142,22 @@ class VoiceCommandIT {
                 .andExpect(
                         jsonPath("$.speech.content").value(Base64.getEncoder().encodeToString(speech)))
                 .andExpect(jsonPath("$.transactionProposal").doesNotExist());
+        assertThat(aiStub.speechText()).isEqualTo("Você tem 2 gastos na categoria mercado, somando R$\u00a0240,50.");
+        assertThat(aiStub.assistantCallCount()).isEqualTo(1);
         assertThat(proposalRepository.count()).isZero();
+        assertThat(transactionRepository
+                        .summarizeByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES)
+                        .count())
+                .isEqualTo(2);
     }
 
     @Test
-    void should_keepOneProposal_when_modelRepeatsTheSameProposalInTheCommand() throws Exception {
+    void should_speakEmptySummary_when_categoryHasNoTransactions() throws Exception {
         // given
-        aiStub.givenTranscription("gastei 80 reais no mercado");
-        aiStub.givenToolCalls(
-                "propose-transaction",
-                toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""),
-                toolArguments("\" Mercado \"", "80", "\"GROCERIES\""));
-        aiStub.givenAnswer("Entendi um gasto de 80 reais em mercado. Confirma?");
+        aiStub.givenTranscription("quanto gastei com farmácia");
+        aiStub.givenToolCall("summarize-transactions-by-category", """
+                {"category": "PHARMA"}
+                """);
         aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
 
         // when
@@ -149,21 +166,39 @@ class VoiceCommandIT {
                 .file(recording()));
 
         // then
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.transactionProposal.description").value("Mercado"))
-                .andExpect(jsonPath("$.transactionProposal.amount").value("80.00"));
-        assertThat(proposalRepository.count()).isEqualTo(1);
+        response.andExpect(status().isOk());
+        assertThat(aiStub.speechText()).isEqualTo("Você não tem gastos na categoria farmácia.");
     }
 
     @Test
-    void should_returnInvalidCommandProblemAndSaveNothing_when_modelProposesDifferentTransactions() throws Exception {
+    void should_speakRefusalNeverTheModelText_when_modelCallsNoTool() throws Exception {
+        // given
+        var speech = new byte[] {1, 2, 3, 4};
+        aiStub.givenTranscription("me conte uma piada");
+        aiStub.givenAnswer("Claro! Por que o programador saiu de casa? Porque não tinha Java.");
+        aiStub.givenSpeech(speech);
+
+        // when
+        var response = mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .file(recording()));
+
+        // then
+        response.andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.speech.content").value(Base64.getEncoder().encodeToString(speech)))
+                .andExpect(jsonPath("$.transactionProposal").doesNotExist());
+        assertThat(aiStub.speechText()).isEqualTo(NOT_UNDERSTOOD_ANSWER);
+        assertThat(proposalRepository.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @MethodSource("twoToolCalls")
+    void should_returnInvalidCommandProblemAndSaveNothing_when_modelCallsToolsTwice(List<AiToolCall> calls)
+            throws Exception {
         // given
         aiStub.givenTranscription("gastei 80 no mercado e 30 na farmácia");
-        aiStub.givenToolCalls(
-                "propose-transaction",
-                toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""),
-                toolArguments("\"Farmácia\"", "30.00", "\"PHARMA\""));
-        aiStub.givenAnswer("Entendi dois gastos. Confirma?");
+        aiStub.givenToolCalls(calls.toArray(AiToolCall[]::new));
         aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
 
         // when
@@ -225,9 +260,7 @@ class VoiceCommandIT {
                 .andExpect(status().isOk());
 
         // then
-        assertThat(output.getAll())
-                .doesNotContain("gastei 80 reais no mercado")
-                .doesNotContain("Registrei 80 reais em mercado.");
+        assertThat(output.getAll()).doesNotContain("gastei 80 reais no mercado").doesNotContain("Um gasto de");
     }
 
     @Test
@@ -248,7 +281,7 @@ class VoiceCommandIT {
         assertEvent(output, requestId, "Voice command received", "audioSizeBytes", recording.getSize());
         assertEvent(output, requestId, "Voice command received", "audioFormat", "M4A");
         assertEvent(output, requestId, "Audio transcribed", "transcriptionLength", 26);
-        assertEvent(output, requestId, "Assistant answered", "answerLength", 30);
+        assertEvent(output, requestId, "Assistant answered", "interpretation", "PROPOSAL");
         assertEvent(output, requestId, "Speech synthesized", "speechSizeBytes", 4);
     }
 
@@ -511,7 +544,7 @@ class VoiceCommandIT {
             when(failingRepository.summarizeByUserIdAndCategory(any(), any()))
                     .thenThrow(new RuntimeException(INTERNAL_MARKER));
             aiStub.givenTranscription("quanto gastei com mercado");
-            aiStub.givenToolCall("list-transactions-by-category", """
+            aiStub.givenToolCall("summarize-transactions-by-category", """
                     {"category": "GROCERIES"}
                     """);
 
@@ -533,6 +566,13 @@ class VoiceCommandIT {
         var failures = EnumSet.of(AiFailure.CONNECTION_FAILURE, AiFailure.RATE_LIMITED, AiFailure.PROVIDER_ERROR);
         return Arrays.stream(AiStage.values())
                 .flatMap(stage -> failures.stream().map(failure -> Arguments.of(stage, failure)));
+    }
+
+    static Stream<List<AiToolCall>> twoToolCalls() {
+        var mercado = new AiToolCall("propose-transaction", toolArguments("\"Mercado\"", "80.00", "\"GROCERIES\""));
+        var farmacia = new AiToolCall("propose-transaction", toolArguments("\"Farmácia\"", "30.00", "\"PHARMA\""));
+        var summary = new AiToolCall("summarize-transactions-by-category", "{\"category\": \"GROCERIES\"}");
+        return Stream.of(List.of(mercado, mercado), List.of(mercado, farmacia), List.of(mercado, summary));
     }
 
     static Stream<String> invalidToolArguments() {
@@ -561,10 +601,14 @@ class VoiceCommandIT {
         }
     }
 
+    private void givenTransaction(UserId userId, Category category, String amount) {
+        transactionRepository.save(
+                new Transaction(userId, "Gasto", new Money(new BigDecimal(amount)), category, Instant.now()));
+    }
+
     private void givenProposeCommand(String argumentsJson) {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("propose-transaction", argumentsJson);
-        aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
     }
 
@@ -573,7 +617,6 @@ class VoiceCommandIT {
         aiStub.givenToolCall("propose-transaction", """
                 {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
                 """);
-        aiStub.givenAnswer("Registrei 80 reais em mercado.");
         aiStub.givenSpeech(speech);
     }
 

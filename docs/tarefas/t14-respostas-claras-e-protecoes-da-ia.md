@@ -209,7 +209,7 @@ Status: Em andamento
       `SummarizeTransactionsByCategoryUseCase`; `SpringAiAssistantGateway` devolve `collector.interpretation()`;
       remover `list-transactions-by-category`, `ListTransactionsByCategoryUseCase`, `findAllByUserIdAndCategory`
       (porta, adaptador, Spring Data e teste) e `ai/tool/result/`
-- [ ] [TDD] `AiStub`/`OpenAiWireMockStub`: uma resposta de chat por comando (sem cenário), `speechText()`,
+- [x] [TDD] `AiStub`/`OpenAiWireMockStub`: uma resposta de chat por comando (sem cenário), `speechText()`,
       `assistantCallCount()`; `VoiceCommandIT`:
       - proposta → síntese recebe `Um gasto de R$ 80,00 com mercado, na categoria mercado. Você confirma?`, uma
         chamada ao chat, contagem da agregação zero

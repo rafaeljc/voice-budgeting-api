@@ -8,24 +8,25 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.http.Fault;
-import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 import org.springframework.core.io.ClassPathResource;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 public class OpenAiWireMockStub implements AiStub {
 
     private static final String PAYLOADS = "ai/openai/";
-    private static final String CHAT_SCENARIO = "chat";
-    private static final String TOOL_CALLED = "tool-called";
+    private static final String TRANSCRIPTION_PATH = "/v1/audio/transcriptions";
+    private static final String CHAT_PATH = "/v1/chat/completions";
+    private static final String SPEECH_PATH = "/v1/audio/speech";
 
     private final WireMockServer server;
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
-    private boolean toolCallGiven;
 
     public OpenAiWireMockStub(WireMockServer server) {
         this.server = server;
@@ -33,13 +34,13 @@ public class OpenAiWireMockStub implements AiStub {
 
     @Override
     public void givenTranscription(String text) {
-        server.stubFor(post(urlEqualTo("/v1/audio/transcriptions"))
+        server.stubFor(post(urlEqualTo(TRANSCRIPTION_PATH))
                 .willReturn(aResponse().withHeader("Content-Type", "text/plain").withBody(text)));
     }
 
     @Override
     public String transcribedAudioFilename() {
-        var requests = server.findAll(postRequestedFor(urlEqualTo("/v1/audio/transcriptions")));
+        var requests = server.findAll(postRequestedFor(urlEqualTo(TRANSCRIPTION_PATH)));
         return requests.getLast().getParts().stream()
                 .filter(part -> "file".equals(part.getName()))
                 .findFirst()
@@ -61,52 +62,81 @@ public class OpenAiWireMockStub implements AiStub {
 
     @Override
     public void givenToolCall(String tool, String argumentsJson) {
-        givenToolCalls(tool, argumentsJson);
+        givenToolCalls(new AiToolCall(tool, argumentsJson));
     }
 
-    // The first chat call asks for the tool, once per arguments; the second one carries the results and gets the
-    // final answer
+    // One chat response per command: the model asks for the tools and never gets a second turn
     @Override
-    public void givenToolCalls(String tool, String... argumentsJson) {
-        var toolCalls = IntStream.range(0, argumentsJson.length)
+    public void givenToolCalls(AiToolCall... calls) {
+        var toolCalls = IntStream.range(0, calls.length)
                 .mapToObj(index -> payload("tool-call.json")
                         .replace("${id}", quoted("call_" + (index + 1)))
-                        .replace("${tool}", quoted(tool))
-                        .replace("${arguments}", quoted(argumentsJson[index])))
+                        .replace("${tool}", quoted(calls[index].tool()))
+                        .replace("${arguments}", quoted(calls[index].argumentsJson())))
                 .collect(Collectors.joining(",", "[", "]"));
-        var body = payload("chat-tool-call.json").replace("${toolCalls}", toolCalls);
-        server.stubFor(post(urlEqualTo("/v1/chat/completions"))
-                .inScenario(CHAT_SCENARIO)
-                .whenScenarioStateIs(Scenario.STARTED)
-                .willSetStateTo(TOOL_CALLED)
-                .willReturn(json(body)));
-        toolCallGiven = true;
+        givenChatResponse(payload("chat-tool-call.json").replace("${toolCalls}", toolCalls));
     }
 
     @Override
     public void givenAnswer(String text) {
-        var body = payload("chat-answer.json").replace("${text}", quoted(text));
-        var stub = post(urlEqualTo("/v1/chat/completions")).inScenario(CHAT_SCENARIO);
-        server.stubFor((toolCallGiven ? stub.whenScenarioStateIs(TOOL_CALLED) : stub).willReturn(json(body)));
+        givenChatResponse(payload("chat-answer.json").replace("${text}", quoted(text)));
+    }
+
+    private void givenChatResponse(String body) {
+        server.stubFor(post(urlEqualTo(CHAT_PATH)).willReturn(json(body)));
     }
 
     @Override
     public void givenSpeech(byte[] audio) {
-        server.stubFor(post(urlEqualTo("/v1/audio/speech"))
+        server.stubFor(post(urlEqualTo(SPEECH_PATH))
                 .willReturn(aResponse().withHeader("Content-Type", "audio/mpeg").withBody(audio)));
+    }
+
+    @Override
+    public String speechText() {
+        var body = server.findAll(postRequestedFor(urlEqualTo(SPEECH_PATH)))
+                .getLast()
+                .getBodyAsString();
+        return jsonMapper.readTree(body).path("input").asString();
+    }
+
+    @Override
+    public String assistantCommand() {
+        var body = server.findAll(postRequestedFor(urlEqualTo(CHAT_PATH)))
+                .getLast()
+                .getBodyAsString();
+        return StreamSupport.stream(jsonMapper.readTree(body).path("messages").spliterator(), false)
+                .filter(message -> "user".equals(message.path("role").asString()))
+                .map(message -> messageText(message.path("content")))
+                .reduce((first, second) -> second)
+                .orElseThrow();
+    }
+
+    @Override
+    public int assistantCallCount() {
+        return server.findAll(postRequestedFor(urlEqualTo(CHAT_PATH))).size();
     }
 
     @Override
     public void reset() {
         server.resetAll();
-        toolCallGiven = false;
+    }
+
+    // The provider sends the content either as a string or as a list of typed parts
+    private static String messageText(JsonNode content) {
+        if (content.isString()) {
+            return content.asString();
+        }
+        return StreamSupport.stream(content.spliterator(), false)
+                .map(part -> part.path("text").asString())
+                .collect(Collectors.joining());
     }
 
     private static String path(AiStage stage) {
         return switch (stage) {
-            case TRANSCRIPTION -> "/v1/audio/transcriptions";
-            case ASSISTANT -> "/v1/chat/completions";
-            case SPEECH -> "/v1/audio/speech";
+            case TRANSCRIPTION -> TRANSCRIPTION_PATH;
+            case ASSISTANT -> CHAT_PATH;
+            case SPEECH -> SPEECH_PATH;
         };
     }
 
