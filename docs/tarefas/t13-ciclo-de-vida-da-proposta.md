@@ -277,9 +277,9 @@ job está ausente no perfil `test` nem que roda no contexto (Fase 3 / definiçã
 
 ## Fase 3: Concorrência e documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionProposalConcurrencyIT`: 10 confirmações simultâneas → um `201`, nove `404`, uma transação,
+- [x] [TDD] `TransactionProposalConcurrencyIT`: 10 confirmações simultâneas → um `201`, nove `404`, uma transação,
       proposta apagada; confirmar × cancelar simultâneos → um vence, o outro `404`, banco coerente com o vencedor.
       Conferir que falha sem o `@Lock(PESSIMISTIC_WRITE)` e reverter
 - [ ] [verificação] README: a proposta expira (5 minutos por padrão) e, depois disso, confirmar ou cancelar responde
