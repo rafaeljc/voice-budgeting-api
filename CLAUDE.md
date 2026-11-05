@@ -39,8 +39,8 @@ src/main/java/dio/budgeting/
     http/                       # *Controller
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
     ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect
-      tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
-        argument/  result/      # *ToolArguments, *ToolResult
+      tool/                     # *Tools, InterpretationCollector, ToolExecutionConfiguration (adaptador de entrada)
+        argument/               # *ToolArguments
     config/                     # *Configuration (ex.: Clock), *Properties
     scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)

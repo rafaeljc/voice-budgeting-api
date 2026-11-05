@@ -323,7 +323,7 @@ Status: Em andamento
       delimitador, opções do chat, descrição de 100, stub com uma chamada), `architecture.md` e `security.md`
       (`summarizeByUserIdAndCategory`), `error-handling.md` (`MultipleToolCallsException`), `testing.md` (novos
       métodos do `AiStub`)
-- [ ] [verificação] `CLAUDE.md`: estrutura sem `ai/tool/result/`
+- [x] [verificação] `CLAUDE.md`: estrutura sem `ai/tool/result/`
 - [ ] [verificação] `docs/tarefas.md`: notas na T16 (o texto da resposta já é montado pela aplicação), T23 (uma
       chamada ao chat por comando, teto de tokens) e T25 (as frases fixas são a chave do cache; recusa e consulta sem
       gastos repetem muito)
