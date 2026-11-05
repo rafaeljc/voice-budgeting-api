@@ -282,7 +282,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `TransactionProposalConcurrencyIT`: 10 confirmações simultâneas → um `201`, nove `404`, uma transação,
       proposta apagada; confirmar × cancelar simultâneos → um vence, o outro `404`, banco coerente com o vencedor.
       Conferir que falha sem o `@Lock(PESSIMISTIC_WRITE)` e reverter
-- [ ] [verificação] README: a proposta expira (5 minutos por padrão) e, depois disso, confirmar ou cancelar responde
+- [x] [verificação] README: a proposta expira (5 minutos por padrão) e, depois disso, confirmar ou cancelar responde
       404; `docs/arquitetura.md`: proposta vencida → 404 na "Decisão sobre a proposta" e parágrafo da faxina
       (`fixedDelay`, lotes com transação própria, mesmo instante), sem diagrama novo
 - [ ] [verificação] Regras: `architecture.md` (vencimento no domínio com `isPendingAt` e

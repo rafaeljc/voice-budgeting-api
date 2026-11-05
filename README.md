@@ -51,7 +51,8 @@ Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); ve
 | `POST` | `/transaction-proposals/{id}/cancel`   | Cancela a proposta (204)                                           |
 
 Um comando de voz de registro não grava a transação: a resposta traz a fala e uma `transactionProposal`, e quem
-decide é o usuário, por `confirm` ou `cancel`. Consultas respondem direto, só com a fala.
+decide é o usuário, por `confirm` ou `cancel`. A proposta expira em 5 minutos (`budgeting.transaction-proposals.time-to-live`):
+depois de `expiresAt`, confirmar ou cancelar responde 404. Consultas respondem direto, só com a fala.
 
 Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http) e
 [`docs/exemplos/voz.http`](docs/exemplos/voz.http). Com `curl`:
