@@ -44,7 +44,13 @@ Adaptadores de entrada (o mundo externo aciona a aplicação) ficam na mesma cam
 ```
 infrastructure/http/TransactionController                      # adaptador HTTP; DTOs em http/request|response
 infrastructure/ai/tool/TransactionTools                        # adaptador de tools de IA; DTOs em ai/tool/argument
+infrastructure/scheduling/TransactionProposalExpirationJob     # adaptador agendado (@Scheduled)
 ```
+
+O job é um adaptador de entrada em `infrastructure/scheduling/`: é ele que faz o laço dos lotes, e o use case apaga um
+lote, então cada lote é uma transação (o proxy do use case). O intervalo usa `fixedDelay`, nunca `fixedRate`, para que
+uma execução lenta não se sobreponha à seguinte; e o job é desligável por propriedade
+(`@ConditionalOnBooleanProperty`).
 
 O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
 `@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
@@ -67,10 +73,16 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 - Dono dos dados: toda transação tem `userId`. A porta nomeia o usuário em toda leitura
   (`findByIdAndUserId(TransactionId, UserId)`, `findAllByUserId(UserId, TransactionFilter, TransactionSort, PageQuery)`,
   `findAllByUserIdAndCategory(UserId, Category)`); `UserId` é `record` sobre `UUID`, com `parse` como o `TransactionId`.
-- A proposta de transação é uma entidade própria (`TransactionProposal`, sem status: se existe, está pendente), com
-  a porta `TransactionProposalRepository`. A busca da decisão é bloqueante
+- A proposta de transação é uma entidade própria (`TransactionProposal`, sem status: existe e ainda não venceu, está
+  pendente), com a porta `TransactionProposalRepository`. A busca da decisão é bloqueante
   (`findByIdAndUserIdForUpdate`, `SELECT ... FOR UPDATE`) e exige a transação do use case; a decisão apaga a
   proposta.
+- O vencimento é regra do domínio: `TransactionProposalTimeToLive` (value object do prazo, entregue como bean pela
+  configuração) define `expiresAt` na criação, e `isPendingAt(Instant)` decide se a proposta ainda vale (vencida a
+  partir de `expiresAt`, inclusive). Confirmar e cancelar checam `isPendingAt` depois da busca bloqueante; vencida,
+  responde o mesmo 404 e a linha fica para a faxina.
+- A faxina apaga as vencidas em lotes pela porta `deleteExpiredBatch(Instant, int)`, que devolve a quantidade; a
+  consulta do lote usa `SKIP LOCKED` para não esperar linhas que uma decisão está usando.
 - Exceções de negócio (`TransactionNotFoundException`, `TransactionProposalNotFoundException`) ficam em `domain/`,
   são unchecked e não importam Spring.
 - Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,

@@ -285,7 +285,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] README: a proposta expira (5 minutos por padrão) e, depois disso, confirmar ou cancelar responde
       404; `docs/arquitetura.md`: proposta vencida → 404 na "Decisão sobre a proposta" e parágrafo da faxina
       (`fixedDelay`, lotes com transação própria, mesmo instante), sem diagrama novo
-- [ ] [verificação] Regras: `architecture.md` (vencimento no domínio com `isPendingAt` e
+- [x] [verificação] Regras: `architecture.md` (vencimento no domínio com `isPendingAt` e
       `TransactionProposalTimeToLive`; `deleteExpiredBatch`; job como adaptador de entrada em
       `infrastructure/scheduling/` que faz o laço dos lotes, uma transação por lote); `error-handling.md` (404 com
       proposta expirada); `testing.md` (job desligado no perfil `test`; faxina testada pelo job e pelo adaptador);

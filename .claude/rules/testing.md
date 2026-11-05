@@ -25,6 +25,12 @@ paths:
   `support/security/AccessTokens` (`NimbusJwtEncoder` e o segredo do perfil `test`), não o `jwt()` do
   `spring-security-test`. `AccessTokens.authorization()` usa o usuário padrão; `authorization(userId)` e
   `validClaims`/`sign` cobrem outro usuário e tokens inválidos.
+- Faxina das propostas vencidas: o job fica desligado no perfil `test`
+  (`budgeting.transaction-proposals.expiration-sweep-enabled=false`), para não apagar propostas no meio de outro teste.
+  O laço dos lotes é testado pelo `TransactionProposalExpirationJobTest` e o apagar em lote, incluindo a linha
+  trancada por outra transação, pelo `JpaTransactionProposalRepositoryIT`; o log do job não tem teste.
+- Concorrência: o `TransactionProposalConcurrencyIT` usa `RANDOM_PORT` e `RestClient`, não MockMvc, porque as chamadas
+  precisam se sobrepor no banco; ele falha sem o `@Lock(PESSIMISTIC_WRITE)`.
 - IA: o perfil `test` aponta a OpenAI para uma URL inválida e desliga o retry do SDK em cada etapa, então um `*IT` que
   aciona a IA sem stub falha na hora.
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
