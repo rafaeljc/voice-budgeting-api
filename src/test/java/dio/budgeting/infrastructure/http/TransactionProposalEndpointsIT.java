@@ -19,6 +19,7 @@ import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -167,7 +169,8 @@ class TransactionProposalEndpointsIT {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-proposal-not-found"))
                 .andExpect(jsonPath("$.title").value("Proposta de transação não encontrada"))
-                .andExpect(jsonPath("$.detail").value("A proposta de transação não existe ou já foi decidida."))
+                .andExpect(
+                        jsonPath("$.detail").value("A proposta de transação não existe, já foi decidida ou expirou."))
                 .andExpect(jsonPath("$.instance").value(TRANSACTION_PROPOSALS_PATH + "/" + id + "/" + action));
     }
 
@@ -186,7 +189,27 @@ class TransactionProposalEndpointsIT {
         // then
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-proposal-not-found"))
-                .andExpect(jsonPath("$.detail").value("A proposta de transação não existe ou já foi decidida."));
+                .andExpect(
+                        jsonPath("$.detail").value("A proposta de transação não existe, já foi decidida ou expirou."));
+        assertThat(proposalRepository.findById(proposalId)).isPresent();
+        assertThat(transactionRepository.count()).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"confirm", "cancel"})
+    void should_returnNotFoundAndKeepProposal_when_proposalIsExpired(String action) throws Exception {
+        // given
+        var proposalId = saveProposal(Instant.now().minusSeconds(1));
+
+        // when
+        var response = mockMvc.perform(post(TRANSACTION_PROPOSALS_PATH + "/{id}/" + action, proposalId)
+                .header(AUTHORIZATION, AccessTokens.authorization()));
+
+        // then
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:transaction-proposal-not-found"))
+                .andExpect(
+                        jsonPath("$.detail").value("A proposta de transação não existe, já foi decidida ou expirou."));
         assertThat(proposalRepository.findById(proposalId)).isPresent();
         assertThat(transactionRepository.count()).isZero();
     }
@@ -212,9 +235,13 @@ class TransactionProposalEndpointsIT {
     }
 
     private UUID saveProposal() {
+        return saveProposal(Instant.now().plus(Duration.ofMinutes(5)));
+    }
+
+    private UUID saveProposal(Instant expiresAt) {
         var id = UUID.randomUUID();
         proposalRepository.save(new TransactionProposalEntity(
-                id, USER_ID, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, PROPOSED_AT));
+                id, USER_ID, "Mercado", new BigDecimal("80.00"), Category.GROCERIES, PROPOSED_AT, expiresAt));
         return id;
     }
 

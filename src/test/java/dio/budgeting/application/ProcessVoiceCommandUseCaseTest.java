@@ -18,9 +18,11 @@ import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionProposal;
 import dio.budgeting.domain.TransactionProposalRepository;
+import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +52,9 @@ class ProcessVoiceCommandUseCaseTest {
 
     @Mock
     private TransactionProposalRepository proposalRepository;
+
+    @Spy
+    private TransactionProposalTimeToLive timeToLive = new TransactionProposalTimeToLive(Duration.ofMinutes(5));
 
     @Mock
     private Clock clock;
@@ -103,6 +109,7 @@ class ProcessVoiceCommandUseCaseTest {
         assertThat(saved.getValue().getAmount()).isEqualTo(new Money(new BigDecimal("80.00")));
         assertThat(saved.getValue().getCategory()).isEqualTo(Category.GROCERIES);
         assertThat(saved.getValue().getCreatedAt()).isEqualTo(NOW);
+        assertThat(saved.getValue().getExpiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(5)));
         assertThat(output.speech()).isSameAs(speech);
         assertThat(output.proposal()).hasValueSatisfying(returned -> {
             assertThat(returned.id()).isEqualTo(saved.getValue().getId().uuid().toString());
@@ -110,6 +117,7 @@ class ProcessVoiceCommandUseCaseTest {
             assertThat(returned.amount()).isEqualByComparingTo("80.00");
             assertThat(returned.currency()).isEqualTo("BRL");
             assertThat(returned.category()).isEqualTo("GROCERIES");
+            assertThat(returned.expiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(5)));
         });
     }
 

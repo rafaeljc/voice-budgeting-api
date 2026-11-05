@@ -22,8 +22,8 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
   `@Validated`, público): `time-to-live=5m`, `expiration-sweep-interval=1m`, `expiration-batch-size=1000`
   (`@Positive`), `expiration-sweep-enabled=true`; `TransactionProposalConfiguration` expõe o bean
   `TransactionProposalTimeToLive`
-- Persistência: coluna `expires_at` `@Column(nullable = false)` e índice
-  `@Table(indexes = @Index(name = "idx_transaction_proposal_expires_at", columnList = "expiresAt"))`
+- Persistência: coluna `expires_at` `@Column(nullable = false)` e índice `@Table(indexes = @Index(columnList =
+  "expires_at"))`, sem nome, como os da `TransactionEntity`
 - Comando de voz: o `ProcessVoiceCommandUseCase` recebe o `TransactionProposalTimeToLive` pelo construtor e grava a
   proposta com o vencimento; `transactionProposal` na resposta ganha `expiresAt` (mesmo tipo e formato do
   `createdAt` do `TransactionResponse`, ISO-8601 UTC)
@@ -101,8 +101,9 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
 - `ProcessVoiceCommandUseCaseTest` recebe o prazo por `@Spy` com instância real — o `@InjectMocks` só injeta
   `@Mock`/`@Spy` (decisão do usuário)
 - Novo `detail` do 404 cita a expiração, mantendo um corpo único (decisão do usuário)
-- Só o índice de `expires_at`, declarado na entidade, sem teste — confirmar e cancelar usam a chave primária
-  (decisão do usuário)
+- Só o índice de `expires_at`, declarado na entidade sem nome e com o nome da coluna, como os da `TransactionEntity`
+  (conferido no MySQL com um teste temporário, removido), sem teste permanente — confirmar e cancelar usam a chave
+  primária (decisão do usuário)
 - Sem ADR — consequência direta do ADR 0005, registrada no plano, nas regras e em comentários (decisão do usuário)
 - `DeleteExpiredTransactionProposalBatchUseCase` sem teste unitário — só delega à porta (sem lógica); coberto pelo
   `*IT` do adaptador e pelo teste do job
@@ -168,23 +169,23 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Vencimento da proposta
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `TransactionProposalTimeToLive` e vencimento na `TransactionProposal`: `TransactionProposalTimeToLiveTest`
+- [x] [TDD] `TransactionProposalTimeToLive` e vencimento na `TransactionProposal`: `TransactionProposalTimeToLiveTest`
       → nulo, zero e negativo recusados; `TransactionProposalTest` → `expiresAt = createdAt + prazo`, prazo nulo
       recusado, `isPendingAt` verdadeiro um instante antes de `expiresAt` e falso em `expiresAt` e depois
-- [ ] [TDD] Confirmar e cancelar recusam a proposta vencida: `ConfirmTransactionProposalUseCaseTest` e
+- [x] [TDD] Confirmar e cancelar recusam a proposta vencida: `ConfirmTransactionProposalUseCaseTest` e
       `CancelTransactionProposalUseCaseTest` → `Clock` em `expiresAt` → `TransactionProposalNotFoundException`, nada
       gravado nem apagado; pendente → comportamento atual
-- [ ] [TDD] `ProcessVoiceCommandUseCase` grava o vencimento: `ProcessVoiceCommandUseCaseTest` → proposta gravada com
+- [x] [TDD] `ProcessVoiceCommandUseCase` grava o vencimento: `ProcessVoiceCommandUseCaseTest` → proposta gravada com
       `expiresAt = Instant.now(clock) + 5 min` e devolvida no output (`TransactionProposalOutput.expiresAt`)
-- [ ] [TDD] Persistência e configuração: `expires_at` `NOT NULL` + `@Index` na `TransactionProposalEntity`;
+- [x] [TDD] Persistência e configuração: `expires_at` `NOT NULL` + `@Index` na `TransactionProposalEntity`;
       `TransactionProposalProperties` e `TransactionProposalConfiguration` (bean do prazo); chaves em
       `application.properties` com comentário; `VoiceCommandIT` → `transactionProposal.expiresAt` na resposta igual
       ao gravado e 5 min depois do `createdAt`; `TransactionProposalEndpointsIT.saveProposal` com `expiresAt` futuro
-- [ ] [TDD] `TransactionProposalEndpointsIT` → proposta vencida (gravada com `expiresAt` no passado): `confirm` e
+- [x] [TDD] `TransactionProposalEndpointsIT` → proposta vencida (gravada com `expiresAt` no passado): `confirm` e
       `cancel` → 404 com o novo `detail`, nenhuma transação, proposta mantida
-- [ ] [TDD] Novo `detail` em `messages.properties` ("A proposta de transação não existe, já foi decidida ou
+- [x] [TDD] Novo `detail` em `messages.properties` ("A proposta de transação não existe, já foi decidida ou
       expirou."); asserções do `TransactionProposalEndpointsIT` atualizadas
 - [ ] [verificação] `docs/openapi.yaml`: `expiresAt` (`date-time`, obrigatório) no schema `TransactionProposal`;
       404 de `confirm` e `cancel` citando a proposta expirada, com o novo `detail` nos exemplos; descrição do
