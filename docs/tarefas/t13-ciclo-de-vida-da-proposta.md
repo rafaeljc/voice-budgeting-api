@@ -108,6 +108,8 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
 - Só o índice de `expires_at`, declarado na entidade sem nome e com o nome da coluna, como os da `TransactionEntity`
   (conferido no MySQL com um teste temporário, removido), sem teste permanente — confirmar e cancelar usam a chave
   primária (decisão do usuário)
+- Sem nota da T13 em `docs/tarefas.md`: as `Nota (Txx)` são recados para tarefas futuras, e a conclusão da T13 é o
+  checkbox; só a T20 e a T22 ganham nota (decisão do usuário)
 - Sem ADR — consequência direta do ADR 0005, registrada no plano, nas regras e em comentários (decisão do usuário)
 - `DeleteExpiredTransactionProposalBatchUseCase` sem teste unitário — só delega à porta (sem lógica); coberto pelo
   `*IT` do adaptador e pelo teste do job
@@ -115,18 +117,18 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] comando de registro → `transactionProposal.expiresAt` = criação + 5 min, igual ao gravado
-- [ ] confirmar ou cancelar proposta vencida → 404 `transaction-proposal-not-found` com o novo `detail`, nenhuma
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] comando de registro → `transactionProposal.expiresAt` = criação + 5 min, igual ao gravado
+- [x] confirmar ou cancelar proposta vencida → 404 `transaction-proposal-not-found` com o novo `detail`, nenhuma
       transação, proposta mantida para a faxina
-- [ ] `deleteExpiredBatch` apaga no máximo `batchSize` vencidas (`expires_at <= instante`), preserva as pendentes e
+- [x] `deleteExpiredBatch` apaga no máximo `batchSize` vencidas (`expires_at <= instante`), preserva as pendentes e
       devolve a quantidade
-- [ ] o job repete os lotes com o mesmo instante até um lote incompleto e registra `Transaction proposals expired`
+- [x] o job repete os lotes com o mesmo instante até um lote incompleto e registra `Transaction proposals expired`
       com a soma só quando apagou algo
-- [ ] 10 confirmações simultâneas → um `201`, nove `404`, uma transação; confirmar × cancelar → um vence, o outro 404,
+- [x] 10 confirmações simultâneas → um `201`, nove `404`, uma transação; confirmar × cancelar → um vence, o outro 404,
       banco coerente; o teste falha sem o `@Lock` (conferido e revertido)
-- [ ] job ausente no perfil `test`; `fixedDelay` (não `fixedRate`) com comentário do porquê
-- [ ] `docs/openapi.yaml`, README, `docs/arquitetura.md`, regras, `CLAUDE.md` e `docs/tarefas.md` atualizados;
+- [x] job ausente no perfil `test`; `fixedDelay` (não `fixedRate`) com comentário do porquê
+- [x] `docs/openapi.yaml`, README, `docs/arquitetura.md`, regras, `CLAUDE.md` e `docs/tarefas.md` atualizados;
       checkbox da T13 marcado no último commit
 
 ## Para futuros agentes
@@ -277,7 +279,7 @@ job está ausente no perfil `test` nem que roda no contexto (Fase 3 / definiçã
 
 ## Fase 3: Concorrência e documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionProposalConcurrencyIT`: 10 confirmações simultâneas → um `201`, nove `404`, uma transação,
       proposta apagada; confirmar × cancelar simultâneos → um vence, o outro `404`, banco coerente com o vencedor.
@@ -290,8 +292,8 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `infrastructure/scheduling/` que faz o laço dos lotes, uma transação por lote); `error-handling.md` (404 com
       proposta expirada); `testing.md` (job desligado no perfil `test`; faxina testada pelo job e pelo adaptador);
       `CLAUDE.md` (`infrastructure/scheduling/` na estrutura e `<Substantivo>Job` na nomenclatura)
-- [ ] [verificação] `docs/tarefas.md`: nota da T13 (expiração e teste concorrente feitos); notas na T20 e na T22 (a
-      faxina registra só a quantidade; evento por proposta expirada exige apagar por ID e registrar cada uma)
+- [x] [verificação] `docs/tarefas.md`: notas na T20 e na T22 (a faxina registra só a quantidade; evento por proposta
+      expirada exige apagar por ID e registrar cada uma); checkbox da T13 marcado
 
 ### Plano de verificação
 
@@ -304,8 +306,42 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `TransactionProposalConcurrencyIT` (`RANDOM_PORT`, `RestClient`, `CountDownLatch`): 10 confirmações simultâneas →
+um `201`, nove `404`, uma transação, proposta apagada; confirmar × cancelar → um vence, o outro `404`, banco coerente
+com o vencedor. README, `docs/arquitetura.md` (proposta vencida → 404 e parágrafo da faxina, sem diagrama novo),
+regras (`architecture.md`, `error-handling.md`, `testing.md`), `CLAUDE.md` (`infrastructure/scheduling/`,
+`<Substantivo>Job`) e `docs/tarefas.md` (notas na T20 e na T22; checkbox da T13).
+
+Decisões: sem nota da T13 em `docs/tarefas.md` (as notas são recados para tarefas futuras) — decisão do usuário.
+Teste com 10 chamadas, como no plano: com 1.000 o teste mediria o pool do banco (10 conexões, timeout de 3 s) e o
+Tomcat, e não o `@Lock`.
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; o
+`TransactionProposalConcurrencyIT` passa e **falha sem o `@Lock(PESSIMISTIC_WRITE)`** em `findByIdAndUserId` (os dois
+testes; conferido e revertido, nada commitado); os `grep` do plano (`isPendingAt`, `expirada|expirou`, `scheduling/`,
+`faxina|expirad`) presentes. Conferido com um teste temporário, removido, que o job não existe no contexto do perfil
+`test` (0 beans).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A proposta de transação agora expira (FN-04) e a confirmação concorrente é provada sem duplicar (RES-07).
+
+- Domínio: `TransactionProposalTimeToLive`, `expiresAt` e `isPendingAt`; vencida a partir de `expiresAt`, inclusive.
+- Confirmar e cancelar recusam a proposta vencida com o mesmo 404 `transaction-proposal-not-found`, de `detail` novo
+  ("não existe, já foi decidida ou expirou"); a linha fica para a faxina. O comando de voz grava o vencimento e a
+  resposta traz `expiresAt`.
+- Faxina: `TransactionProposalExpirationJob` (`fixedDelay`, `@ConditionalOnBooleanProperty`, desligado no perfil
+  `test`) repete lotes com o mesmo instante, cada um numa transação (`DeleteExpiredTransactionProposalBatchUseCase`);
+  a consulta do lote usa `@Lock(PESSIMISTIC_WRITE)` com `SKIP LOCKED` e pula as linhas que uma decisão está usando.
+- Configuração `budgeting.transaction-proposals.*`: `time-to-live=5m`, `expiration-sweep-interval=1m`,
+  `expiration-batch-size=1000`, `expiration-sweep-enabled=true`.
+- Contrato e documentação atualizados (OpenAPI, README, arquitetura, regras, `CLAUDE.md`, `docs/tarefas.md`).
+
+Pontos de atenção:
+- Banco local com propostas antigas: `ddl-auto=update` não acrescenta `expires_at` `NOT NULL` a uma tabela com linhas;
+  rode `docker compose down -v` antes do `bootRun`.
+- O retorno de `deleteExpiredBatch` é `expired.size()` (linhas selecionadas e trancadas); `deleteAllInBatch` não devolve
+  contagem, e a trava garante que coincide com as apagadas.
+- O log `Transaction proposals expired` e o log de agendamento no `ApplicationReadyEvent` existem, mas não têm teste
+  (decisão do usuário).
+- Faxina por ID e evento por proposta expirada ficam para a T20 e a T22 (notas em `docs/tarefas.md`).

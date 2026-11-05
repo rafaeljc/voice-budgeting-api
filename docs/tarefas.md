@@ -27,7 +27,7 @@
 - [x] [T10 — Timeouts e retries](#t10)
 - [x] [T11 — Validação do áudio recebido](#t11)
 - [x] [T12 — Confirmação em duas etapas](#t12)
-- [ ] [T13 — Ciclo de vida da proposta](#t13)
+- [x] [T13 — Ciclo de vida da proposta](#t13)
 - [ ] [T14 — Respostas claras e proteções da IA](#t14)
 
 **Fase 6 — Resiliência e recuperação de falhas**
@@ -352,6 +352,8 @@ Registrar, em um banco NoSQL separado do transacional, os eventos do fluxo: auto
 
 **Nota (T12):** a proposta é apagada na decisão, então a decisão (confirmada, cancelada ou expirada) precisa ser registrada aqui como evento; o banco transacional não guarda o histórico.
 
+**Nota (T13):** a faxina das propostas vencidas só registra a quantidade apagada, sem evento por proposta. Para auditar cada expiração, a faxina precisa apagar por ID e registrar uma a uma.
+
 <a id="t21"></a>
 ### T21 — Garantia de entrega da auditoria
 
@@ -378,6 +380,8 @@ Expor métricas técnicas (latência por etapa, taxa de erros, estado dos circui
 - OBS-03 — Métricas de negócio
 
 **Nota (T12):** a proposta é apagada na decisão, então as taxas de confirmada, cancelada e expirada vêm do evento da decisão (T20) ou de contadores incrementados na decisão, e não de uma contagem por status.
+
+**Nota (T13):** a faxina registra só a quantidade de propostas expiradas (log `Transaction proposals expired`, com `count`). Uma métrica de expiradas por proposta exige apagar por ID e contar cada uma na faxina.
 
 <a id="t23"></a>
 ### T23 — Medição de consumo de IA
