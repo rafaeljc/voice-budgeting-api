@@ -28,7 +28,7 @@
 - [x] [T11 — Validação do áudio recebido](#t11)
 - [x] [T12 — Confirmação em duas etapas](#t12)
 - [x] [T13 — Ciclo de vida da proposta](#t13)
-- [ ] [T14 — Respostas claras e proteções da IA](#t14)
+- [x] [T14 — Respostas claras e proteções da IA](#t14)
 
 **Fase 6 — Resiliência e recuperação de falhas**
 - [ ] [T15 — Circuit breaker e bulkhead](#t15)

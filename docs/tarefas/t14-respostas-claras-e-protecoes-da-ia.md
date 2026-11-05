@@ -101,19 +101,19 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] proposta → `200` com `speech` e `transactionProposal`; a síntese recebe a frase fixa da proposta; uma chamada ao
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] proposta → `200` com `speech` e `transactionProposal`; a síntese recebe a frase fixa da proposta; uma chamada ao
       chat
-- [ ] consulta → `200` só com `speech`; a síntese recebe a frase com contagem e soma do banco; nada gravado
-- [ ] sem tool (fora do escopo ou injeção) → `200` só com `speech`; a síntese recebe a frase de recusa, nunca o texto
+- [x] consulta → `200` só com `speech`; a síntese recebe a frase com contagem e soma do banco; nada gravado
+- [x] sem tool (fora do escopo ou injeção) → `200` só com `speech`; a síntese recebe a frase de recusa, nunca o texto
       do modelo
-- [ ] duas chamadas de tool no mesmo comando → 422 `invalid-command`, nada gravado
-- [ ] transcrição enviada ao assistente entre `<transcricao>` e `</transcricao>`, sem `<` nem `>` vindos da fala
-- [ ] descrição da tool com mais de 100 caracteres → 422 `invalid-command`
-- [ ] nenhuma ocorrência de `list-transactions-by-category`, `ListTransactionsByCategoryUseCase`,
+- [x] duas chamadas de tool no mesmo comando → 422 `invalid-command`, nada gravado
+- [x] transcrição enviada ao assistente entre `<transcricao>` e `</transcricao>`, sem `<` nem `>` vindos da fala
+- [x] descrição da tool com mais de 100 caracteres → 422 `invalid-command`
+- [x] nenhuma ocorrência de `list-transactions-by-category`, `ListTransactionsByCategoryUseCase`,
       `findAllByUserIdAndCategory`, `MultipleTransactionProposalsException` nem `ProposeTransactionToolResult` em `src/`,
       `.claude/` e `docs/` (exceto plan files antigos)
-- [ ] ADR 0006, `docs/arquitetura.md`, `docs/openapi.yaml`, regras, `CLAUDE.md` e notas da T16, T23 e T25
+- [x] ADR 0006, `docs/arquitetura.md`, `docs/openapi.yaml`, regras, `CLAUDE.md` e notas da T16, T23 e T25
       atualizados; checkbox da T14 marcado no último commit
 
 ## Para futuros agentes
@@ -310,7 +310,7 @@ idempotência da proposta, e devem ser atualizadas lá.
 
 ## Fase 4: Documentação
 
-Status: Em andamento
+Status: Concluída
 
 - [x] [verificação] ADR `docs/adr/0006-resposta-falada-montada-pela-aplicacao.md` a partir do `template.md`
       (opções: modelo escreve; modelo guiado por frases no prompt; modelo extrai a intenção e a aplicação monta a
@@ -338,8 +338,35 @@ Status: Em andamento
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: ADR 0006 (resposta falada montada pela aplicação), revisado contra o repositório por um agente sem o contexto da
+sessão; `docs/arquitetura.md` com o texto e o diagrama de sequência do fluxo de voz (caminhos de consulta, registro e
+nenhuma tool); `docs/openapi.yaml` com as frases fixas na descrição do endpoint e `docs/exemplos/voz.http` com um
+exemplo da frase; regras (`ai-integration.md`, `architecture.md`, `security.md`, `error-handling.md`, `testing.md`);
+`CLAUDE.md` sem `ai/tool/result/`; notas da T14 na T16, T23 e T25 em `docs/tarefas.md`; checkbox da T14.
+
+Decisões: o README não muda (decisão do usuário, em Decisões); duas notas antigas de `docs/tarefas.md` que citavam
+símbolos removidos foram reescritas com texto neutro, para o `grep` do plano passar sem alterá-lo.
+
+Verificação: `ls docs/adr/0006-*.md` mostra o ADR; o `grep` dos símbolos removidos em `src/`, `docs/`, `.claude/`,
+`CLAUDE.md` e `README.md` não acha ocorrência (fora dos plan files); `grep "Nota (T14)" docs/tarefas.md` acha as notas
+da T16, T23 e T25; `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL` (resultado reaproveitado,
+sem código novo desde a fase 3; 275 testes, 0 falhas).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A resposta falada do comando de voz deixou de ser escrita pelo modelo. O modelo só extrai a intenção pelas tools
+(`propose-transaction` e `summarize-transactions-by-category`, ambas com `returnDirect`), o `InterpretationCollector`
+aceita uma única chamada de tool por comando (a segunda responde 422) e a aplicação monta a frase fixa em
+`SpokenAnswers`: registro, consulta com e sem gastos e "não entendido". A consulta passou a ser uma agregação no banco
+(contagem e soma por usuário e categoria), e a listagem por categoria foi removida. As proteções são a transcrição
+delimitada por `<transcricao>` e sem `<` nem `>`, o prompt do sistema restrito ao escopo, `parallel-tool-calls=false`,
+`max-completion-tokens=500` e a descrição de até 100 caracteres. Há uma única chamada ao chat por comando, e o pior
+caso de tempo do comando caiu de 128 s para 96 s.
+
+Decisões tomadas na execução: frase de "não entendido" `Não entendi, tente novamente.`; `max-completion-tokens=500`
+no lugar de 200; README sem mudança. O contrato HTTP do endpoint não mudou. Nenhuma chamada à OpenAI real foi feita:
+os exemplos do prompt e o teto de tokens não foram exercitados contra o modelo.
+
+Definição de pronto conferida: cada critério foi coberto pelo `VoiceCommandIT` (proposta, consulta, recusa sem tool,
+duas chamadas de tool, transcrição delimitada, descrição de 101 caracteres), pelo `grep` dos símbolos removidos e pelo
+`build` completo, com 275 testes e 0 falhas.
