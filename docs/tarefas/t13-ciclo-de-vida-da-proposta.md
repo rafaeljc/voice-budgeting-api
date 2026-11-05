@@ -95,6 +95,8 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
   bloqueio (decisão do usuário)
 - Log da faxina só com a quantidade, uma linha por execução com algo apagado — evento por proposta fica para T20/T22
   (decisão do usuário)
+- O log da faxina não tem teste — não carrega dado de negócio, e um erro nele só gera ruído; o `*Test` do job cobre o
+  laço dos lotes (decisão do usuário)
 - Job desligável por `expiration-sweep-enabled` (`@ConditionalOnBooleanProperty`), desligado no perfil `test` — a
   faxina não apaga propostas no meio de outro teste; com intervalo longo ela ainda rodaria na inicialização
   (decisão do usuário)
@@ -159,7 +161,7 @@ Contexto para uma sessão nova:
   TransactionProposalTimeToLive(Duration.ofMinutes(5));`. Se o spy de `record` falhar no Mockito, parar e perguntar.
 - `TransactionProposalProperties` precisa ser público (o job, em `scheduling/`, lê o tamanho do lote e o intervalo
   vem do `fixedDelayString`); no `TransactionProposalExpirationJobTest` ele também entra por `@Spy` com instância
-  real, e o log é conferido com `OutputCaptureExtension` + `LogEvents`.
+  real.
 - `@Modifying`/`deleteAllInBatch` e o `@Lock` exigem a transação do use case.
 - `ddl-auto=update` não acrescenta coluna `NOT NULL` a uma tabela com linhas: banco local com propostas antigas →
   `docker compose down -v` antes do `bootRun`. Nos testes o container é novo.
@@ -232,10 +234,9 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `JpaTransactionProposalRepositoryIT` (chamado dentro de uma transação, como no use case) → lote 2 com 5
       vencidas e 1 pendente: 2, 2, 1 e 0; a de `expiresAt` igual ao instante é apagada; a pendente fica; com uma
       vencida trancada por outra transação, a faxina a pula sem esperar e apaga as demais
-- [ ] [TDD] `DeleteExpiredTransactionProposalBatchUseCase` (`@Transactional`, delega à porta) e
+- [x] [TDD] `DeleteExpiredTransactionProposalBatchUseCase` (`@Transactional`, delega à porta) e
       `TransactionProposalExpirationJob`: `TransactionProposalExpirationJobTest` → repete enquanto o lote vem cheio e
-      para no incompleto; o mesmo instante (`Clock` lido uma vez) em todas as chamadas; log
-      `Transaction proposals expired` com `count` = soma; nenhum log quando nada foi apagado
+      para no incompleto; o mesmo instante (`Clock` lido uma vez) em todas as chamadas; sem teste do log
 - [ ] [verificação] Agendamento: `@Scheduled(fixedDelayString = ...)` com comentário do porquê de `fixedDelay`;
       `@ConditionalOnBooleanProperty` no job; `SchedulingConfiguration` com `@EnableScheduling`; chaves em
       `application.properties`; `expiration-sweep-enabled=false` em `application-test.properties`
