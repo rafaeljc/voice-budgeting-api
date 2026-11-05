@@ -40,7 +40,7 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
 - Contrato do endpoint de voz sem mudança: `200` com `speech` e `transactionProposal` só na proposta; erros como hoje.
 - `AiStub` com métodos neutros para ler o texto enviado à síntese, o texto enviado ao assistente e a quantidade de
   chamadas ao assistente; stub com uma única resposta de chat (sem cenário de duas chamadas).
-- Documentação: ADR 0006, README, `docs/arquitetura.md`, `docs/openapi.yaml` (frases na descrição do endpoint),
+- Documentação: ADR 0006, `docs/arquitetura.md`, `docs/openapi.yaml` (frases na descrição do endpoint),
   `docs/exemplos/voz.http` (se citar a resposta), regras (`ai-integration.md`, `architecture.md`, `security.md`,
   `error-handling.md`, `testing.md`), `CLAUDE.md`, comentário de pior caso de tempo no `application.properties` e
   notas na T16, T23 e T25 em `docs/tarefas.md`.
@@ -95,6 +95,8 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
 - O log `Assistant answered` troca `answerLength` por `interpretation` (`PROPOSAL`, `SUMMARY`, `NOT_UNDERSTOOD`) —
   metadado, sem conteúdo
 - Opções do chat são configuração: verificadas por `grep`, sem teste (`testing.md`)
+- README sem mudança: o fluxo de voz, as frases e as proteções já estão em `docs/arquitetura.md`, no ADR 0006 e no
+  contrato `docs/openapi.yaml`; repetir no README duplicaria o conteúdo (decisão do usuário, na execução)
 - Quatro fases; tipo `feat`; PR `feat: padroniza as respostas faladas e protege a ia`
 
 ## Definição de pronto
@@ -111,7 +113,7 @@ injection* (FN-07). O modelo deixa de escrever a resposta e de ver dados do usu�
 - [ ] nenhuma ocorrência de `list-transactions-by-category`, `ListTransactionsByCategoryUseCase`,
       `findAllByUserIdAndCategory`, `MultipleTransactionProposalsException` nem `ProposeTransactionToolResult` em `src/`,
       `.claude/` e `docs/` (exceto plan files antigos)
-- [ ] ADR 0006, README, `docs/arquitetura.md`, `docs/openapi.yaml`, regras, `CLAUDE.md` e notas da T16, T23 e T25
+- [ ] ADR 0006, `docs/arquitetura.md`, `docs/openapi.yaml`, regras, `CLAUDE.md` e notas da T16, T23 e T25
       atualizados; checkbox da T14 marcado no último commit
 
 ## Para futuros agentes
@@ -302,7 +304,7 @@ Verificação: `grep` das duas opções do chat em `application.properties` e de
 `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL` (inclui o `VoiceCommandIT`), rodado de
 novo com o valor final de `max-completion-tokens`.
 
-Para a sessão nova: a fase 4 é só documentação (ADR 0006, `arquitetura.md`, `openapi.yaml`, README, regras,
+Para a sessão nova: a fase 4 é só documentação (ADR 0006, `arquitetura.md`, `openapi.yaml`, regras,
 `CLAUDE.md` e notas em `tarefas.md`); as regras ainda citam `TransactionProposalCollector`, `ai/tool/result/` e a
 idempotência da proposta, e devem ser atualizadas lá.
 
@@ -317,8 +319,7 @@ Status: Em andamento
       com `returnDirect`, frase montada pela aplicação)
 - [x] [verificação] `docs/openapi.yaml`: frases na descrição do endpoint de voz; `docs/exemplos/voz.http` se citar a
       resposta
-- [ ] [verificação] README: fluxo de voz, frases fixas e proteções
-- [ ] [verificação] regras: `ai-integration.md` (tools com `returnDirect`, coletor estrito, frases em Java,
+- [x] [verificação] regras: `ai-integration.md` (tools com `returnDirect`, coletor estrito, frases em Java,
       delimitador, opções do chat, descrição de 100, stub com uma chamada), `architecture.md` e `security.md`
       (`summarizeByUserIdAndCategory`), `error-handling.md` (`MultipleToolCallsException`), `testing.md` (novos
       métodos do `AiStub`)

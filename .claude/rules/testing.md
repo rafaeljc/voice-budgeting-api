@@ -34,7 +34,9 @@ paths:
 - IA: o perfil `test` aponta a OpenAI para uma URL inválida e desliga o retry do SDK em cada etapa, então um `*IT` que
   aciona a IA sem stub falha na hora.
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
-  `givenAnswer`, `givenSpeech` e `givenFailure(AiStage, AiFailure)` (falha por etapa). O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
+  `givenToolCalls(AiToolCall...)`, `givenAnswer`, `givenSpeech` e `givenFailure(AiStage, AiFailure)` (falha por etapa).
+  O stub tem uma única resposta de chat por comando, e `speechText()`, `assistantCommand()` e `assistantCallCount()`
+  leem o que foi enviado à síntese e ao assistente. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em
