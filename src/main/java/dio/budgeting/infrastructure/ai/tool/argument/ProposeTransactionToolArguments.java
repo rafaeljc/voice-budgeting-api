@@ -2,7 +2,6 @@ package dio.budgeting.infrastructure.ai.tool.argument;
 
 import dio.budgeting.application.input.ProposeTransactionInput;
 import dio.budgeting.domain.Category;
-import dio.budgeting.domain.Transaction;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +11,12 @@ import java.math.BigDecimal;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 public record ProposeTransactionToolArguments(
-        @NotBlank @Size(max = Transaction.DESCRIPTION_MAX_LENGTH) @ToolParam(description = "Descrição do gasto")
+        @NotBlank
+        @Size(max = ProposeTransactionToolArguments.DESCRIPTION_MAX_LENGTH)
+        @ToolParam(
+                description =
+                        "Descrição curta do gasto, em minúsculas e com até 100 caracteres, sem o valor nem a categoria"
+                                + " (nomes próprios com maiúscula)")
         String description,
 
         @NotNull
@@ -24,6 +28,9 @@ public record ProposeTransactionToolArguments(
 
         @NotNull @ToolParam(description = "Categoria de uma transação")
         Category category) {
+    // Spoken aloud: 100 characters are about 5-6 s of speech, while the manual endpoint accepts up to 255
+    public static final int DESCRIPTION_MAX_LENGTH = 100;
+
     public ProposeTransactionInput toInput() {
         return new ProposeTransactionInput(description, amount, category);
     }

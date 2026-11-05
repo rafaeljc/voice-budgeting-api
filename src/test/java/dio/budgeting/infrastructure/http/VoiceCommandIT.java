@@ -620,7 +620,7 @@ class VoiceCommandIT {
     static Stream<String> invalidToolArguments() {
         return Stream.of(
                 toolArguments("\"\"", "80.00", "\"GROCERIES\""),
-                toolArguments("\"" + "a".repeat(256) + "\"", "80.00", "\"GROCERIES\""),
+                toolArguments("\"" + "a".repeat(101) + "\"", "80.00", "\"GROCERIES\""),
                 toolArguments("\"Mercado\"", "80.005", "\"GROCERIES\""),
                 toolArguments("\"Mercado\"", "0", "\"GROCERIES\""),
                 """
