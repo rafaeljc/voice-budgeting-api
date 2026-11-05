@@ -235,7 +235,7 @@ Fazer com que comandos de registro gerem uma proposta persistida, que o cliente 
 - DOC-04 — Diagramas (sequência da decisão sobre a proposta, no lugar dos estados: a proposta não tem status)
 - DOC-06 — Exemplos de requisição e áudio (fluxo de voz)
 
-**Nota (T06):** a tool de escrita (`propose-transaction`) devolve ao modelo um `ProposeTransactionToolResult` com só o necessário para a resposta falada, sem o `TransactionOutput`.
+**Nota (T06):** a tool de escrita (`propose-transaction`) devolve ao modelo só o necessário para a resposta falada, sem o `TransactionOutput`.
 
 **Nota (T07):** o `docs/openapi.yaml`, a seção "API" do README e `docs/exemplos/voz.http` foram atualizados para o fluxo de proposta.
 
@@ -265,7 +265,7 @@ Padronizar as respostas do assistente (frases fixas, formato único de valores e
 
 **Nota (T06):** ao trocar a tool de consulta, avaliar o que ela devolve ao modelo (um `ToolResponse`), como na T12.
 
-**Nota (T07):** trocar a tool `list-transactions-by-category` por uma agregação (`COUNT`/`SUM`) feita no banco, em outro use case: é a forma melhor de responder à consulta por voz que já existe, não uma consulta nova. A listagem paginada da T07 não serve à voz, e a tool atual lista tudo de uma categoria sem limite.
+**Nota (T07):** trocar a tool de consulta por categoria por uma agregação (`COUNT`/`SUM`) feita no banco, em outro use case: é a forma melhor de responder à consulta por voz que já existe, não uma consulta nova. A listagem paginada da T07 não serve à voz, e a tool atual lista tudo de uma categoria sem limite.
 
 ## Fase 6 — Resiliência e recuperação de falhas
 
@@ -301,6 +301,8 @@ Definir a resposta para cada cenário de falha: texto quando a geração de voz 
 **Nota (T12):** ao responder em texto quando a voz falhar, manter a ordem voz → gravação da proposta: a proposta só é gravada depois de a resposta (em texto, nesse caso) estar pronta.
 
 **Nota (T06):** o 422 `invalid-command` (argumentos inválidos da tool) não gera voz hoje e responde só com Problem Details; servir uma mensagem falada como áudio estático.
+
+**Nota (T14):** o texto da resposta falada já é montado pela aplicação (`SpokenAnswers`), não pelo modelo.
 
 <a id="t17"></a>
 ### T17 — Idempotência no envio de áudio
@@ -393,6 +395,8 @@ Registrar o consumo de IA por requisição e por usuário (tokens, segundos de �
 **Itens do escopo:**
 - CUS-01 — Medição de consumo por usuário
 
+**Nota (T14):** há uma única chamada ao chat por comando (antes eram duas, quando havia tool), e `max-completion-tokens` limita a saída do chat a 500 tokens.
+
 ## Fase 9 — Desempenho
 
 <a id="t24"></a>
@@ -415,6 +419,8 @@ Reaproveitar o áudio gerado para um mesmo texto de resposta, usando como chave 
 **Itens do escopo:**
 - CUS-03 — Cache da síntese de voz
 - DOC-03 — ADRs (estratégia de cache no fluxo de voz)
+
+**Nota (T14):** as frases fixas de `SpokenAnswers` são a chave do cache; a recusa ("não entendido") e a consulta sem gastos tendem a se repetir.
 
 ## Fase 10 — Entrega
 

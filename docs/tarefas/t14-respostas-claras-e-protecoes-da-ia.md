@@ -324,7 +324,7 @@ Status: Em andamento
       (`summarizeByUserIdAndCategory`), `error-handling.md` (`MultipleToolCallsException`), `testing.md` (novos
       métodos do `AiStub`)
 - [x] [verificação] `CLAUDE.md`: estrutura sem `ai/tool/result/`
-- [ ] [verificação] `docs/tarefas.md`: notas na T16 (o texto da resposta já é montado pela aplicação), T23 (uma
+- [x] [verificação] `docs/tarefas.md`: notas na T16 (o texto da resposta já é montado pela aplicação), T23 (uma
       chamada ao chat por comando, teto de tokens) e T25 (as frases fixas são a chave do cache; recusa e consulta sem
       gastos repetem muito)
 - [ ] [verificação] checkbox da T14 em `docs/tarefas.md` (último commit)
