@@ -218,7 +218,7 @@ Status: Em andamento
       - duas chamadas de tool (iguais e diferentes) → 422, nada gravado
       - falha do repositório na tool de consulta (`summarizeByUserIdAndCategory`) → 500 genérico
       - logs do fluxo com `interpretation`
-- [ ] [verificação] `system-message.st`: tirar as instruções de fala ("diga em uma frase…", "nunca diga que
+- [x] [verificação] `system-message.st`: tirar as instruções de fala ("diga em uma frase…", "nunca diga que
       registrou…"), que não se aplicam mais; reescrita completa na fase 3
 - [ ] [verificação] comentário de pior caso de tempo no `application.properties` (chat com uma requisição, 96 s)
 
