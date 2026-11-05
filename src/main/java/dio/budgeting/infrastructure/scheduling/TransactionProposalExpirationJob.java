@@ -5,9 +5,14 @@ import dio.budgeting.infrastructure.config.TransactionProposalProperties;
 import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnBooleanProperty(name = "budgeting.transaction-proposals.expiration-sweep-enabled", matchIfMissing = true)
 public class TransactionProposalExpirationJob {
     private static final Logger log = LoggerFactory.getLogger(TransactionProposalExpirationJob.class);
 
@@ -24,6 +29,18 @@ public class TransactionProposalExpirationJob {
         this.clock = clock;
     }
 
+    // Only after the startup succeeds, and only when the sweep is enabled: its absence in the logs is a clue
+    @EventListener(ApplicationReadyEvent.class)
+    void logSweepSchedule() {
+        log.atInfo()
+                .addKeyValue("interval", properties.expirationSweepInterval())
+                .addKeyValue("batchSize", properties.expirationBatchSize())
+                .log("Transaction proposal expiration sweep scheduled");
+    }
+
+    // Fixed delay, not fixed rate: the interval counts from the end of the previous run, so a slow run never overlaps
+    // the next one on this instance
+    @Scheduled(fixedDelayString = "${budgeting.transaction-proposals.expiration-sweep-interval}")
     public void sweep() {
         // One instant for the whole run, so the run ends even if more proposals expire meanwhile
         var expiredAt = clock.instant();

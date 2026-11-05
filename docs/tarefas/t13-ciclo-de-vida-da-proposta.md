@@ -227,7 +227,7 @@ desliga a faxina (Fase 2).
 
 ## Fase 2: Faxina em lotes
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] Porta `deleteExpiredBatch` e adaptador (`JpaRepository`, `findByExpiresAtLessThanEqualOrderByExpiresAt`
       com `Limit`, `@Lock(PESSIMISTIC_WRITE)` + `SKIP LOCKED`, `deleteAllInBatch`):
@@ -237,7 +237,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `DeleteExpiredTransactionProposalBatchUseCase` (`@Transactional`, delega à porta) e
       `TransactionProposalExpirationJob`: `TransactionProposalExpirationJobTest` → repete enquanto o lote vem cheio e
       para no incompleto; o mesmo instante (`Clock` lido uma vez) em todas as chamadas; sem teste do log
-- [ ] [verificação] Agendamento: `@Scheduled(fixedDelayString = ...)` com comentário do porquê de `fixedDelay`;
+- [x] [verificação] Agendamento: `@Scheduled(fixedDelayString = ...)` com comentário do porquê de `fixedDelay`;
       `@ConditionalOnBooleanProperty` no job; `SchedulingConfiguration` com `@EnableScheduling`; chaves em
       `application.properties`; `expiration-sweep-enabled=false` em `application-test.properties`
 
@@ -252,7 +252,28 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: porta `deleteExpiredBatch` e adaptador (`TransactionProposalEntityRepository` agora é `JpaRepository`, consulta
+derivada com `Limit` + `deleteAllInBatch`); `DeleteExpiredTransactionProposalBatchUseCase`;
+`TransactionProposalExpirationJob` (laço dos lotes com o mesmo instante, log `Transaction proposals expired` com a
+soma, `@Scheduled` com `fixedDelay`, `@ConditionalOnBooleanProperty`); `SchedulingConfiguration`; faxina desligada no
+perfil `test`.
+
+Decisões (todas do usuário): a consulta do lote usa `@Lock(PESSIMISTIC_WRITE)` com `SKIP LOCKED`
+(`jakarta.persistence.lock.timeout=-2`), substituindo o "sem `FOR UPDATE`" do plano, porque confirmar e cancelar
+trancam a linha mesmo vencida; o teste da linha trancada falha sem a dica (conferido e restaurado). O log da faxina
+não tem teste (o `*Test` do job cobre o laço). O job registra `Transaction proposal expiration sweep scheduled` (com
+`interval` e `batchSize`) no `ApplicationReadyEvent`, como sinal de vida para troubleshooting; o método é
+`logSweepSchedule`.
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL` (inclui o
+`TransactionProposalExpirationJobTest` e o `JpaTransactionProposalRepositoryIT`); `grep -rn "fixedRate" src/main` →
+nenhuma linha; `expiration-sweep-enabled=false` presente em `application-test.properties`.
+
+Para uma sessão nova: o retorno de `deleteExpiredBatch` é `expired.size()` (linhas selecionadas e trancadas), pois o
+`deleteAllInBatch` não devolve contagem; a trava garante que coincide com as apagadas. Nenhum teste prova ainda que o
+job está ausente no perfil `test` nem que roda no contexto (Fase 3 / definição de pronto). Faltam a
+`TransactionProposalConcurrencyIT` e a documentação (README, `docs/arquitetura.md`, regras, `CLAUDE.md`,
+`docs/tarefas.md`).
 
 ## Fase 3: Concorrência e documentação
 
