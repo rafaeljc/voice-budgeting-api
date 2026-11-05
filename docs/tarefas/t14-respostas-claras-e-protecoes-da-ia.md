@@ -159,12 +159,12 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Consulta agregada no banco
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `TransactionRepository.summarizeByUserIdAndCategory(UserId, Category)` → `TransactionSummary`, com
       implementação em `JpaTransactionRepository` e `TransactionEntityRepository`; `JpaTransactionRepositoryIT`:
       conta e soma só o usuário e a categoria pedidos; sem gastos → 0 e `0.00`
-- [ ] [TDD] `SummarizeTransactionsByCategoryUseCase` (`@Transactional(readOnly = true)`, log `Transactions summarized`
+- [x] [TDD] `SummarizeTransactionsByCategoryUseCase` (`@Transactional(readOnly = true)`, log `Transactions summarized`
       com `resultCount`) devolvendo `TransactionSummaryOutput`; `SummarizeTransactionsByCategoryUseCaseTest`
 
 ### Plano de verificação
@@ -175,7 +175,20 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `TransactionSummary(long count, Money total)` no domain; porta
+`TransactionRepository.summarizeByUserIdAndCategory`, com consulta JPQL (`count`/`sum` por usuário e categoria) em
+`TransactionEntityRepository` e adaptador em `JpaTransactionRepository`; `SummarizeTransactionsByCategoryUseCase`
+(`@Transactional(readOnly = true)`, `execute(UserId, Category)`, sem Input por ter só dois parâmetros tipados) e
+`TransactionSummaryOutput(Category, long, Money)`.
+
+Decisões: a consulta devolve o record público `TransactionTotals(long, BigDecimal)` (package-private falha no proxy
+do Spring Data com `IllegalAccessError`); o adaptador troca soma nula por zero e passa por `Money.of`. A porta
+`findAllByUserIdAndCategory` e o `ListTransactionsByCategoryUseCase` continuam até a fase 2.
+
+Verificação: `SummarizeTransactionsByCategoryUseCaseTest`, `JpaTransactionRepositoryIT` e
+`env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passam (`BUILD SUCCESSFUL`).
+
+Para a sessão nova: a fase 2 troca a tool de consulta por esse use case e remove a listagem por categoria.
 
 ## Fase 2: Interpretação e frases fixas
 
