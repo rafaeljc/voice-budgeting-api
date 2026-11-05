@@ -315,7 +315,7 @@ Status: Em andamento
       frase — escolhida)
 - [x] [verificação] `docs/arquitetura.md`: texto e diagrama de sequência do comando de voz (uma chamada ao chat, tool
       com `returnDirect`, frase montada pela aplicação)
-- [ ] [verificação] `docs/openapi.yaml`: frases na descrição do endpoint de voz; `docs/exemplos/voz.http` se citar a
+- [x] [verificação] `docs/openapi.yaml`: frases na descrição do endpoint de voz; `docs/exemplos/voz.http` se citar a
       resposta
 - [ ] [verificação] README: fluxo de voz, frases fixas e proteções
 - [ ] [verificação] regras: `ai-integration.md` (tools com `returnDirect`, coletor estrito, frases em Java,

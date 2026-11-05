@@ -279,9 +279,16 @@ paths:
       operationId: sendVoiceCommand
       summary: Envia um comando de voz
       description: |
-        Transcreve o áudio, interpreta o comando e responde falado. Consultas respondem direto. Um comando de
-        registro só gera uma **proposta** de transação, devolvida junto da fala; nenhuma transação é criada até o
-        usuário confirmá-la em `POST /transaction-proposals/{id}/confirm`. Um comando propõe no máximo uma transação.
+        Transcreve o áudio, interpreta o comando e responde falado, com uma frase fixa montada pela aplicação:
+
+        - registro: `Um gasto de R$ 80,00 com {descrição}, na categoria {categoria}. Você confirma?`
+        - consulta com gastos: `Você tem 3 gastos na categoria {categoria}, somando R$ 240,00.`
+        - consulta sem gastos: `Você não tem gastos na categoria {categoria}.`
+        - comando não entendido: `Não entendi, tente novamente.`
+
+        Consultas respondem direto. Um comando de registro só gera uma **proposta** de transação, devolvida junto da
+        fala; nenhuma transação é criada até o usuário confirmá-la em `POST /transaction-proposals/{id}/confirm`. Um
+        comando propõe no máximo uma transação.
       requestBody:
         required: true
         content:
@@ -298,7 +305,7 @@ paths:
         '200':
           description: |
             Resposta falada ao comando. `transactionProposal` só aparece quando o comando gerou uma proposta;
-            uma consulta, ou um conteúdo fora do escopo, devolve só `speech`.
+            uma consulta de gastos, ou um comando não entendido, devolve só `speech`.
           content:
             application/json:
               schema:
@@ -380,8 +387,8 @@ paths:
         '422':
           description: |
             O áudio foi entendido, mas o comando não pôde ser processado com os dados interpretados (valor não
-            positivo, descrição vazia ou longa, categoria inexistente) ou com mais de uma transação diferente no
-            mesmo comando. Nenhuma proposta é gravada. Envie um novo comando de voz.
+            positivo, descrição vazia ou longa, categoria inexistente) ou com mais de um pedido
+            interpretado no mesmo comando. Nenhuma proposta é gravada. Envie um novo comando de voz.
           content:
             application/problem+json:
               schema:
