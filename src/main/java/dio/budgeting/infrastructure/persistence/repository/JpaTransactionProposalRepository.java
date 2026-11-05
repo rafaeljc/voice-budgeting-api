@@ -5,7 +5,9 @@ import dio.budgeting.domain.TransactionProposalId;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.persistence.entity.TransactionProposalEntity;
+import java.time.Instant;
 import java.util.Optional;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -33,5 +35,13 @@ public class JpaTransactionProposalRepository implements TransactionProposalRepo
     @Override
     public void delete(TransactionProposal proposal) {
         proposalEntityRepository.deleteById(proposal.getId().uuid());
+    }
+
+    @Override
+    public int deleteExpiredBatch(Instant expiredAt, int batchSize) {
+        var expired =
+                proposalEntityRepository.findByExpiresAtLessThanEqualOrderByExpiresAt(expiredAt, Limit.of(batchSize));
+        proposalEntityRepository.deleteAllInBatch(expired);
+        return expired.size();
     }
 }

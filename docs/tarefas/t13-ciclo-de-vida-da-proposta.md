@@ -36,8 +36,9 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
   - porta `TransactionProposalRepository.deleteExpiredBatch(Instant expiredAt, int batchSize)` → `int` (quantidade
     apagada)
   - adaptador: `TransactionProposalEntityRepository` passa a estender `JpaRepository`;
-    `findByExpiresAtLessThanEqualOrderByExpiresAt(Instant expiredAt, Limit limit)` + `deleteAllInBatch(expired)`,
-    devolve `expired.size()`; sem `FOR UPDATE` (comentário do porquê no adaptador)
+    `findByExpiresAtLessThanEqualOrderByExpiresAt(Instant expiredAt, Limit limit)` com `@Lock(PESSIMISTIC_WRITE)` e
+    `SKIP LOCKED` + `deleteAllInBatch(expired)`, devolve `expired.size()`; a faxina pula as linhas trancadas por
+    outra requisição (comentário do porquê no adaptador)
   - `application/DeleteExpiredTransactionProposalBatchUseCase` (`@Transactional`), `int execute(Instant expiredAt,
     int batchSize)`: apaga um lote
   - `infrastructure/scheduling/TransactionProposalExpirationJob`: `@Scheduled(fixedDelayString =
@@ -87,10 +88,11 @@ confirmar a mesma proposta mais de uma vez não cria transações duplicadas (RE
   `TransactionTemplate` na `application` e sem mudar as regras (decisão do usuário)
 - Nome `DeleteExpiredTransactionProposalBatchUseCase` e porta `deleteExpiredBatch` — diz que apaga um lote; evita o
   `InBatch` do Spring Data, que significa "tudo numa instrução" (decisão do usuário)
-- Lote por consulta derivada do Spring Data com `Limit` + `deleteAllInBatch`, sem SQL nativo nem `FOR UPDATE` —
-  forma nativa do Spring; nenhuma proposta vencida é alterada por outro caminho entre o `SELECT` e o `DELETE`
-  (confirmar e cancelar a recusam, ela nunca volta a ficar pendente e a faxina não se sobrepõe na instância)
-  (decisão do usuário)
+- Lote por consulta derivada do Spring Data com `Limit` + `deleteAllInBatch`, sem SQL nativo — forma nativa do
+  Spring. A consulta usa `@Lock(PESSIMISTIC_WRITE)` com `SKIP LOCKED`: confirmar e cancelar trancam a linha ao
+  buscá-la, mesmo vencida, e a faxina não espera por elas; a linha pulada fica para a próxima execução, e um lote
+  que volta incompleto por isso só encerra a execução atual. Substitui a decisão de não travar, que ignorava esse
+  bloqueio (decisão do usuário)
 - Log da faxina só com a quantidade, uma linha por execução com algo apagado — evento por proposta fica para T20/T22
   (decisão do usuário)
 - Job desligável por `expiration-sweep-enabled` (`@ConditionalOnBooleanProperty`), desligado no perfil `test` — a
@@ -223,12 +225,13 @@ desliga a faxina (Fase 2).
 
 ## Fase 2: Faxina em lotes
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] Porta `deleteExpiredBatch` e adaptador (`JpaRepository`, `findByExpiresAtLessThanEqualOrderByExpiresAt`
-      com `Limit`, `deleteAllInBatch`): `JpaTransactionProposalRepositoryIT` (chamado dentro de uma transação, como
-      no use case) → lote 2 com 5 vencidas e 1 pendente: 2, 2, 1 e 0; a de `expiresAt` igual ao instante é apagada;
-      a pendente fica
+- [x] [TDD] Porta `deleteExpiredBatch` e adaptador (`JpaRepository`, `findByExpiresAtLessThanEqualOrderByExpiresAt`
+      com `Limit`, `@Lock(PESSIMISTIC_WRITE)` + `SKIP LOCKED`, `deleteAllInBatch`):
+      `JpaTransactionProposalRepositoryIT` (chamado dentro de uma transação, como no use case) → lote 2 com 5
+      vencidas e 1 pendente: 2, 2, 1 e 0; a de `expiresAt` igual ao instante é apagada; a pendente fica; com uma
+      vencida trancada por outra transação, a faxina a pula sem esperar e apaga as demais
 - [ ] [TDD] `DeleteExpiredTransactionProposalBatchUseCase` (`@Transactional`, delega à porta) e
       `TransactionProposalExpirationJob`: `TransactionProposalExpirationJobTest` → repete enquanto o lote vem cheio e
       para no incompleto; o mesmo instante (`Clock` lido uma vez) em todas as chamadas; log
