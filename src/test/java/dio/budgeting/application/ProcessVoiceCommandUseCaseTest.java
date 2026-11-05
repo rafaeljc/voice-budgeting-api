@@ -14,6 +14,7 @@ import dio.budgeting.application.input.AudioFormat;
 import dio.budgeting.application.input.ProcessVoiceCommandInput;
 import dio.budgeting.application.input.ProposeTransactionInput;
 import dio.budgeting.application.output.AssistantOutput;
+import dio.budgeting.application.output.TransactionSummaryOutput;
 import dio.budgeting.domain.Category;
 import dio.budgeting.domain.Money;
 import dio.budgeting.domain.TransactionProposal;
@@ -24,7 +25,6 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,10 @@ class ProcessVoiceCommandUseCaseTest {
     private static final UserId USER_ID = new UserId(UUID.randomUUID());
     private static final Instant NOW = Instant.parse("2026-03-01T12:30:45.123Z");
     private static final String COMMAND = "gastei 80 reais no mercado";
-    private static final String ANSWER = "Entendi um gasto de 80 reais em mercado. Confirma?";
+    private static final String PROPOSAL_ANSWER =
+            "Um gasto de R$\u00a080,00 com Mercado, na categoria mercado. Você confirma?";
+    private static final String SUMMARY_ANSWER = "Você tem 3 gastos na categoria mercado, somando R$\u00a0240,00.";
+    private static final String NOT_UNDERSTOOD_ANSWER = "Não entendi, tente novamente.";
 
     @Mock
     private SpeechToTextGateway speechToText;
@@ -63,14 +66,14 @@ class ProcessVoiceCommandUseCaseTest {
     private ProcessVoiceCommandUseCase useCase;
 
     @Test
-    void should_chainStagesAndReturnSpeechWithoutProposal_when_assistantProposesNothing() {
+    void should_speakRefusalAndSaveNothing_when_assistantDoesNotUnderstand() {
         // given
         var recording = new byte[] {9, 8, 7};
         var speech = new byte[] {1, 2, 3, 4};
         var input = new ProcessVoiceCommandInput(recording, AudioFormat.M4A);
         when(speechToText.transcribe(any(Audio.class))).thenReturn(COMMAND);
-        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput(ANSWER, Optional.empty()));
-        when(textToSpeech.synthesize(ANSWER)).thenReturn(speech);
+        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput.NotUnderstood());
+        when(textToSpeech.synthesize(NOT_UNDERSTOOD_ANSWER)).thenReturn(speech);
 
         // when
         var output = useCase.execute(USER_ID, input);
@@ -91,8 +94,8 @@ class ProcessVoiceCommandUseCaseTest {
         var speech = new byte[] {1, 2, 3, 4};
         var proposal = new ProposeTransactionInput("Mercado", new BigDecimal("80"), Category.GROCERIES);
         when(speechToText.transcribe(any(Audio.class))).thenReturn(COMMAND);
-        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput(ANSWER, Optional.of(proposal)));
-        when(textToSpeech.synthesize(ANSWER)).thenReturn(speech);
+        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput.Proposal(proposal));
+        when(textToSpeech.synthesize(PROPOSAL_ANSWER)).thenReturn(speech);
         when(proposalRepository.save(any(TransactionProposal.class))).then(returnsFirstArg());
         when(clock.instant()).thenReturn(NOW);
 
@@ -102,7 +105,7 @@ class ProcessVoiceCommandUseCaseTest {
         // then
         var saved = ArgumentCaptor.forClass(TransactionProposal.class);
         var order = inOrder(textToSpeech, proposalRepository);
-        order.verify(textToSpeech).synthesize(ANSWER);
+        order.verify(textToSpeech).synthesize(PROPOSAL_ANSWER);
         order.verify(proposalRepository).save(saved.capture());
         assertThat(saved.getValue().getUserId()).isEqualTo(USER_ID);
         assertThat(saved.getValue().getDescription()).isEqualTo("Mercado");
@@ -122,12 +125,30 @@ class ProcessVoiceCommandUseCaseTest {
     }
 
     @Test
+    void should_speakSummaryAndSaveNothing_when_assistantSummarizesCategory() {
+        // given
+        var speech = new byte[] {1, 2, 3, 4};
+        var summary = new TransactionSummaryOutput(Category.GROCERIES, 3, new Money(new BigDecimal("240.00")));
+        when(speechToText.transcribe(any(Audio.class))).thenReturn(COMMAND);
+        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput.Summary(summary));
+        when(textToSpeech.synthesize(SUMMARY_ANSWER)).thenReturn(speech);
+
+        // when
+        var output = useCase.execute(USER_ID, new ProcessVoiceCommandInput(new byte[] {9}, AudioFormat.M4A));
+
+        // then
+        assertThat(output.speech()).isSameAs(speech);
+        assertThat(output.proposal()).isEmpty();
+        verifyNoInteractions(proposalRepository);
+    }
+
+    @Test
     void should_saveNothing_when_speechSynthesisFails() {
         // given
         var proposal = new ProposeTransactionInput("Mercado", new BigDecimal("80"), Category.GROCERIES);
         when(speechToText.transcribe(any(Audio.class))).thenReturn(COMMAND);
-        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput(ANSWER, Optional.of(proposal)));
-        when(textToSpeech.synthesize(ANSWER)).thenThrow(new AiProviderUnavailableException(null, null));
+        when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput.Proposal(proposal));
+        when(textToSpeech.synthesize(PROPOSAL_ANSWER)).thenThrow(new AiProviderUnavailableException(null, null));
 
         // when / then
         assertThatThrownBy(

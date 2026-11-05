@@ -20,12 +20,15 @@ public class SpringAiAssistantGateway implements AssistantGateway {
     @Override
     public AssistantOutput interpret(UserId userId, String command) {
         var collector = new TransactionProposalCollector();
-        var text = chatClient
+        chatClient
                 .prompt()
                 .user(command)
                 .toolContext(Map.of(TransactionTools.USER_ID, userId, TransactionTools.PROPOSAL_COLLECTOR, collector))
                 .call()
                 .content();
-        return new AssistantOutput(text, collector.proposal());
+        return collector
+                .proposal()
+                .<AssistantOutput>map(AssistantOutput.Proposal::new)
+                .orElseGet(AssistantOutput.NotUnderstood::new);
     }
 }

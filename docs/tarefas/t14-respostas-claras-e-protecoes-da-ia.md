@@ -197,7 +197,7 @@ Status: Em andamento
 
 - [x] [TDD] `SpokenAnswers` em `application/`: frase da proposta, da consulta (0, 1 e N gastos), da recusa; valor
       "R$ 1.234,56"; nome falado de cada `Category`; `SpokenAnswersTest`
-- [ ] [TDD] `AssistantOutput` vira `sealed interface` (`Proposal`, `Summary`, `NotUnderstood`);
+- [x] [TDD] `AssistantOutput` vira `sealed interface` (`Proposal`, `Summary`, `NotUnderstood`);
       `ProcessVoiceCommandUseCase` monta a frase com `SpokenAnswers`, sintetiza e grava a proposta por último; log
       `Assistant answered` com `interpretation`; `ProcessVoiceCommandUseCaseTest` (síntese recebe a frase exata em cada
       caso; só a proposta é gravada)
