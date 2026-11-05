@@ -255,9 +255,9 @@ adiciona o `user-message.st`.
 
 ## Fase 3: Proteções da IA
 
-Status: Não iniciada
+Status: Em andamento
 
-- [ ] [TDD] `prompts/user-message.st` com a transcrição entre `<transcricao>` e `</transcricao>`; `PromptTemplate`
+- [x] [TDD] `prompts/user-message.st` com a transcrição entre `<transcricao>` e `</transcricao>`; `PromptTemplate`
       como bean do `AssistantConfiguration`; `SpringAiAssistantGateway` monta a mensagem num método privado, depois
       de remover `<` e `>`; `AiStub.assistantCommand()`; `VoiceCommandIT`: transcrição com `</transcricao>` e `<b>`
       chega ao assistente delimitada e sem `<`/`>`
