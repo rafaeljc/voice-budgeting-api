@@ -30,11 +30,19 @@ flowchart TB
 
 ## Fluxo de voz
 
-O cliente envia o áudio de um comando. A aplicação o transcreve e pede ao provedor de IA que interprete o texto. Quando
-o modelo pede uma tool, ela é executada: uma consulta devolve o resultado ao modelo; um registro **não grava**, só anota
-a proposta do modelo, e o modelo recebe apenas a confirmação de que ela foi anotada. A resposta em texto é sintetizada
-em voz e, só depois de a voz estar pronta, a proposta é gravada. O cliente recebe a fala e a proposta (`id`,
-descrição, valor, categoria e `expiresAt`). Uma consulta, ou um conteúdo fora do escopo, recebe só a fala.
+O cliente envia o áudio de um comando. A aplicação o transcreve e pede ao provedor de IA que interprete o texto, que
+chega ao modelo entre as marcas `<transcricao>` e `</transcricao>`, sem `<` nem `>` vindos da fala. O modelo só extrai a
+intenção: ele escolhe uma tool (registrar um gasto ou consultar os gastos de uma categoria) e os argumentos, e nunca
+escreve a resposta. A tool anota a interpretação e `returnDirect` encerra a chamada, então há uma única chamada ao chat
+por comando e o resultado da tool nunca volta ao modelo. Um registro **não grava**, só anota a proposta; a consulta de
+gastos por categoria calcula a contagem e a soma no banco e as anota. Quando o modelo não chama nenhuma tool (por
+exemplo, um comando fora do escopo ou uma injeção que não resulta em tool), a interpretação é "não entendido" e o texto
+que ele devolveu é descartado; uma segunda chamada de tool no mesmo comando é recusada (422).
+
+A aplicação monta a frase falada a partir da interpretação (`SpokenAnswers`), sempre a mesma para a mesma entrada, e a
+sintetiza em voz. Só depois de a voz estar pronta a proposta é gravada. O cliente recebe a fala e, no registro, a
+proposta (`id`, descrição, valor, categoria e `expiresAt`). A consulta de gastos, ou um comando não entendido, recebe só
+a fala.
 
 A proposta é gravada por último de propósito: nada é registrado antes de a resposta que o anuncia estar pronta, e uma
 falha na síntese de voz não deixa uma proposta órfã. A chamada à IA nunca fica dentro de uma transação de banco.
@@ -48,15 +56,24 @@ sequenceDiagram
     Cliente->>App: áudio
     App->>IA: transcrever áudio
     IA-->>App: texto
-    App->>IA: interpretar texto
-    IA-->>App: pede uma tool
-    App->>App: executa a tool (anota a proposta, não grava)
-    App->>IA: resultado da tool
-    IA-->>App: resposta em texto
-    App->>IA: sintetizar resposta
+    App->>IA: interpretar texto (uma chamada ao chat)
+    alt consultar gastos por categoria
+        IA-->>App: pede a tool de consulta
+        App->>DB: contagem e soma da categoria (só leitura)
+        DB-->>App: contagem e soma
+    else registrar um gasto
+        IA-->>App: pede a tool de registro
+        App->>App: anota a proposta (não grava)
+    else nenhuma tool
+        IA-->>App: texto do modelo (descartado)
+    end
+    App->>App: monta a frase falada
+    App->>IA: sintetizar a frase
     IA-->>App: áudio
-    App->>DB: grava a proposta
-    App-->>Cliente: fala e proposta
+    opt só no registro
+        App->>DB: grava a proposta
+    end
+    App-->>Cliente: fala e, no registro, a proposta
 ```
 
 ## Decisão sobre a proposta

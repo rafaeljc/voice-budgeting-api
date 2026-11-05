@@ -27,7 +27,7 @@ Detalhes e uso em `docs/autenticacao.md`. Rate limiting fica para a T19.
 ## Isolamento
 
 - Todo dado pertence a um usuário (`userId` na entidade); leituras e escritas filtram pelo usuário autenticado.
-- O usuário é parâmetro obrigatório da porta (`findByIdAndUserId`, `findAllByUserId`, `findAllByUserIdAndCategory`)
+- O usuário é parâmetro obrigatório da porta (`findByIdAndUserId`, `findAllByUserId`, `summarizeByUserIdAndCategory`)
   e primeiro parâmetro do `execute` dos use cases: o compilador impede esquecer o isolamento. Ele não faz parte do
   `Input` nem do `TransactionFilter`.
 - Recurso de outro usuário responde 404, com o mesmo corpo do inexistente.

@@ -32,19 +32,28 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - As tools ficam em `infrastructure/ai/tool/` (adaptador de entrada); os argumentos são um `record` em
   `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
   adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave
-  do JSON enviada pelo modelo. O que a tool devolve ao modelo é um `record` em `ai/tool/result/`
-  (`<Verbo><Substantivo>ToolResult`), com só o necessário para a resposta falada.
+  do JSON enviada pelo modelo. A descrição da proposta tem até 100 caracteres (`DESCRIPTION_MAX_LENGTH`: ~5-6 s de
+  fala); o endpoint manual aceita 255.
 - O usuário chega à tool pelo `ToolContext` (parâmetro do método, excluído do schema enviado ao modelo), montado no
   `toolContext(...)` do `ChatClient` com o `UserId` autenticado; a tool nunca pede o usuário ao modelo e opera só
   para ele.
-- A tool de escrita (`propose-transaction`) não grava: anota a proposta num `TransactionProposalCollector`, criado
-  por comando e passado pelo `toolContext` ao lado do `UserId`, e devolve ao modelo só descrição, valor, categoria
-  e a mensagem "Proposta de transação anotada com sucesso.", sem ID. O resultado relata o que a tool fez, sem
-  instruir o modelo: o comportamento depois da proposta fica no prompt. O `AssistantGateway` devolve o texto e a
-  proposta anotada (`AssistantOutput`).
-- Uma proposta por comando, com idempotência dentro dele: a segunda chamada com os mesmos argumentos (depois da
-  normalização do domínio: `strip` da descrição, valor com 2 casas) é a mesma proposta; com argumentos diferentes
-  → 422 `invalid-command`, nada gravado.
+- O modelo só extrai a intenção: as tools usam `@Tool(returnDirect = true)` e são `void`, então o resultado nunca
+  volta ao modelo e há uma única chamada ao chat por comando. O texto que o modelo devolve é descartado.
+- As tools não gravam: `propose-transaction` anota uma proposta e `summarize-transactions-by-category` chama
+  `SummarizeTransactionsByCategoryUseCase` (contagem e soma no banco, por usuário e categoria) e anota o resumo. A
+  anotação vai para um `InterpretationCollector`, criado por comando e passado pelo `toolContext` ao lado do `UserId`.
+  O `AssistantGateway` devolve `collector.interpretation()`: `Proposal`, `Summary` ou `NotUnderstood` (o padrão, quando
+  nenhuma tool é chamada).
+- Coletor estrito: uma única anotação por comando. A segunda chamada de tool, igual ou diferente, de qualquer tool →
+  `MultipleToolCallsException` → 422 `invalid-command`, nada gravado. `parallel-tool-calls=false` e
+  `max-completion-tokens=500` no `application.properties` limitam o chat.
+- A resposta falada é montada pela aplicação, nunca pelo modelo: `SpokenAnswers` (`application/`, métodos estáticos)
+  traz as frases fixas, o valor em "R$ 1.234,56", o plural e o nome falado da categoria por `switch` exaustivo sem
+  `default`; o `ProcessVoiceCommandUseCase` a monta a partir do `AssistantOutput` e a sintetiza. Sem tool, a frase é a
+  de "não entendido".
+- A transcrição chega ao modelo por `prompts/user-message.st`, entre `<transcricao>` e `</transcricao>`, montada no
+  `SpringAiAssistantGateway` com um `PromptTemplate` (bean do `AssistantConfiguration`) depois de remover `<` e `>`.
+  O prompt do sistema restringe o escopo e trata a transcrição como dado, nunca como instrução.
 - A proposta é gravada por último, depois da síntese de voz (`ProcessVoiceCommandUseCase`): nada é registrado antes
   de a resposta que o anuncia estar pronta, e uma falha de voz não deixa proposta órfã. A síntese nunca fica dentro
   de uma transação de banco.
@@ -58,8 +67,8 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 
 - A IA nunca grava: a tool de escrita só anota uma proposta; a transação só nasce quando o usuário a confirma por
   chamada explícita à API (`POST /transaction-proposals/{id}/confirm`), sem IA.
-- Respostas faladas padronizadas: frases fixas, formato único de valores em R$, sem dados que identifiquem
-  o usuário.
+- Respostas faladas padronizadas: frases fixas montadas pela aplicação, formato único de valores em R$, sem dados
+  que identifiquem o usuário.
 
 ## Testes
 
@@ -71,6 +80,9 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - Falhas da IA (timeout, erro, conexão derrubada) são simuladas com `AiStub.givenFailure(AiStage, AiFailure)`, por
   etapa (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`), implementado no stub do WireMock; o `VoiceCommandIT` cobre cada
   etapa.
+- O stub tem uma única resposta de chat por comando, porque `returnDirect` encerra a chamada; o teste confere a frase
+  falada com `AiStub.speechText()`, a mensagem enviada ao assistente com `assistantCommand()` e o número de chamadas
+  ao chat com `assistantCallCount()`.
 
 ## Não fazer
 
@@ -80,6 +92,7 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - Retry sobre o laço de tools (`interpret` inteiro) enquanto houver tool de escrita não idempotente: refaria a
   conversa e gravaria em dobro.
 - Prompt fixo em código Java.
+- Deixar o modelo escrever a resposta falada, ou devolver a ele o resultado de uma tool.
 - Logging do Spring AI em `DEBUG` versionado.
 - Ligar as opções de observação do Spring AI que logam conteúdo (`log-prompt`, `log-completion`, `log-transcript`,
   `log-text`, `include-content`); transcrição, prompt e resposta nunca vão para o log.

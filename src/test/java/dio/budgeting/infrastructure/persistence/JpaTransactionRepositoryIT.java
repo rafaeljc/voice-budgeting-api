@@ -24,22 +24,42 @@ class JpaTransactionRepositoryIT {
     }
 
     @Test
-    void should_returnOnlyOwnTransactions_when_listingByCategory() {
+    void should_countAndSumOnlyOwnTransactionsOfCategory_when_summarizing() {
         // given
         var owner = new UserId(UUID.randomUUID());
         var other = new UserId(UUID.randomUUID());
-        var own = repository.save(transaction(owner, "Mercado", Category.GROCERIES));
-        repository.save(transaction(owner, "Remédio", Category.PHARMA));
-        repository.save(transaction(other, "Feira", Category.GROCERIES));
+        repository.save(transaction(owner, "Mercado", Category.GROCERIES, "80.00"));
+        repository.save(transaction(owner, "Feira", Category.GROCERIES, "160.50"));
+        repository.save(transaction(owner, "Remédio", Category.PHARMA, "30.00"));
+        repository.save(transaction(other, "Padaria", Category.GROCERIES, "500.00"));
 
         // when
-        var found = repository.findAllByUserIdAndCategory(owner, Category.GROCERIES);
+        var summary = repository.summarizeByUserIdAndCategory(owner, Category.GROCERIES);
 
         // then
-        assertThat(found).extracting(transaction -> transaction.getId()).containsExactly(own.getId());
+        assertThat(summary.count()).isEqualTo(2);
+        assertThat(summary.total()).isEqualTo(new Money(new BigDecimal("240.50")));
+    }
+
+    @Test
+    void should_returnZeroCountAndTotal_when_noTransactionsInCategory() {
+        // given
+        var owner = new UserId(UUID.randomUUID());
+        repository.save(transaction(owner, "Remédio", Category.PHARMA, "30.00"));
+
+        // when
+        var summary = repository.summarizeByUserIdAndCategory(owner, Category.GROCERIES);
+
+        // then
+        assertThat(summary.count()).isZero();
+        assertThat(summary.total()).isEqualTo(new Money(new BigDecimal("0.00")));
     }
 
     private static Transaction transaction(UserId userId, String description, Category category) {
-        return new Transaction(userId, description, new Money(new BigDecimal("10.00")), category, NOW);
+        return transaction(userId, description, category, "10.00");
+    }
+
+    private static Transaction transaction(UserId userId, String description, Category category, String amount) {
+        return new Transaction(userId, description, new Money(new BigDecimal(amount)), category, NOW);
     }
 }

@@ -72,7 +72,7 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
   `Input`.
 - Dono dos dados: toda transação tem `userId`. A porta nomeia o usuário em toda leitura
   (`findByIdAndUserId(TransactionId, UserId)`, `findAllByUserId(UserId, TransactionFilter, TransactionSort, PageQuery)`,
-  `findAllByUserIdAndCategory(UserId, Category)`); `UserId` é `record` sobre `UUID`, com `parse` como o `TransactionId`.
+  `summarizeByUserIdAndCategory(UserId, Category)`, que agrega contagem e soma no banco); `UserId` é `record` sobre `UUID`, com `parse` como o `TransactionId`.
 - A proposta de transação é uma entidade própria (`TransactionProposal`, sem status: existe e ainda não venceu, está
   pendente), com a porta `TransactionProposalRepository`. A busca da decisão é bloqueante
   (`findByIdAndUserIdForUpdate`, `SELECT ... FOR UPDATE`) e exige a transação do use case; a decisão apaga a
