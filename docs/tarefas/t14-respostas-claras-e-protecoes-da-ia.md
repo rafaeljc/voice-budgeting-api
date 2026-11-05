@@ -313,7 +313,7 @@ Status: Em andamento
 - [x] [verificação] ADR `docs/adr/0006-resposta-falada-montada-pela-aplicacao.md` a partir do `template.md`
       (opções: modelo escreve; modelo guiado por frases no prompt; modelo extrai a intenção e a aplicação monta a
       frase — escolhida)
-- [ ] [verificação] `docs/arquitetura.md`: texto e diagrama de sequência do comando de voz (uma chamada ao chat, tool
+- [x] [verificação] `docs/arquitetura.md`: texto e diagrama de sequência do comando de voz (uma chamada ao chat, tool
       com `returnDirect`, frase montada pela aplicação)
 - [ ] [verificação] `docs/openapi.yaml`: frases na descrição do endpoint de voz; `docs/exemplos/voz.http` se citar a
       resposta
