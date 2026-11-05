@@ -33,12 +33,15 @@ public class ConfirmTransactionProposalUseCase {
     @Transactional
     public TransactionOutput execute(UserId userId, TransactionProposalId id) {
         // Locked read: a concurrent decision on the same proposal waits for this transaction and then finds nothing.
-        // An unknown ID and another user's proposal end the same way: not found
+        // An unknown ID, another user's proposal and an expired one end the same way: not found. The expired row is
+        // left for the sweep
+        var now = Instant.now(clock);
         var proposal = proposalRepository
                 .findByIdAndUserIdForUpdate(id, userId)
+                .filter(found -> found.isPendingAt(now))
                 .orElseThrow(TransactionProposalNotFoundException::new);
 
-        var transaction = transactionRepository.save(proposal.toTransaction(Instant.now(clock)));
+        var transaction = transactionRepository.save(proposal.toTransaction(now));
         proposalRepository.delete(proposal);
         log.atInfo()
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())

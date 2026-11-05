@@ -11,6 +11,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -19,6 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(indexes = @Index(columnList = "expires_at"))
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,6 +44,9 @@ public class TransactionProposalEntity {
     @Column(nullable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private Instant expiresAt;
+
     public static TransactionProposalEntity from(TransactionProposal proposal) {
         return new TransactionProposalEntity(
                 proposal.getId().uuid(),
@@ -48,7 +54,8 @@ public class TransactionProposalEntity {
                 proposal.getDescription(),
                 proposal.getAmount().value(),
                 proposal.getCategory(),
-                proposal.getCreatedAt());
+                proposal.getCreatedAt(),
+                proposal.getExpiresAt());
     }
 
     public TransactionProposal toDomain() {
@@ -58,6 +65,7 @@ public class TransactionProposalEntity {
                 this.description,
                 new Money(this.amount),
                 this.category,
-                this.createdAt);
+                this.createdAt,
+                this.expiresAt);
     }
 }

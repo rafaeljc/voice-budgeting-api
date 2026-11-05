@@ -6,6 +6,7 @@ import dio.budgeting.application.output.TransactionProposalOutput;
 import dio.budgeting.application.output.VoiceCommandOutput;
 import dio.budgeting.domain.TransactionProposal;
 import dio.budgeting.domain.TransactionProposalRepository;
+import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
 import java.time.Clock;
 import java.time.Instant;
@@ -21,6 +22,7 @@ public class ProcessVoiceCommandUseCase {
     private final AssistantGateway assistant;
     private final TextToSpeechGateway textToSpeech;
     private final TransactionProposalRepository proposalRepository;
+    private final TransactionProposalTimeToLive timeToLive;
     private final Clock clock;
 
     public ProcessVoiceCommandUseCase(
@@ -28,11 +30,13 @@ public class ProcessVoiceCommandUseCase {
             AssistantGateway assistant,
             TextToSpeechGateway textToSpeech,
             TransactionProposalRepository proposalRepository,
+            TransactionProposalTimeToLive timeToLive,
             Clock clock) {
         this.speechToText = speechToText;
         this.assistant = assistant;
         this.textToSpeech = textToSpeech;
         this.proposalRepository = proposalRepository;
+        this.timeToLive = timeToLive;
         this.clock = clock;
     }
 
@@ -54,7 +58,12 @@ public class ProcessVoiceCommandUseCase {
 
     private TransactionProposalOutput save(UserId userId, ProposeTransactionInput proposed) {
         var proposal = proposalRepository.save(new TransactionProposal(
-                userId, proposed.description(), proposed.toMoney(), proposed.category(), Instant.now(clock)));
+                userId,
+                proposed.description(),
+                proposed.toMoney(),
+                proposed.category(),
+                Instant.now(clock),
+                timeToLive));
         log.atInfo()
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())
                 .log("Transaction proposal created");

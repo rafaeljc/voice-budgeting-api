@@ -41,7 +41,8 @@ src/main/java/dio/budgeting/
     ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect
       tool/                     # *Tools, ToolExecutionConfiguration (tools de IA: adaptador de entrada)
         argument/  result/      # *ToolArguments, *ToolResult
-    config/                     # *Configuration (ex.: Clock)
+    config/                     # *Configuration (ex.: Clock), *Properties
+    scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
@@ -63,6 +64,7 @@ docs/exemplos/                  # exemplos de requisição (.http)
   entidade JPA `<X>Entity`
 - Serviço externo: porta `<X>Gateway` (application, par do `Repository`) → adaptador `<Tecnologia><X>Gateway`
   (ex.: `SpringAiSpeechToTextGateway`)
+- Rotina agendada: `<Substantivo>Job` (ex.: `TransactionProposalExpirationJob`), em `infrastructure/scheduling/`
 - ID tipado: `<X>Id` (record sobre `UUID`)
 - Exceções: `<Condição>Exception` (ex.: `TransactionNotFoundException`)
 - Testes: `<Classe>Test` (unitário), `<Funcionalidade>IT` (integração)

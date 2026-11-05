@@ -28,6 +28,8 @@ import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.EnumSet;
@@ -93,8 +95,13 @@ class VoiceCommandIT {
                 .andExpect(jsonPath("$.transactionProposal.category").value("GROCERIES"))
                 .andReturn();
         var proposalId = JsonPath.<String>read(result.getResponse().getContentAsString(), "$.transactionProposal.id");
-        assertThat(proposalRepository.findById(UUID.fromString(proposalId)))
-                .hasValueSatisfying(saved -> assertThat(saved.getUserId()).isEqualTo(AccessTokens.DEFAULT_USER.uuid()));
+        var expiresAt = Instant.parse(
+                JsonPath.<String>read(result.getResponse().getContentAsString(), "$.transactionProposal.expiresAt"));
+        assertThat(proposalRepository.findById(UUID.fromString(proposalId))).hasValueSatisfying(saved -> {
+            assertThat(saved.getUserId()).isEqualTo(AccessTokens.DEFAULT_USER.uuid());
+            assertThat(saved.getExpiresAt()).isEqualTo(expiresAt);
+            assertThat(saved.getExpiresAt()).isEqualTo(saved.getCreatedAt().plus(Duration.ofMinutes(5)));
+        });
         assertThat(transactionRepository.findAllByUserIdAndCategory(AccessTokens.DEFAULT_USER, Category.GROCERIES))
                 .isEmpty();
     }
