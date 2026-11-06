@@ -257,7 +257,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       com a exceção (o `WARN` continua, sem teste)
 - [x] [TDD] `MongoAuditEntryRepository.append` idempotente: `MongoAuditEntryRepositoryIT` → o mesmo evento gravado
       duas vezes → um único documento em `audit_entries`, sem exceção, com `_id` igual a `event.id().uuid()`
-- [ ] [verificação] `application.properties`: `spring.modulith.events.staleness.published=1m`, `.processing=1m`,
+- [x] [verificação] `application.properties`: `spring.modulith.events.staleness.published=1m`, `.processing=1m`,
       `.resubmitted=1m` (e o intervalo de checagem, se a propriedade existir) e
       `logging.level.org.springframework.modulith.events.support.CompletionRegisteringAdvisor=WARN`, cada grupo com
       comentário do porquê
