@@ -248,7 +248,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `compose.yml`: serviço `audit-database` (`mongo:9.0`, `27018:27017`, volume `audit_data`,
       healthcheck `mongosh` + `ping`, credenciais `MONGO_USERNAME`/`MONGO_PASSWORD` obrigatórias com `:?`,
       `MONGO_INITDB_DATABASE: audit`); `.env.example` com as duas variáveis
-- [ ] [verificação] `application.properties`: `spring.threads.virtual.enabled=true`,
+- [x] [verificação] `application.properties`: `spring.threads.virtual.enabled=true`,
       `spring.task.execution.propagate-context=true`, `spring.mongodb.representation.uuid=standard` e
       `budgeting.audit.*` (3 s, 3 s, 5 s), cada grupo com comentário do porquê
 - [ ] [verificação] `AuditProperties` + `MongoConfiguration` (`MongoClientSettingsBuilderCustomizer` com
