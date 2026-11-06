@@ -255,7 +255,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `DomainEventAuditListener.on` devolve `CompletableFuture<Void>`: `DomainEventAuditListenerTest` → sucesso
       → *future* concluído e use case chamado com o evento; use case lança `RuntimeException` → *future* concluído
       com a exceção (o `WARN` continua, sem teste)
-- [ ] [TDD] `MongoAuditEntryRepository.append` idempotente: `MongoAuditEntryRepositoryIT` → o mesmo evento gravado
+- [x] [TDD] `MongoAuditEntryRepository.append` idempotente: `MongoAuditEntryRepositoryIT` → o mesmo evento gravado
       duas vezes → um único documento em `audit_entries`, sem exceção, com `_id` igual a `event.id().uuid()`
 - [ ] [verificação] `application.properties`: `spring.modulith.events.staleness.published=1m`, `.processing=1m`,
       `.resubmitted=1m` (e o intervalo de checagem, se a propriedade existir) e
