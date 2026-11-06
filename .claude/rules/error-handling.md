@@ -94,7 +94,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 - Campos permitidos: IDs (`transactionId`) e metadados técnicos (tamanhos, contagens, tipo de mídia, status).
 - Nunca logar: transcrição, prompt, resposta do modelo, texto sintetizado, argumentos de tools, áudio, dados de
   negócio (descrição, valor, categoria), cabeçalhos, query string, valores rejeitados em validação nem a mensagem
-  crua de exceção. O conteúdo vai para a auditoria (T20), não para o log.
+  crua de exceção. O conteúdo vai para os registros de auditoria (MongoDB), não para o log.
 - As opções de observação do Spring AI que escrevem conteúdo (`log-prompt`, `log-completion`, `log-transcript`,
   `log-text`, `include-content`) ficam sempre em `false`.
 
@@ -102,6 +102,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 |-------------------------------------------------|---------|-----------------------------------------------------------------|
 | Exceção inesperada (500)                        | `ERROR` | stack trace                                                     |
 | Falha de dependência externa (banco, OpenAI)    | `WARN`  | no adaptador que a trata                                        |
+| Registro de auditoria não gravado               | `WARN`  | `Audit entry not appended` no `DomainEventAuditListener`, com `eventType` e `errorType` (nomes das classes), nunca o conteúdo nem a mensagem da exceção; a resposta não muda |
 | 401 e 429                                       | `WARN`  | sinais de segurança                                             |
 | Demais 4xx                                      | `INFO`  | uma linha, sem stack trace, com status e tipo do problema (nomes dos campos em validação) |
 

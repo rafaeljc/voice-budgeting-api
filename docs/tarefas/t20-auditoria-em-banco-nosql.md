@@ -380,7 +380,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `infrastructure/event/`, `persistence/document/`) e nomenclatura (`<Fato>Event`, `Mongo<X>Repository`,
       `<X>Document`, `<X>DocumentRepository`); README: MongoDB nos pré-requisitos e `MONGO_USERNAME`/`MONGO_PASSWORD`
       na configuração, sem seção nova
-- [ ] [verificação] Regras: `architecture.md` (eventos de domínio em `domain/event/`, publicação no use case,
+- [x] [verificação] Regras: `architecture.md` (eventos de domínio em `domain/event/`, publicação no use case,
       listener como adaptador de entrada, `AFTER_COMMIT` + `@Async`, porta `append`); `error-handling.md` (`WARN`
       `Audit entry not appended`; o conteúdo vai para a auditoria); `testing.md` (container do MongoDB, limpeza entre
       testes, Awaitility e usuário novo por teste para a gravação assíncrona)
