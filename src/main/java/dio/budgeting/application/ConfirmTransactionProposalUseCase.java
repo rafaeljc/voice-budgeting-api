@@ -6,10 +6,12 @@ import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.TransactionProposalConfirmedEvent;
 import java.time.Clock;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +21,17 @@ public class ConfirmTransactionProposalUseCase {
 
     private final TransactionProposalRepository proposalRepository;
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public ConfirmTransactionProposalUseCase(
             TransactionProposalRepository proposalRepository,
             TransactionRepository transactionRepository,
+            ApplicationEventPublisher eventPublisher,
             Clock clock) {
         this.proposalRepository = proposalRepository;
         this.transactionRepository = transactionRepository;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -47,6 +52,8 @@ public class ConfirmTransactionProposalUseCase {
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())
                 .addKeyValue("transactionId", transaction.getId().uuid())
                 .log("Transaction proposal confirmed");
+        eventPublisher.publishEvent(
+                new TransactionProposalConfirmedEvent(userId, now, proposal.getId(), transaction.getId()));
 
         return TransactionOutput.from(transaction);
     }

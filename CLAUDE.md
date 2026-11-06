@@ -8,7 +8,8 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 ## Stack
 
 - Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
-- Spring Web MVC, Spring Data JPA, MySQL 9.6 (`compose.yml`, iniciado pelo `spring-boot-docker-compose`)
+- Spring Web MVC, Spring Data JPA, MySQL 9.6, Spring Data MongoDB, MongoDB 9.0 (`compose.yml`,
+  iniciados pelo `spring-boot-docker-compose`); requisições, `@Async` e `@Scheduled` em virtual threads
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
 - Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
   por `scripts/generate_token.py`
@@ -17,7 +18,7 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
 - Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
 - Configuração em `application.properties`; segredos só por variável de ambiente (`OPENAI_API_KEY`, `JWT_SECRET`,
-  credenciais do MySQL), modelo em `.env.example` e `.env` fora do versionamento
+  credenciais do MySQL e do MongoDB), modelo em `.env.example` e `.env` fora do versionamento
 
 ## Arquitetura
 
@@ -33,6 +34,7 @@ DDD em camadas. Dependências apontam para dentro: `infrastructure` → `applica
 src/main/java/dio/budgeting/
   BudgetingApplication.java
   domain/                       # Transaction, TransactionProposal, *Id, UserId, Money, Category, *Repository
+    event/                      # DomainEvent (sealed), *Event, AudioMetadata
   application/                  # *UseCase, portas *Gateway (serviços externos), exceções neutras da IA
     input/  output/
   infrastructure/
@@ -42,10 +44,12 @@ src/main/java/dio/budgeting/
       tool/                     # *Tools, InterpretationCollector, ToolExecutionConfiguration (adaptador de entrada)
         argument/               # *ToolArguments
     config/                     # *Configuration (ex.: Clock), *Properties
+    event/                      # *Listener (ouvem eventos de domínio: adaptador de entrada)
     scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
     persistence/
-      entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository
+      entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository, Mongo*Repository, *DocumentRepository
+      document/                 # *Document (MongoDB), irmão de entity/
 src/main/resources/
   application.properties
   prompts/                      # prompts do sistema (*.st, UTF-8)
@@ -65,6 +69,8 @@ docs/exemplos/                  # exemplos de requisição (.http)
 - Serviço externo: porta `<X>Gateway` (application, par do `Repository`) → adaptador `<Tecnologia><X>Gateway`
   (ex.: `SpringAiSpeechToTextGateway`)
 - Rotina agendada: `<Substantivo>Job` (ex.: `TransactionProposalExpirationJob`), em `infrastructure/scheduling/`
+- Evento de domínio: `<Fato>Event`, no passado (ex.: `TransactionProposalConfirmedEvent`), em `domain/event/`
+- Documento do MongoDB: `<X>Document`, repositório Spring Data `<X>DocumentRepository`, adaptador `Mongo<X>Repository`
 - ID tipado: `<X>Id` (record sobre `UUID`)
 - Exceções: `<Condição>Exception` (ex.: `TransactionNotFoundException`)
 - Testes: `<Classe>Test` (unitário), `<Funcionalidade>IT` (integração)

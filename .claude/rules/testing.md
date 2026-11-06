@@ -10,7 +10,7 @@ paths:
 | Sufixo  | Escopo                         | Contexto Spring | Dependências externas                     |
 |---------|--------------------------------|-----------------|-------------------------------------------|
 | `*Test` | domain, application            | não             | nenhuma (Mockito para portas)             |
-| `*IT`   | adaptadores, HTTP, fluxo        | sim             | Testcontainers MySQL (`@ServiceConnection`), WireMock no lugar da OpenAI |
+| `*IT`   | adaptadores, HTTP, fluxo        | sim             | Testcontainers MySQL e MongoDB (`@ServiceConnection`), WireMock no lugar da OpenAI |
 
 - `./gradlew test` roda só `*Test` (sem Docker); `./gradlew integrationTest` roda só `*IT` (exige Docker). Os dois
   usam o mesmo source set `src/test/java`, e `./gradlew build` roda tudo, mais Spotless, Checkstyle e JaCoCo.
@@ -18,13 +18,20 @@ paths:
 
 ## Infraestrutura de integração
 
-- `@IntegrationTest` (`support/`): contexto Spring, perfil `test`, injeção por construtor e MySQL. Todo `*IT` usa.
+- `@IntegrationTest` (`support/`): contexto Spring, perfil `test`, injeção por construtor, MySQL e MongoDB. Todo `*IT` usa.
 - MySQL: container `mysql:9.6` único por JVM (`support/mysql/`). O banco é zerado antes de cada teste
   (`TRUNCATE` das tabelas lidas de `information_schema`); não depender de rollback.
+- MongoDB: container `mongo:9.0` único por JVM (`support/mongo/`). Os documentos de todas as coleções são apagados antes
+  de cada teste (`MongoCleaner`).
 - Autenticação: todo `*IT` HTTP envia `Authorization: Bearer` com um token real, assinado por
   `support/security/AccessTokens` (`NimbusJwtEncoder` e o segredo do perfil `test`), não o `jwt()` do
   `spring-security-test`. `AccessTokens.authorization()` usa o usuário padrão; `authorization(userId)` e
   `validClaims`/`sign` cobrem outro usuário e tokens inválidos.
+- Auditoria: a gravação é assíncrona, então o `*IT` espera com Awaitility (`await().untilAsserted`), nunca com `sleep`.
+  Cada teste usa um usuário novo (`UserId` aleatório) e filtra os registros por ele, porque uma gravação de um teste
+  anterior pode chegar depois da limpeza. A ausência de registro é conferida depois de um registro seguinte do mesmo
+  usuário ter chegado. Os documentos são lidos crus (`MongoTemplate`, `Document`) para conferir o tipo BSON. A falha do
+  MongoDB é coberta só pelo `DomainEventAuditListenerTest`.
 - Faxina das propostas vencidas: o job fica desligado no perfil `test`
   (`budgeting.transaction-proposals.expiration-sweep-enabled=false`), para não apagar propostas no meio de outro teste.
   O laço dos lotes é testado pelo `TransactionProposalExpirationJobTest` e o apagar em lote, incluindo a linha

@@ -11,7 +11,7 @@ Detalha a seção "Arquitetura" do `CLAUDE.md`.
 
 | Camada           | Contém                                                         | Pode depender de                         |
 |------------------|----------------------------------------------------------------|------------------------------------------|
-| `domain`         | entidades, value objects, IDs tipados, enums, portas de repositório | JDK                                  |
+| `domain`         | entidades, value objects, IDs tipados, enums, eventos, portas de repositório | JDK                         |
 | `application`    | use cases, `input/`, `output/`, portas de gateway              | `domain`                                 |
 | `infrastructure` | controllers, DTOs HTTP, JPA, IA, segurança, `@Configuration`   | `application`, `domain`, frameworks      |
 
@@ -45,6 +45,7 @@ Adaptadores de entrada (o mundo externo aciona a aplicação) ficam na mesma cam
 infrastructure/http/TransactionController                      # adaptador HTTP; DTOs em http/request|response
 infrastructure/ai/tool/TransactionTools                        # adaptador de tools de IA; DTOs em ai/tool/argument
 infrastructure/scheduling/TransactionProposalExpirationJob     # adaptador agendado (@Scheduled)
+infrastructure/event/DomainEventAuditListener                  # adaptador de eventos de domínio (@Async + @TransactionalEventListener)
 ```
 
 O job é um adaptador de entrada em `infrastructure/scheduling/`: é ele que faz o laço dos lotes, e o use case apaga um
@@ -55,11 +56,24 @@ uma execução lenta não se sobreponha à seguinte; e o job é desligável por 
 O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
 `@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
 
+O listener é um adaptador de entrada como os demais: ouve o evento de domínio e chama um use case
+(`AppendAuditEntryUseCase`), que acrescenta o registro de auditoria pela porta `AuditEntryRepository` (só `append`, nunca
+altera). A cadeia de persistência no MongoDB espelha a do JPA, e o documento fica em `persistence/document/`, irmão de
+`entity/`:
+
+```
+domain/AuditEntryRepository                                    # porta (interface)
+infrastructure/persistence/repository/MongoAuditEntryRepository # adaptador, implementa a porta
+infrastructure/persistence/repository/AuditEntryDocumentRepository # Spring Data (MongoRepository)
+infrastructure/persistence/document/AuditEntryDocument         # documento do MongoDB
+```
+
 Os tipos das portas são neutros: `Audio`, `byte[]` e `String`, nunca `MultipartFile`, `Resource` nem tipos do
 Spring AI. A falha do provedor sai da porta como `AiProviderUnavailableException` (transitória) ou
 `AiProviderFailedException` (definitiva), em `application/`, sem tipo do provedor.
 
-Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e `XEntity.from(domain)`.
+Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e
+`XEntity.from(domain)` (`AuditEntryDocument.from(event, traceId)` para a auditoria).
 
 ## Modelagem
 
@@ -83,6 +97,14 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
   responde o mesmo 404 e a linha fica para a faxina.
 - A faxina apaga as vencidas em lotes pela porta `deleteExpiredBatch(Instant, int)`, que devolve a quantidade; a
   consulta do lote usa `SKIP LOCKED` para não esperar linhas que uma decisão está usando.
+- Eventos de domínio ficam em `domain/event/`: `record`s `<Fato>Event` que implementam a `sealed interface DomainEvent`
+  (`userId()`, `occurredAt()`), sem validação própria (só os use cases os criam, a partir de dado já válido). Quem
+  conhece o fato publica, no use case, com `ApplicationEventPublisher.publishEvent` — não no adaptador de repositório,
+  que não tem a transcrição nem o resultado da IA. Consulta e falha não publicam. O evento carrega tipos do domínio,
+  nunca de `infrastructure`.
+- A gravação do evento é assíncrona e depois do commit: `@Async` + `@TransactionalEventListener(phase = AFTER_COMMIT,
+  fallbackExecution = true)`. Uma decisão que sofre rollback nunca vira registro; `fallbackExecution` cobre o que não
+  tem transação (o comando de voz). Falha na gravação só gera `WARN`, nunca muda a resposta.
 - Exceções de negócio (`TransactionNotFoundException`, `TransactionProposalNotFoundException`) ficam em `domain/`,
   são unchecked e não importam Spring.
 - Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,
@@ -116,7 +138,8 @@ Entidades JPA nunca saem de `infrastructure`: o adaptador converte com `entity.t
 
 ## Não fazer
 
-- Use case importando client, controller ou repositório JPA de `infrastructure`.
+- Use case importando client, controller, repositório JPA ou documento do MongoDB de `infrastructure`.
+- Listener de evento que não passa por um use case.
 - Anotações do Spring AI (`@Tool`, `@ToolParam`) em `domain` ou `application`.
 - Lógica de negócio em controller ou adaptador.
 - Injeção por campo; `System.out` / `System.err`.

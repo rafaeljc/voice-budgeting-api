@@ -10,7 +10,7 @@ Camadas e fluxo de voz em [docs/arquitetura.md](docs/arquitetura.md).
 ## Pré-requisitos
 
 - JDK 25
-- Docker (MySQL do `compose.yml` e Testcontainers nos testes)
+- Docker (MySQL e MongoDB do `compose.yml` e Testcontainers nos testes)
 
 ## Configuração
 
@@ -26,6 +26,8 @@ cp .env.example .env
 | `MYSQL_USER`          | usuário da aplicação no MySQL local                      |
 | `MYSQL_PASSWORD`      | senha do usuário da aplicação                            |
 | `OPENAI_API_KEY`      | chave da OpenAI, necessária só para executar a aplicação |
+| `MONGO_USERNAME`      | usuário `root` do MongoDB de auditoria local (`compose.yml`) |
+| `MONGO_PASSWORD`      | senha desse usuário                                      |
 | `JWT_SECRET`          | segredo (mínimo de 32 bytes) que assina e valida os tokens; a aplicação não sobe sem ele |
 
 ## Execução

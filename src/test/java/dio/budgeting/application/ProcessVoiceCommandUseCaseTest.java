@@ -21,6 +21,9 @@ import dio.budgeting.domain.TransactionProposal;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.AudioMetadata;
+import dio.budgeting.domain.event.TransactionProposalCreatedEvent;
+import dio.budgeting.domain.event.VoiceCommandNotUnderstoodEvent;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -33,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessVoiceCommandUseCaseTest {
@@ -60,6 +64,9 @@ class ProcessVoiceCommandUseCaseTest {
     private TransactionProposalTimeToLive timeToLive = new TransactionProposalTimeToLive(Duration.ofMinutes(5));
 
     @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
     private Clock clock;
 
     @InjectMocks
@@ -74,6 +81,7 @@ class ProcessVoiceCommandUseCaseTest {
         when(speechToText.transcribe(any(Audio.class))).thenReturn(COMMAND);
         when(assistant.interpret(USER_ID, COMMAND)).thenReturn(new AssistantOutput.NotUnderstood());
         when(textToSpeech.synthesize(NOT_UNDERSTOOD_ANSWER)).thenReturn(speech);
+        when(clock.instant()).thenReturn(NOW);
 
         // when
         var output = useCase.execute(USER_ID, input);
@@ -86,6 +94,8 @@ class ProcessVoiceCommandUseCaseTest {
         assertThat(output.speech()).isSameAs(speech);
         assertThat(output.proposal()).isEmpty();
         verifyNoInteractions(proposalRepository);
+        verify(eventPublisher)
+                .publishEvent(new VoiceCommandNotUnderstoodEvent(USER_ID, NOW, new AudioMetadata("M4A", 3), COMMAND));
     }
 
     @Test
@@ -122,6 +132,9 @@ class ProcessVoiceCommandUseCaseTest {
             assertThat(returned.category()).isEqualTo("GROCERIES");
             assertThat(returned.expiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(5)));
         });
+        verify(eventPublisher)
+                .publishEvent(new TransactionProposalCreatedEvent(
+                        USER_ID, NOW, new AudioMetadata("M4A", 1), COMMAND, saved.getValue()));
     }
 
     @Test
@@ -140,6 +153,7 @@ class ProcessVoiceCommandUseCaseTest {
         assertThat(output.speech()).isSameAs(speech);
         assertThat(output.proposal()).isEmpty();
         verifyNoInteractions(proposalRepository);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -155,5 +169,6 @@ class ProcessVoiceCommandUseCaseTest {
                         () -> useCase.execute(USER_ID, new ProcessVoiceCommandInput(new byte[] {9}, AudioFormat.M4A)))
                 .isInstanceOf(AiProviderUnavailableException.class);
         verifyNoInteractions(proposalRepository);
+        verifyNoInteractions(eventPublisher);
     }
 }
