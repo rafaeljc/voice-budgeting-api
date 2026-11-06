@@ -194,9 +194,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Outbox, ID do evento e transação do comando de voz
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `build.gradle`: BOM `spring-modulith-bom` 2.1.x por `platform(...)` e
+- [x] [verificação] `build.gradle`: BOM `spring-modulith-bom` 2.1.x por `platform(...)` e
       `spring-modulith-starter-jpa`; conferir a compatibilidade com o Boot 4.1.2 e o Jackson 3
 - [ ] [verificação] `application.properties`: `spring.modulith.events.completion-mode=DELETE`, com comentário (a
       publicação carrega a transcrição)
