@@ -261,7 +261,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `.resubmitted=1m` (e o intervalo de checagem, se a propriedade existir) e
       `logging.level.org.springframework.modulith.events.support.CompletionRegisteringAdvisor=WARN`, cada grupo com
       comentário do porquê
-- [ ] [verificação] `AuditProperties` com `resubmissionInterval`, `resubmissionMinAge`, `resubmissionBatchSize` e
+- [x] [verificação] `AuditProperties` com `resubmissionInterval`, `resubmissionMinAge`, `resubmissionBatchSize` e
       `resubmissionEnabled`; `budgeting.audit.resubmission-*` no `application.properties` (1m, 1m, 100, `true`) e
       `budgeting.audit.resubmission-enabled=false` no `application-test.properties`, com comentário
 - [ ] [verificação] `EventPublicationResubmissionJob` em `infrastructure/scheduling/` (`@ConditionalOnBooleanProperty`,
