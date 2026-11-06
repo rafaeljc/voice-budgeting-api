@@ -76,7 +76,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
   - `support/mongo/`: `MongoTestContainer` (`mongo:9.0`, `@ServiceConnection`, um por JVM), `MongoCleaner`,
     `ResetMongoExtension` e `MongoCleanerIT`, incluídos no `@IntegrationTest`
 - ADR `docs/adr/0007-auditoria-em-banco-de-documentos-separado.md`
-- Documentação: `docs/arquitetura.md`, `CLAUDE.md`, regras (`architecture.md`, `error-handling.md`, `testing.md`),
+- Documentação: `CLAUDE.md`, regras (`architecture.md`, `error-handling.md`, `testing.md`),
   README (só pré-requisito e variáveis do `.env`), `docs/tarefas.md` (notas na T18, T21 e T22; checkbox da T20)
 
 **Fora:**
@@ -184,7 +184,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
       `application.properties`
 - [ ] `docker compose config` válido com o serviço `audit-database` (`mongo:9.0`); a aplicação sobe localmente e
       `/actuator/health` responde `UP`
-- [ ] ADR 0007, `docs/arquitetura.md`, `CLAUDE.md`, regras, README e `docs/tarefas.md` atualizados; checkbox da T20
+- [ ] ADR 0007, `CLAUDE.md`, regras, README e `docs/tarefas.md` atualizados; checkbox da T20
       marcado no último commit
 
 ## Para futuros agentes
@@ -376,10 +376,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       opções MySQL, MongoDB e Cassandra; decisão MongoDB; consequências (tecnologia a mais para operar, nenhuma
       transação comum entre os bancos — motivo da T21 —, retenção aplicável depois sem tocar no MySQL, esquema por
       tipo de evento)
-- [ ] [verificação] `docs/arquitetura.md`: seção "Auditoria" (os quatro eventos, publicação nos use cases, gravação
-      assíncrona depois do commit e `traceId`) com diagrama de sequência; menção à publicação nos fluxos
-      de voz e de decisão
-- [ ] [verificação] `CLAUDE.md`: stack (MongoDB 9.0 no `compose.yml`, virtual threads), estrutura (`domain/event/`,
+- [x] [verificação] `CLAUDE.md`: stack (MongoDB 9.0 no `compose.yml`, virtual threads), estrutura (`domain/event/`,
       `infrastructure/event/`, `persistence/document/`) e nomenclatura (`<Fato>Event`, `Mongo<X>Repository`,
       `<X>Document`, `<X>DocumentRepository`); README: MongoDB nos pré-requisitos e `MONGO_USERNAME`/`MONGO_PASSWORD`
       na configuração, sem seção nova
@@ -397,7 +394,6 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`
 - `ls docs/adr/0007-*.md` → o arquivo existe; `grep -n "^status: aceito" docs/adr/0007-*.md` → presente
-- `grep -n "Auditoria" docs/arquitetura.md` → seção presente
 - `grep -n "domain/event\|persistence/document\|Mongo<X>Repository" CLAUDE.md` → presentes
 - `grep -n "MONGO_USERNAME" README.md .env.example` → presentes nos dois
 - `grep -n "Nota (T20)" docs/tarefas.md` → notas na T18, T21 e T22
