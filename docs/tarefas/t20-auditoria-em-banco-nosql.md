@@ -245,7 +245,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Dependências no `build.gradle`: `spring-boot-starter-data-mongodb` e `testImplementation
       'org.testcontainers:testcontainers-mongodb'`; conferir a compatibilidade do driver gerenciado com o servidor 9.0
-- [ ] [verificação] `compose.yml`: serviço `audit-database` (`mongo:9.0`, `27018:27017`, volume `audit_data`,
+- [x] [verificação] `compose.yml`: serviço `audit-database` (`mongo:9.0`, `27018:27017`, volume `audit_data`,
       healthcheck `mongosh` + `ping`, credenciais `MONGO_USERNAME`/`MONGO_PASSWORD` obrigatórias com `:?`,
       `MONGO_INITDB_DATABASE: audit`); `.env.example` com as duas variáveis
 - [ ] [verificação] `application.properties`: `spring.threads.virtual.enabled=true`,

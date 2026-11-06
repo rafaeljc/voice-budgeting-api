@@ -16,6 +16,22 @@ services:
       timeout: 5s
       retries: 5
 
+  audit-database:
+    image: mongo:9.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:?Defina MONGO_USERNAME no .env (veja .env.example)}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Defina MONGO_PASSWORD no .env (veja .env.example)}
+      MONGO_INITDB_DATABASE: audit
+    ports:
+      - "27018:27017"
+    volumes:
+      - audit_data:/data/db
+    healthcheck:
+      test: [ "CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\")' || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   swagger-ui:
     image: swaggerapi/swagger-ui:v5.34.0
     environment:
@@ -29,3 +45,4 @@ services:
 
 volumes:
   transaction_data:
+  audit_data:
