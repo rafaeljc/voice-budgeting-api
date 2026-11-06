@@ -10,6 +10,7 @@ import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.domain.event.AudioMetadata;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalCreatedEvent;
 import dio.budgeting.domain.event.VoiceCommandNotUnderstoodEvent;
 import java.time.Clock;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionOperations;
 
 @Service
 public class ProcessVoiceCommandUseCase {
@@ -30,6 +32,7 @@ public class ProcessVoiceCommandUseCase {
     private final TransactionProposalRepository proposalRepository;
     private final TransactionProposalTimeToLive timeToLive;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionOperations transactionOperations;
     private final Clock clock;
 
     public ProcessVoiceCommandUseCase(
@@ -39,6 +42,7 @@ public class ProcessVoiceCommandUseCase {
             TransactionProposalRepository proposalRepository,
             TransactionProposalTimeToLive timeToLive,
             ApplicationEventPublisher eventPublisher,
+            TransactionOperations transactionOperations,
             Clock clock) {
         this.speechToText = speechToText;
         this.assistant = assistant;
@@ -46,6 +50,7 @@ public class ProcessVoiceCommandUseCase {
         this.proposalRepository = proposalRepository;
         this.timeToLive = timeToLive;
         this.eventPublisher = eventPublisher;
+        this.transactionOperations = transactionOperations;
         this.clock = clock;
     }
 
@@ -64,15 +69,29 @@ public class ProcessVoiceCommandUseCase {
         var audio = new AudioMetadata(input.format().name(), input.audio().length);
         return switch (interpretation) {
             case AssistantOutput.Proposal proposed -> {
-                var proposal = save(userId, proposed.proposal());
-                eventPublisher.publishEvent(
-                        new TransactionProposalCreatedEvent(userId, proposal.getCreatedAt(), audio, command, proposal));
+                // The execute method is not transactional (it calls the AI), so the proposal and its event share a
+                // transaction here: the event publication is recorded atomically with the write and is never lost
+                var proposal = transactionOperations.execute(_ -> {
+                    var saved = save(userId, proposed.proposal());
+                    eventPublisher.publishEvent(new TransactionProposalCreatedEvent(
+                            new DomainEventId(),
+                            userId,
+                            saved.getCreatedAt(),
+                            audio,
+                            command,
+                            saved.getId(),
+                            saved.getDescription(),
+                            saved.getAmount(),
+                            saved.getCategory(),
+                            saved.getExpiresAt()));
+                    return saved;
+                });
                 yield new VoiceCommandOutput(speech, Optional.of(TransactionProposalOutput.from(proposal)));
             }
             case AssistantOutput.Summary _ -> new VoiceCommandOutput(speech, Optional.empty());
             case AssistantOutput.NotUnderstood _ -> {
-                eventPublisher.publishEvent(
-                        new VoiceCommandNotUnderstoodEvent(userId, Instant.now(clock), audio, command));
+                eventPublisher.publishEvent(new VoiceCommandNotUnderstoodEvent(
+                        new DomainEventId(), userId, Instant.now(clock), audio, command));
                 yield new VoiceCommandOutput(speech, Optional.empty());
             }
         };

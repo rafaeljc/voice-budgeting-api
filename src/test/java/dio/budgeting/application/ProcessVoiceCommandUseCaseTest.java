@@ -22,6 +22,7 @@ import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.domain.event.AudioMetadata;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalCreatedEvent;
 import dio.budgeting.domain.event.VoiceCommandNotUnderstoodEvent;
 import java.math.BigDecimal;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionOperations;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessVoiceCommandUseCaseTest {
@@ -66,6 +68,9 @@ class ProcessVoiceCommandUseCaseTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Spy
+    private TransactionOperations transactionOperations = TransactionOperations.withoutTransaction();
+
     @Mock
     private Clock clock;
 
@@ -94,8 +99,14 @@ class ProcessVoiceCommandUseCaseTest {
         assertThat(output.speech()).isSameAs(speech);
         assertThat(output.proposal()).isEmpty();
         verifyNoInteractions(proposalRepository);
-        verify(eventPublisher)
-                .publishEvent(new VoiceCommandNotUnderstoodEvent(USER_ID, NOW, new AudioMetadata("M4A", 3), COMMAND));
+        var published = ArgumentCaptor.forClass(VoiceCommandNotUnderstoodEvent.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue().id()).isNotNull();
+        assertThat(published.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(new VoiceCommandNotUnderstoodEvent(
+                        new DomainEventId(), USER_ID, NOW, new AudioMetadata("M4A", 3), COMMAND));
     }
 
     @Test
@@ -132,9 +143,7 @@ class ProcessVoiceCommandUseCaseTest {
             assertThat(returned.category()).isEqualTo("GROCERIES");
             assertThat(returned.expiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(5)));
         });
-        verify(eventPublisher)
-                .publishEvent(new TransactionProposalCreatedEvent(
-                        USER_ID, NOW, new AudioMetadata("M4A", 1), COMMAND, saved.getValue()));
+        assertProposalCreatedEventPublished(saved.getValue());
     }
 
     @Test
@@ -170,5 +179,25 @@ class ProcessVoiceCommandUseCaseTest {
                 .isInstanceOf(AiProviderUnavailableException.class);
         verifyNoInteractions(proposalRepository);
         verifyNoInteractions(eventPublisher);
+    }
+
+    private void assertProposalCreatedEventPublished(TransactionProposal saved) {
+        var published = ArgumentCaptor.forClass(TransactionProposalCreatedEvent.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue().id()).isNotNull();
+        assertThat(published.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(new TransactionProposalCreatedEvent(
+                        new DomainEventId(),
+                        USER_ID,
+                        NOW,
+                        new AudioMetadata("M4A", 1),
+                        COMMAND,
+                        saved.getId(),
+                        "Mercado",
+                        new Money(new BigDecimal("80.00")),
+                        Category.GROCERIES,
+                        NOW.plus(Duration.ofMinutes(5))));
     }
 }

@@ -6,6 +6,7 @@ import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalConfirmedEvent;
 import java.time.Clock;
 import java.time.Instant;
@@ -52,8 +53,8 @@ public class ConfirmTransactionProposalUseCase {
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())
                 .addKeyValue("transactionId", transaction.getId().uuid())
                 .log("Transaction proposal confirmed");
-        eventPublisher.publishEvent(
-                new TransactionProposalConfirmedEvent(userId, now, proposal.getId(), transaction.getId()));
+        eventPublisher.publishEvent(new TransactionProposalConfirmedEvent(
+                new DomainEventId(), userId, now, proposal.getId(), transaction.getId()));
 
         return TransactionOutput.from(transaction);
     }

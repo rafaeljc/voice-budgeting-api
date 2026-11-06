@@ -1,7 +1,6 @@
 package dio.budgeting.infrastructure.persistence.document;
 
 import dio.budgeting.domain.Money;
-import dio.budgeting.domain.TransactionProposal;
 import dio.budgeting.domain.event.AudioMetadata;
 import dio.budgeting.domain.event.DomainEvent;
 import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
@@ -14,7 +13,6 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -27,7 +25,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 @NoArgsConstructor
 public class AuditEntryDocument {
     @Id
-    private ObjectId id;
+    private UUID id;
 
     private AuditEntryType type;
     private UUID userId;
@@ -52,13 +50,13 @@ public class AuditEntryDocument {
             String currency,
             String category,
             Instant expiresAt) {
-        static Proposal from(TransactionProposal proposal) {
+        static Proposal from(TransactionProposalCreatedEvent event) {
             return new Proposal(
-                    proposal.getDescription(),
-                    proposal.getAmount().value(),
+                    event.description(),
+                    event.amount().value(),
                     Money.CURRENCY,
-                    proposal.getCategory().name(),
-                    proposal.getExpiresAt());
+                    event.category().name(),
+                    event.expiresAt());
         }
     }
 
@@ -66,10 +64,10 @@ public class AuditEntryDocument {
         return switch (event) {
             case TransactionProposalCreatedEvent created -> {
                 var entry = of(AuditEntryType.TRANSACTION_PROPOSAL_CREATED, created, traceId);
-                entry.setTransactionProposalId(created.proposal().getId().uuid());
+                entry.setTransactionProposalId(created.transactionProposalId().uuid());
                 entry.setAudio(Audio.from(created.audio()));
                 entry.setTranscription(created.transcription());
-                entry.setProposal(Proposal.from(created.proposal()));
+                entry.setProposal(Proposal.from(created));
                 yield entry;
             }
             case VoiceCommandNotUnderstoodEvent notUnderstood -> {
@@ -94,6 +92,7 @@ public class AuditEntryDocument {
 
     private static AuditEntryDocument of(AuditEntryType type, DomainEvent event, String traceId) {
         var entry = new AuditEntryDocument();
+        entry.setId(event.id().uuid());
         entry.setType(type);
         entry.setUserId(event.userId().uuid());
         entry.setOccurredAt(event.occurredAt());

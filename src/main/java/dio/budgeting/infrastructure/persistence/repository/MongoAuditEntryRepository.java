@@ -4,6 +4,7 @@ import dio.budgeting.domain.AuditEntryRepository;
 import dio.budgeting.domain.event.DomainEvent;
 import dio.budgeting.infrastructure.persistence.document.AuditEntryDocument;
 import io.micrometer.tracing.Tracer;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -18,7 +19,12 @@ public class MongoAuditEntryRepository implements AuditEntryRepository {
 
     @Override
     public void append(DomainEvent event) {
-        documentRepository.insert(AuditEntryDocument.from(event, traceId()));
+        try {
+            documentRepository.insert(AuditEntryDocument.from(event, traceId()));
+        } catch (DuplicateKeyException alreadyAppended) {
+            // Delivery is at least once and the entry id is the event id: a duplicate key means this event was
+            // already appended (a resubmission), so there is nothing left to do
+        }
     }
 
     // The tracing context reaches the async thread by context propagation; without a span there is no trace to link

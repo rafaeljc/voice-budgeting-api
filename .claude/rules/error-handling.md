@@ -102,9 +102,14 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 |-------------------------------------------------|---------|-----------------------------------------------------------------|
 | Exceção inesperada (500)                        | `ERROR` | stack trace                                                     |
 | Falha de dependência externa (banco, OpenAI)    | `WARN`  | no adaptador que a trata                                        |
-| Registro de auditoria não gravado               | `WARN`  | `Audit entry not appended` no `DomainEventAuditListener`, com `eventType` e `errorType` (nomes das classes), nunca o conteúdo nem a mensagem da exceção; a resposta não muda |
+| Registro de auditoria não gravado               | `WARN`  | `Audit entry not appended` no `DomainEventAuditListener`, com `eventType` e `errorType` (nomes das classes), nunca o conteúdo nem a mensagem da exceção; a resposta não muda e a publicação do Modulith fica `FAILED`, para reenvio |
 | 401 e 429                                       | `WARN`  | sinais de segurança                                             |
 | Demais 4xx                                      | `INFO`  | uma linha, sem stack trace, com status e tipo do problema (nomes dos campos em validação) |
+
+- O Modulith registra a falha de uma entrega em `INFO` com a mensagem da exceção, que pode trazer dado de negócio:
+  o logger `CompletionRegisteringAdvisor` fica em `WARN`, e o `WARN` do listener é o registro da falha.
+- Um método `@Async` que pode falhar devolve `CompletableFuture`; a exceção que escapa de um `@Async` `void` vira um
+  `ERROR` com stack trace pelo `SimpleAsyncUncaughtExceptionHandler`.
 
 ## Não fazer
 

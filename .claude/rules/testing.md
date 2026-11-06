@@ -31,7 +31,10 @@ paths:
   Cada teste usa um usuário novo (`UserId` aleatório) e filtra os registros por ele, porque uma gravação de um teste
   anterior pode chegar depois da limpeza. A ausência de registro é conferida depois de um registro seguinte do mesmo
   usuário ter chegado. Os documentos são lidos crus (`MongoTemplate`, `Document`) para conferir o tipo BSON. A falha do
-  MongoDB é coberta só pelo `DomainEventAuditListenerTest`.
+  MongoDB é coberta só pelo `DomainEventAuditListenerTest` (o *future* falha). A garantia de entrega (outbox, reenvio,
+  *staleness*) é do Modulith e não tem `*IT` próprio; a idempotência (mesmo evento, um registro) é coberta pelo
+  `MongoAuditEntryRepositoryIT`. O job de reenvio fica desligado no perfil `test`
+  (`budgeting.audit.resubmission-enabled=false`).
 - Faxina das propostas vencidas: o job fica desligado no perfil `test`
   (`budgeting.transaction-proposals.expiration-sweep-enabled=false`), para não apagar propostas no meio de outro teste.
   O laço dos lotes é testado pelo `TransactionProposalExpirationJobTest` e o apagar em lote, incluindo a linha
@@ -55,6 +58,8 @@ paths:
 - Nome: `should_<resultado>_when_<condição>`.
 - Estrutura `// given // when // then`; um comportamento por teste.
 - Teste unitário: `@ExtendWith(MockitoExtension.class)`, `@Mock` nas portas e `@InjectMocks` na classe testada.
+- Evento publicado: confira com `ArgumentCaptor` e `usingRecursiveComparison().ignoringFields("id")`, porque o ID do
+  evento é aleatório; confira à parte que o `id` não é nulo.
 - Áudios de exemplo em `src/test/resources/audio/`.
 
 ## O que testar

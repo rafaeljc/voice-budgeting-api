@@ -4,6 +4,7 @@ import dio.budgeting.domain.TransactionProposalId;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
 import java.time.Clock;
 import java.time.Instant;
@@ -43,6 +44,7 @@ public class CancelTransactionProposalUseCase {
         log.atInfo()
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())
                 .log("Transaction proposal canceled");
-        eventPublisher.publishEvent(new TransactionProposalCanceledEvent(userId, now, proposal.getId()));
+        eventPublisher.publishEvent(
+                new TransactionProposalCanceledEvent(new DomainEventId(), userId, now, proposal.getId()));
     }
 }
