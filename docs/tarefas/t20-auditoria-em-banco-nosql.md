@@ -241,7 +241,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Infraestrutura do MongoDB e das execuções assíncronas
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Dependências no `build.gradle`: `spring-boot-starter-data-mongodb` e `testImplementation
       'org.testcontainers:testcontainers-mongodb'`; conferir a compatibilidade do driver gerenciado com o servidor 9.0
@@ -254,7 +254,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `AuditProperties` + `MongoConfiguration` (`MongoClientSettingsBuilderCustomizer` com
       `connectTimeout`, `readTimeout` e `serverSelectionTimeout`) e `AsyncConfiguration` (`@EnableAsync`) em
       `infrastructure/config/`
-- [ ] [TDD] `support/mongo/`: `MongoTestContainer`, `MongoCleaner`, `ResetMongoExtension`; `MongoCleanerIT` →
+- [x] [TDD] `support/mongo/`: `MongoTestContainer`, `MongoCleaner`, `ResetMongoExtension`; `MongoCleanerIT` →
       documento inserido em uma coleção é apagado pelo `clean()`; `@IntegrationTest` com os dois containers, as duas
       limpezas e as duas extensões
 
@@ -273,7 +273,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: dependências do MongoDB (`spring-boot-starter-data-mongodb`, `testcontainers-mongodb`), serviço
+`audit-database` (`mongo:9.0`) no `compose.yml` e variáveis no `.env.example`, propriedades de virtual threads,
+propagação de contexto, UUID padrão e timeouts da auditoria, `AuditProperties`, `MongoConfiguration`,
+`AsyncConfiguration` e o suporte de testes `support/mongo/` (`MongoTestContainer`, `MongoCleaner`,
+`ResetMongoExtension`, `MongoCleanerIT`), já incluído no `@IntegrationTest`.
+
+Decisões: o driver gerenciado pelo Boot 4.1.2 (5.8.1) não é testado com o servidor 9.0; o `mongodb-driver-sync` foi
+fixado em 5.14.0 por `ext['mongodb.version']` (ver Decisões), com comentário para remover a linha quando o Boot
+gerenciar o 5.14 ou mais novo.
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `MongoCleanerIT` passa; `docker compose --env-file
+.env.example config --quiet` sem erro; driver resolvido em 5.14.0; `bootRun` → `{"status":"UP"}`; as duas
+propriedades presentes no `application.properties`.
+
+Para uma sessão nova: o `.env` local precisa de `MONGO_USERNAME` e `MONGO_PASSWORD` (copie do `.env.example`), senão
+o `bootRun` falha na interpolação do `compose.yml`. Nenhum `AuditEntry*` existe ainda; a Fase 2 começa pelo
+`UserAgent`.
 
 ## Fase 2: Eventos de domínio e publicação
 

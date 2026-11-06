@@ -1,5 +1,8 @@
 package dio.budgeting.support;
 
+import dio.budgeting.support.mongo.MongoCleaner;
+import dio.budgeting.support.mongo.MongoTestContainer;
+import dio.budgeting.support.mongo.ResetMongoExtension;
 import dio.budgeting.support.mysql.MySqlCleaner;
 import dio.budgeting.support.mysql.MySqlTestContainer;
 import dio.budgeting.support.mysql.ResetMySqlExtension;
@@ -22,9 +25,9 @@ import org.springframework.test.context.TestConstructor;
 @SpringBootTest
 @ActiveProfiles("test")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@ImportTestcontainers(MySqlTestContainer.class)
-@Import(MySqlCleaner.class)
-@ExtendWith(ResetMySqlExtension.class)
+@ImportTestcontainers({MySqlTestContainer.class, MongoTestContainer.class})
+@Import({MySqlCleaner.class, MongoCleaner.class})
+@ExtendWith({ResetMySqlExtension.class, ResetMongoExtension.class})
 public @interface IntegrationTest {
     @AliasFor(annotation = SpringBootTest.class, attribute = "webEnvironment")
     SpringBootTest.WebEnvironment webEnvironment() default SpringBootTest.WebEnvironment.MOCK;
