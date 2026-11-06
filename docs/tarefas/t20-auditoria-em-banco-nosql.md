@@ -293,9 +293,9 @@ o `bootRun` falha na interpolação do `compose.yml`. Nenhum `AuditEntry*` exist
 
 ## Fase 2: Eventos de domínio e publicação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `domain/UserAgent`: `UserAgentTest` → `parse` de nulo e de texto em branco → vazio; texto com espaços nas
+- [x] [TDD] `domain/UserAgent`: `UserAgentTest` → `parse` de nulo e de texto em branco → vazio; texto com espaços nas
       pontas → sem eles; texto com mais de 256 caracteres → truncado em 256; o construtor recusa nulo, em branco e
       mais de 256
 - [ ] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
