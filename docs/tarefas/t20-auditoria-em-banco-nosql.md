@@ -288,14 +288,14 @@ eventos de domínio.
 
 ## Fase 2: Eventos de domínio e publicação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
 - [x] [TDD] `ProcessVoiceCommandUseCase` publica: `ProcessVoiceCommandUseCaseTest` → proposta →
       `TransactionProposalCreatedEvent` com `AudioMetadata` (formato e tamanho do input), transcrição, a
       proposta gravada e `occurredAt` = `createdAt` dela; não entendido → `VoiceCommandNotUnderstoodEvent` com
       `occurredAt` = `Instant.now(clock)`; consulta → nada publicado; falha na síntese → nada publicado
-- [ ] [TDD] Confirmar e cancelar publicam: `ConfirmTransactionProposalUseCaseTest` →
+- [x] [TDD] Confirmar e cancelar publicam: `ConfirmTransactionProposalUseCaseTest` →
       `TransactionProposalConfirmedEvent` com os dois IDs e `occurredAt` = instante da confirmação;
       `CancelTransactionProposalUseCaseTest` → `TransactionProposalCanceledEvent`; proposta inexistente ou vencida →
       nada publicado nos dois
@@ -310,7 +310,21 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event` em `domain/event/`; o
+`ProcessVoiceCommandUseCase` publica `TransactionProposalCreatedEvent` (depois de gravar a proposta) e
+`VoiceCommandNotUnderstoodEvent`; o `ConfirmTransactionProposalUseCase` e o `CancelTransactionProposalUseCase`
+publicam `TransactionProposalConfirmedEvent` e `TransactionProposalCanceledEvent`. Consulta, falha da síntese e
+proposta inexistente ou vencida não publicam nada. Todos recebem o `ApplicationEventPublisher` pelo construtor.
+
+Decisões: o `User-Agent` foi excluído da tarefa (ver Decisões) — o `UserAgent`, o parâmetro dos use cases e a leitura
+nos controllers saíram do escopo e do código; a assinatura de `execute` e os controllers não mudaram. O commit
+`refactor: remove o user agent da auditoria` desfaz o value object criado antes dessa decisão.
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; os três `*UseCaseTest` passam; `grep` de imports de Spring,
+Jakarta e Jackson no `domain` → nenhuma linha.
+
+Para uma sessão nova: os eventos não têm `userAgent`; `DomainEvent` expõe só `userId()` e `occurredAt()`. A Fase 3
+cria o listener, a porta `AuditEntryRepository`, o documento e o `AuditTrailIT` (sem `userAgent` nos campos).
 
 ## Fase 3: Trilha de auditoria
 

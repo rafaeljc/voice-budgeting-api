@@ -4,10 +4,12 @@ import dio.budgeting.domain.TransactionProposalId;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
 import java.time.Clock;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +18,13 @@ public class CancelTransactionProposalUseCase {
     private static final Logger log = LoggerFactory.getLogger(CancelTransactionProposalUseCase.class);
 
     private final TransactionProposalRepository proposalRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
-    public CancelTransactionProposalUseCase(TransactionProposalRepository proposalRepository, Clock clock) {
+    public CancelTransactionProposalUseCase(
+            TransactionProposalRepository proposalRepository, ApplicationEventPublisher eventPublisher, Clock clock) {
         this.proposalRepository = proposalRepository;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -38,5 +43,6 @@ public class CancelTransactionProposalUseCase {
         log.atInfo()
                 .addKeyValue("transactionProposalId", proposal.getId().uuid())
                 .log("Transaction proposal canceled");
+        eventPublisher.publishEvent(new TransactionProposalCanceledEvent(userId, now, proposal.getId()));
     }
 }

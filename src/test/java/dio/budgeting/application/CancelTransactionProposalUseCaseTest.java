@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import dio.budgeting.domain.Category;
@@ -14,6 +15,7 @@ import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class CancelTransactionProposalUseCaseTest {
@@ -36,6 +39,9 @@ class CancelTransactionProposalUseCaseTest {
 
     @Mock
     private TransactionProposalRepository repository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private Clock clock;
@@ -56,6 +62,7 @@ class CancelTransactionProposalUseCaseTest {
 
         // then
         verify(repository).delete(proposal);
+        verify(eventPublisher).publishEvent(new TransactionProposalCanceledEvent(USER_ID, NOW, proposal.getId()));
     }
 
     @Test
@@ -67,6 +74,7 @@ class CancelTransactionProposalUseCaseTest {
 
         // when / then
         assertThatThrownBy(() -> useCase.execute(USER_ID, id)).isInstanceOf(TransactionProposalNotFoundException.class);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -81,5 +89,6 @@ class CancelTransactionProposalUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(USER_ID, proposal.getId()))
                 .isInstanceOf(TransactionProposalNotFoundException.class);
         verify(repository, never()).delete(any());
+        verifyNoInteractions(eventPublisher);
     }
 }

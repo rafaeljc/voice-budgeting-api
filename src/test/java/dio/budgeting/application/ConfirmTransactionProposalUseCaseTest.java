@@ -20,6 +20,7 @@ import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.TransactionProposalConfirmedEvent;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -32,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class ConfirmTransactionProposalUseCaseTest {
@@ -46,6 +48,9 @@ class ConfirmTransactionProposalUseCaseTest {
 
     @Mock
     private TransactionRepository transactionRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private Clock clock;
@@ -78,6 +83,12 @@ class ConfirmTransactionProposalUseCaseTest {
         assertThat(saved.getValue().getCreatedAt()).isEqualTo(CONFIRMED_AT);
         assertThat(output.id()).isEqualTo(saved.getValue().getId().uuid().toString());
         assertThat(output.createdAt()).isEqualTo(CONFIRMED_AT);
+        verify(eventPublisher)
+                .publishEvent(new TransactionProposalConfirmedEvent(
+                        USER_ID,
+                        CONFIRMED_AT,
+                        proposal.getId(),
+                        saved.getValue().getId()));
     }
 
     @Test
@@ -90,6 +101,7 @@ class ConfirmTransactionProposalUseCaseTest {
         // when / then
         assertThatThrownBy(() -> useCase.execute(USER_ID, id)).isInstanceOf(TransactionProposalNotFoundException.class);
         verifyNoInteractions(transactionRepository);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -106,5 +118,6 @@ class ConfirmTransactionProposalUseCaseTest {
                 .isInstanceOf(TransactionProposalNotFoundException.class);
         verifyNoInteractions(transactionRepository);
         verify(proposalRepository, never()).delete(any());
+        verifyNoInteractions(eventPublisher);
     }
 }
