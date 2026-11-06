@@ -28,7 +28,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
 - Use cases: `ProcessVoiceCommandUseCase`, `ConfirmTransactionProposalUseCase` e `CancelTransactionProposalUseCase`
   recebem o `ApplicationEventPublisher` pelo construtor e publicam com `publishEvent`; a assinatura de `execute` não
   muda e os controllers não mudam
-- Trilha de auditoria:
+- Registros de auditoria:
   - porta `domain/AuditEntryRepository` — `void append(DomainEvent event)` (só acrescenta, nunca altera)
   - `application/AppendAuditEntryUseCase` — `execute(DomainEvent event)`, delega à porta; sem `@Transactional`
   - `infrastructure/event/DomainEventAuditListener` — adaptador de entrada: `@Async` +
@@ -326,7 +326,7 @@ Jakarta e Jackson no `domain` → nenhuma linha.
 Para uma sessão nova: os eventos não têm `userAgent`; `DomainEvent` expõe só `userId()` e `occurredAt()`. A Fase 3
 cria o listener, a porta `AuditEntryRepository`, o documento e o `AuditTrailIT` (sem `userAgent` nos campos).
 
-## Fase 3: Trilha de auditoria
+## Fase 3: Gravação da auditoria
 
 Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
@@ -370,9 +370,9 @@ confirmei no relatório que os 5 testes rodaram. A Fase 4 é só documentação.
 
 ## Fase 4: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] ADR `docs/adr/0007-auditoria-em-banco-de-documentos-separado.md` a partir do `template.md`:
+- [x] [verificação] ADR `docs/adr/0007-auditoria-em-banco-de-documentos-separado.md` a partir do `template.md`:
       opções MySQL, MongoDB e Cassandra; decisão MongoDB; consequências (tecnologia a mais para operar, nenhuma
       transação comum entre os bancos — motivo da T21 —, retenção aplicável depois sem tocar no MySQL, esquema por
       tipo de evento)
