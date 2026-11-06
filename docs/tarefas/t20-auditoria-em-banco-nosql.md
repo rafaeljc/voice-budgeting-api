@@ -168,6 +168,9 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
 - Um ADR (0007) com as opções MySQL, MongoDB e Cassandra — mesma instância ou outra é detalhe de infraestrutura;
   Elasticsearch não é opção de armazenamento (decisão do usuário)
 - README sem seção nova, só o pré-requisito e as variáveis do `.env` (decisão do usuário)
+- Driver `mongodb-driver-sync` fixado em 5.14.0 por `ext['mongodb.version']` — o 5.8.1 gerenciado pelo Boot 4.1.2 não é
+  testado com o servidor 9.0 (tabela de compatibilidade da MongoDB); 5.12+ é totalmente compatível. Custo: a linha
+  fica no `build.gradle` e deve ser removida quando o Boot gerenciar o 5.14 ou mais novo (decisão do usuário)
 - Quatro fases; tipo `feat`
 
 ## Definição de pronto
@@ -238,9 +241,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Infraestrutura do MongoDB e das execuções assíncronas
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Dependências no `build.gradle`: `spring-boot-starter-data-mongodb` e `testImplementation
+- [x] [verificação] Dependências no `build.gradle`: `spring-boot-starter-data-mongodb` e `testImplementation
       'org.testcontainers:testcontainers-mongodb'`; conferir a compatibilidade do driver gerenciado com o servidor 9.0
 - [ ] [verificação] `compose.yml`: serviço `audit-database` (`mongo:9.0`, `27018:27017`, volume `audit_data`,
       healthcheck `mongosh` + `ping`, credenciais `MONGO_USERNAME`/`MONGO_PASSWORD` obrigatórias com `:?`,
