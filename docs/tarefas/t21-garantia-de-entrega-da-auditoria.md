@@ -250,9 +250,9 @@ maiúsculas); o Boot derruba o compose ao encerrar o `bootRun`, então consulte 
 
 ## Fase 2: Falha, idempotência e reenvio
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `DomainEventAuditListener.on` devolve `CompletableFuture<Void>`: `DomainEventAuditListenerTest` → sucesso
+- [x] [TDD] `DomainEventAuditListener.on` devolve `CompletableFuture<Void>`: `DomainEventAuditListenerTest` → sucesso
       → *future* concluído e use case chamado com o evento; use case lança `RuntimeException` → *future* concluído
       com a exceção (o `WARN` continua, sem teste)
 - [ ] [TDD] `MongoAuditEntryRepository.append` idempotente: `MongoAuditEntryRepositoryIT` → o mesmo evento gravado
