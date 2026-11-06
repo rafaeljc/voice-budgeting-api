@@ -53,6 +53,10 @@ lote, então cada lote é uma transação (o proxy do use case). O intervalo usa
 uma execução lenta não se sobreponha à seguinte; e o job é desligável por propriedade
 (`@ConditionalOnBooleanProperty`).
 
+O job de reenvio das publicações de auditoria (`EventPublicationResubmissionJob`) é exceção: chama o
+`FailedEventPublications` do Modulith direto, sem use case, porque reenviar é operação técnica do framework, sem regra
+de negócio (um use case em `application` teria de importar o Modulith).
+
 O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
 `@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
 
@@ -98,13 +102,26 @@ Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptado
 - A faxina apaga as vencidas em lotes pela porta `deleteExpiredBatch(Instant, int)`, que devolve a quantidade; a
   consulta do lote usa `SKIP LOCKED` para não esperar linhas que uma decisão está usando.
 - Eventos de domínio ficam em `domain/event/`: `record`s `<Fato>Event` que implementam a `sealed interface DomainEvent`
-  (`userId()`, `occurredAt()`), sem validação própria (só os use cases os criam, a partir de dado já válido). Quem
+  (`id()`, `userId()`, `occurredAt()`), sem validação própria (só os use cases os criam, a partir de dado já válido). Quem
   conhece o fato publica, no use case, com `ApplicationEventPublisher.publishEvent` — não no adaptador de repositório,
   que não tem a transcrição nem o resultado da IA. Consulta e falha não publicam. O evento carrega tipos do domínio,
   nunca de `infrastructure`.
-- A gravação do evento é assíncrona e depois do commit: `@Async` + `@TransactionalEventListener(phase = AFTER_COMMIT,
-  fallbackExecution = true)`. Uma decisão que sofre rollback nunca vira registro; `fallbackExecution` cobre o que não
-  tem transação (o comando de voz). Falha na gravação só gera `WARN`, nunca muda a resposta.
+- Todo evento tem um `DomainEventId` (`id()`), criado pelo use case (`new DomainEventId()`). Os eventos são
+  serializados pelo Modulith e desserializados no reenvio, então só carregam `record`s, IDs tipados, enums e tipos do
+  JDK; nunca uma entidade (o `TransactionProposalCreatedEvent` leva os dados da proposta, não o `TransactionProposal`).
+- A auditoria tem entrega pelo menos uma vez (outbox transacional): a publicação do evento é gravada pelo registro de
+  publicação de eventos do Spring Modulith, no MySQL, na transação da escrita, e concluída (apagada) quando o listener
+  termina sem erro. O listener é `@Async` + `@TransactionalEventListener(phase = AFTER_COMMIT, fallbackExecution =
+  true)`: uma decisão que sofre rollback nunca vira registro; `fallbackExecution` cobre o que não tem transação (o
+  não entendido). O listener devolve `CompletableFuture<Void>`: no sucesso, `completedFuture(null)`; em qualquer outra
+  falha, `WARN` e `failedFuture(e)`, para o Modulith deixar a publicação `FAILED`. Nunca o `throw` de um `@Async`
+  `void`. A resposta ao cliente nunca muda.
+- Um use case sem transação (o comando de voz, que chama a IA) que grava e publica o faz junto em
+  `TransactionOperations.execute(...)`, aberto depois das chamadas à IA, para a escrita e a publicação serem atômicas.
+- O reenvio vem de duas peças: o *staleness monitor* do Modulith marca como `FAILED` as publicações paradas depois de
+  uma queda, e o `EventPublicationResubmissionJob` reenvia as `FAILED` em lotes. O `MongoAuditEntryRepository` trata a
+  `DuplicateKeyException` como sucesso: o `_id` do registro é o ID do evento, então um reenvio de evento já gravado é
+  inofensivo.
 - Exceções de negócio (`TransactionNotFoundException`, `TransactionProposalNotFoundException`) ficam em `domain/`,
   são unchecked e não importam Spring.
 - Consultas paginadas usam tipos próprios do `domain` na assinatura da porta: `PageQuery(number, size)`,

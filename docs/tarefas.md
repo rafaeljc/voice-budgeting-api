@@ -39,7 +39,7 @@
 **Fase 7 — Segurança e rastreabilidade**
 - [ ] [T19 — Rate limiting por usuário](#t19)
 - [x] [T20 — Auditoria em banco NoSQL](#t20)
-- [ ] [T21 — Garantia de entrega da auditoria](#t21)
+- [x] [T21 — Garantia de entrega da auditoria](#t21)
 
 **Fase 8 — Observabilidade e custo**
 - [ ] [T22 — Métricas técnicas e de negócio](#t22)
@@ -331,6 +331,8 @@ Expor indicadores de vida e de prontidão que considerem as dependências, e con
 
 **Nota (T20):** a gravação da auditoria roda em um executor assíncrono (`@Async`) que não espera as tarefas pendentes ao desligar; o encerramento gracioso precisa decidir se espera os registros de auditoria em andamento. O health passa a incluir o MongoDB.
 
+**Nota (T21):** o desligamento não perde registro de auditoria: a publicação pendente fica no MySQL (registro de publicação de eventos do Spring Modulith) e é reenviada depois. Esperar as tarefas `@Async` em andamento passa a ser só uma otimização.
+
 ## Fase 7 — Segurança e rastreabilidade
 
 <a id="t19"></a>
@@ -390,6 +392,8 @@ Expor métricas técnicas (latência por etapa, taxa de erros, estado dos circui
 **Nota (T13):** a faxina registra só a quantidade de propostas expiradas (log `Transaction proposals expired`, com `count`). Uma métrica de expiradas por proposta exige apagar por ID e contar cada uma na faxina.
 
 **Nota (T20):** os `DomainEvent` (proposta criada, confirmada e cancelada, e comando não entendido) existem para contar as taxas: `confirmadas / (confirmadas + canceladas + não entendidos)`. A expiração não tem evento, então a taxa de expiradas vem de um contador na faxina.
+
+**Nota (T21):** os listeners de métrica usam `@EventListener`, não `@TransactionalEventListener`: com este último, cada evento ganharia uma publicação no registro do Modulith. A quantidade de publicações `FAILED` é uma métrica candidata.
 
 <a id="t23"></a>
 ### T23 — Medição de consumo de IA

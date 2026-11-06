@@ -149,19 +149,19 @@ idempotente, com reenvio periódico das que falharam.
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] Spring Modulith 2.1.x no `build.gradle` com `spring-modulith-starter-jdbc`; `EVENT_PUBLICATION` criada pelo Modulith no MySQL
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] Spring Modulith 2.1.x no `build.gradle` com `spring-modulith-starter-jdbc`; `EVENT_PUBLICATION` criada pelo Modulith no MySQL
       local; `completion-mode=DELETE` e *staleness* de 1 min nos três estados no `application.properties`
-- [ ] os quatro eventos têm `DomainEventId id()`; o `TransactionProposalCreatedEvent` não carrega a entidade
-- [ ] no comando de voz, a gravação da proposta e a publicação rodam no mesmo `TransactionOperations.execute`
-- [ ] o listener devolve `CompletableFuture<Void>` e entrega a falha ao Modulith (`DomainEventAuditListenerTest`)
-- [ ] o mesmo evento gravado duas vezes vira um único registro, com `_id` igual ao ID do evento
+- [x] os quatro eventos têm `DomainEventId id()`; o `TransactionProposalCreatedEvent` não carrega a entidade
+- [x] no comando de voz, a gravação da proposta e a publicação rodam no mesmo `TransactionOperations.execute`
+- [x] o listener devolve `CompletableFuture<Void>` e entrega a falha ao Modulith (`DomainEventAuditListenerTest`)
+- [x] o mesmo evento gravado duas vezes vira um único registro, com `_id` igual ao ID do evento
       (`MongoAuditEntryRepositoryIT`)
-- [ ] `EventPublicationResubmissionJob` com `FailedEventPublications.resubmit`, propriedades `budgeting.audit.resubmission-*`
+- [x] `EventPublicationResubmissionJob` com `FailedEventPublications.resubmit`, propriedades `budgeting.audit.resubmission-*`
       e desligado no perfil `test`
-- [ ] `INFO` do `CompletionRegisteringAdvisor` silenciado, com comentário
-- [ ] `AuditTrailIT` passa sem casos novos; a aplicação sobe localmente e `/actuator/health` responde `UP`
-- [ ] `CLAUDE.md`, regras e `docs/tarefas.md` atualizados; checkbox da T21 marcado no último commit
+- [x] `INFO` do `CompletionRegisteringAdvisor` silenciado, com comentário
+- [x] `AuditTrailIT` passa sem casos novos; a aplicação sobe localmente e `/actuator/health` responde `UP`
+- [x] `CLAUDE.md`, regras e `docs/tarefas.md` atualizados; checkbox da T21 marcado no último commit
 
 ## Para futuros agentes
 
@@ -310,11 +310,11 @@ com o próprio shell e o mata).
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `CLAUDE.md`: Spring Modulith (registro de publicação de eventos, JPA) na stack, como outbox da
+- [x] [verificação] `CLAUDE.md`: Spring Modulith (registro de publicação de eventos, JPA) na stack, como outbox da
       auditoria
-- [ ] [verificação] `architecture.md`: a publicação do evento é gravada pelo registro do Modulith na transação da
+- [x] [verificação] `architecture.md`: a publicação do evento é gravada pelo registro do Modulith na transação da
       escrita (outbox) e concluída quando o listener termina; em use case sem transação, a escrita e a publicação
       ficam juntas em `TransactionOperations`; eventos só carregam `record`s, IDs tipados, enums e tipos do JDK (são
       desserializados no reenvio); o `MongoAuditEntryRepository` trata a chave duplicada como sucesso (entrega pelo
@@ -322,13 +322,13 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       qualquer outra falha (`failedFuture`), para a publicação ficar `FAILED` e ser reenviada; o
       `EventPublicationResubmissionJob` chama o Modulith direto, sem use case (exceção registrada); *staleness* para
       as publicações presas depois de uma queda
-- [ ] [verificação] `error-handling.md`: o `WARN` `Audit entry not appended` continua, e a publicação fica `FAILED`
+- [x] [verificação] `error-handling.md`: o `WARN` `Audit entry not appended` continua, e a publicação fica `FAILED`
       para reenvio; o `INFO` do Modulith com a mensagem da exceção é silenciado; um `@Async` devolve
       `CompletableFuture` para a falha não virar `ERROR` com stack trace
-- [ ] [verificação] `testing.md`: o job de reenvio fica desligado no perfil `test`; a garantia de entrega (outbox,
+- [x] [verificação] `testing.md`: o job de reenvio fica desligado no perfil `test`; a garantia de entrega (outbox,
       reenvio, *staleness*) é do framework e não tem `*IT` próprio; a idempotência é coberta pelo
       `MongoAuditEntryRepositoryIT`; os testes de use case conferem o evento ignorando o `id` aleatório
-- [ ] [verificação] `docs/tarefas.md`: nota na T18 (o desligamento não perde registro de auditoria: a publicação
+- [x] [verificação] `docs/tarefas.md`: nota na T18 (o desligamento não perde registro de auditoria: a publicação
       pendente é reenviada depois; esperar as tarefas `@Async` vira só otimização); nota na T22 (listeners de métrica
       usam `@EventListener`, não `@TransactionalEventListener`, senão cada evento ganha uma publicação no registro; a
       quantidade de publicações `FAILED` é métrica candidata); checkbox da T21 marcado
@@ -345,8 +345,29 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `CLAUDE.md` (Spring Modulith na stack); `architecture.md` (outbox, `DomainEventId`, eventos só com tipos
+serializáveis, `TransactionOperations` no use case sem transação, listener com `CompletableFuture`, idempotência pelo
+`_id`, *staleness* + job de reenvio, e o job como exceção sem use case); `error-handling.md` (`WARN` e `FAILED`, `INFO`
+do Modulith silenciado, `@Async` devolve `CompletableFuture`); `testing.md` (job desligado no perfil `test`, garantia
+do framework sem `*IT`, evento conferido ignorando o `id`); `docs/tarefas.md` (notas na T18 e na T22, checkbox da T21).
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; greps de `Modulith` nos
+quatro arquivos, de `TransactionOperations`, `DuplicateKey` e `EventPublicationResubmissionJob` no `architecture.md`,
+das `Nota (T21)` (T18 e T22) e do `[x] [T21` → todos presentes.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A auditoria passou a ter entrega pelo menos uma vez: a publicação de cada evento de domínio é gravada no MySQL, na
+transação da escrita, pelo registro de publicação de eventos do Spring Modulith 2.1.2 (starter JDBC, schema oficial
+criado pelo próprio Modulith), e é entregue ao MongoDB de forma idempotente (`_id` = `DomainEventId`). Uma falha do
+MongoDB deixa a publicação `FAILED` (o listener devolve `failedFuture`), uma queda deixa a publicação parada, que o
+*staleness monitor* marca `FAILED` em 1 min, e o `EventPublicationResubmissionJob` reenvia as `FAILED` a cada minuto,
+em lotes de 100. No comando de voz, a proposta e a publicação do evento são atômicas (`TransactionOperations`), sem
+chamada à IA dentro da transação.
+
+Desvios do plano original, todos aprovados: starter JDBC no lugar do JPA (o `ddl-auto` criava `serialized_event` como
+`VARCHAR(255)`); supressão do `ParameterNumber` do Checkstyle para o `ProcessVoiceCommandUseCase`; `INFO` de
+agendamento no job de reenvio. Sem ADR e sem `*IT` de falha, como decidido no plano.
+
+Definição de pronto conferida: todos os itens marcados acima, com o `build` verde, `AuditTrailIT` com 5 testes, a
+aplicação no ar com `/actuator/health` `UP` e a tabela `EVENT_PUBLICATION` criada no MySQL.
