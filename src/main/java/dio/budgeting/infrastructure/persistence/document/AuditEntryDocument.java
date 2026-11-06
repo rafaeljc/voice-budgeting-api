@@ -1,7 +1,6 @@
 package dio.budgeting.infrastructure.persistence.document;
 
 import dio.budgeting.domain.Money;
-import dio.budgeting.domain.TransactionProposal;
 import dio.budgeting.domain.event.AudioMetadata;
 import dio.budgeting.domain.event.DomainEvent;
 import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
@@ -52,13 +51,13 @@ public class AuditEntryDocument {
             String currency,
             String category,
             Instant expiresAt) {
-        static Proposal from(TransactionProposal proposal) {
+        static Proposal from(TransactionProposalCreatedEvent event) {
             return new Proposal(
-                    proposal.getDescription(),
-                    proposal.getAmount().value(),
+                    event.description(),
+                    event.amount().value(),
                     Money.CURRENCY,
-                    proposal.getCategory().name(),
-                    proposal.getExpiresAt());
+                    event.category().name(),
+                    event.expiresAt());
         }
     }
 
@@ -66,10 +65,10 @@ public class AuditEntryDocument {
         return switch (event) {
             case TransactionProposalCreatedEvent created -> {
                 var entry = of(AuditEntryType.TRANSACTION_PROPOSAL_CREATED, created, traceId);
-                entry.setTransactionProposalId(created.proposal().getId().uuid());
+                entry.setTransactionProposalId(created.transactionProposalId().uuid());
                 entry.setAudio(Audio.from(created.audio()));
                 entry.setTranscription(created.transcription());
-                entry.setProposal(Proposal.from(created.proposal()));
+                entry.setProposal(Proposal.from(created));
                 yield entry;
             }
             case VoiceCommandNotUnderstoodEvent notUnderstood -> {

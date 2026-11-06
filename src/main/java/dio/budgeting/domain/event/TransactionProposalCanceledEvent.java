@@ -5,4 +5,5 @@ import dio.budgeting.domain.UserId;
 import java.time.Instant;
 
 public record TransactionProposalCanceledEvent(
-        UserId userId, Instant occurredAt, TransactionProposalId transactionProposalId) implements DomainEvent {}
+        DomainEventId id, UserId userId, Instant occurredAt, TransactionProposalId transactionProposalId)
+        implements DomainEvent {}

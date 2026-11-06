@@ -1,5 +1,6 @@
 package dio.budgeting.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -15,6 +16,7 @@ import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -24,6 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,7 +65,13 @@ class CancelTransactionProposalUseCaseTest {
 
         // then
         verify(repository).delete(proposal);
-        verify(eventPublisher).publishEvent(new TransactionProposalCanceledEvent(USER_ID, NOW, proposal.getId()));
+        var published = ArgumentCaptor.forClass(TransactionProposalCanceledEvent.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue().id()).isNotNull();
+        assertThat(published.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(new TransactionProposalCanceledEvent(new DomainEventId(), USER_ID, NOW, proposal.getId()));
     }
 
     @Test

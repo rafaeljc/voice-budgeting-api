@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import dio.budgeting.application.AppendAuditEntryUseCase;
 import dio.budgeting.domain.TransactionProposalId;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalCanceledEvent;
 import java.time.Instant;
 import java.util.UUID;
@@ -19,7 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DomainEventAuditListenerTest {
     private static final TransactionProposalCanceledEvent EVENT = new TransactionProposalCanceledEvent(
-            new UserId(UUID.randomUUID()), Instant.parse("2026-03-01T12:35:00Z"), new TransactionProposalId());
+            new DomainEventId(),
+            new UserId(UUID.randomUUID()),
+            Instant.parse("2026-03-01T12:35:00Z"),
+            new TransactionProposalId());
 
     @Mock
     private AppendAuditEntryUseCase appendAuditEntry;

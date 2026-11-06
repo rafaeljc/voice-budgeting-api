@@ -6,5 +6,9 @@ import dio.budgeting.domain.UserId;
 import java.time.Instant;
 
 public record TransactionProposalConfirmedEvent(
-        UserId userId, Instant occurredAt, TransactionProposalId transactionProposalId, TransactionId transactionId)
+        DomainEventId id,
+        UserId userId,
+        Instant occurredAt,
+        TransactionProposalId transactionProposalId,
+        TransactionId transactionId)
         implements DomainEvent {}

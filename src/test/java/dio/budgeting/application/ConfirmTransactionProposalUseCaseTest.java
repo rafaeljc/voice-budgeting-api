@@ -20,6 +20,7 @@ import dio.budgeting.domain.TransactionProposalRepository;
 import dio.budgeting.domain.TransactionProposalTimeToLive;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.domain.UserId;
+import dio.budgeting.domain.event.DomainEventId;
 import dio.budgeting.domain.event.TransactionProposalConfirmedEvent;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -83,8 +84,14 @@ class ConfirmTransactionProposalUseCaseTest {
         assertThat(saved.getValue().getCreatedAt()).isEqualTo(CONFIRMED_AT);
         assertThat(output.id()).isEqualTo(saved.getValue().getId().uuid().toString());
         assertThat(output.createdAt()).isEqualTo(CONFIRMED_AT);
-        verify(eventPublisher)
-                .publishEvent(new TransactionProposalConfirmedEvent(
+        var published = ArgumentCaptor.forClass(TransactionProposalConfirmedEvent.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue().id()).isNotNull();
+        assertThat(published.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(new TransactionProposalConfirmedEvent(
+                        new DomainEventId(),
                         USER_ID,
                         CONFIRMED_AT,
                         proposal.getId(),

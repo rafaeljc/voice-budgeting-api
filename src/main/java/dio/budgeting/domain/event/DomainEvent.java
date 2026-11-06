@@ -9,6 +9,8 @@ public sealed interface DomainEvent
                 TransactionProposalConfirmedEvent,
                 TransactionProposalCanceledEvent {
 
+    DomainEventId id();
+
     UserId userId();
 
     Instant occurredAt();
