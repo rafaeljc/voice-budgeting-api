@@ -38,7 +38,7 @@
 
 **Fase 7 — Segurança e rastreabilidade**
 - [ ] [T19 — Rate limiting por usuário](#t19)
-- [ ] [T20 — Auditoria em banco NoSQL](#t20)
+- [x] [T20 — Auditoria em banco NoSQL](#t20)
 - [ ] [T21 — Garantia de entrega da auditoria](#t21)
 
 **Fase 8 — Observabilidade e custo**
@@ -329,6 +329,8 @@ Expor indicadores de vida e de prontidão que considerem as dependências, e con
 - RES-09 — Health checks
 - RES-10 — Encerramento gracioso
 
+**Nota (T20):** a gravação da auditoria roda em um executor assíncrono (`@Async`) que não espera as tarefas pendentes ao desligar; o encerramento gracioso precisa decidir se espera os registros de auditoria em andamento. O health passa a incluir o MongoDB.
+
 ## Fase 7 — Segurança e rastreabilidade
 
 <a id="t19"></a>
@@ -368,6 +370,8 @@ Garantir que nenhum evento de auditoria seja perdido e que falhas no banco de au
 - QA-03 — Testes de falha (parcial)
 - DOC-03 — ADRs (estratégia de garantia de entrega dos eventos)
 
+**Nota (T20):** os pontos a reforçar são o `DomainEventAuditListener` (hoje só registra um `WARN` quando a gravação falha) e o `MongoAuditEntryRepository`. Os registros de auditoria podem se perder em três situações: MongoDB fora do ar, queda da aplicação entre o commit e a gravação, e tarefas assíncronas pendentes no desligamento. Os testes de falha com o MongoDB fora do ar ficam aqui; a T20 cobre só o listener, em teste unitário.
+
 ## Fase 8 — Observabilidade e custo
 
 <a id="t22"></a>
@@ -384,6 +388,8 @@ Expor métricas técnicas (latência por etapa, taxa de erros, estado dos circui
 **Nota (T12):** a proposta é apagada na decisão, então as taxas de confirmada, cancelada e expirada vêm do evento da decisão (T20) ou de contadores incrementados na decisão, e não de uma contagem por status.
 
 **Nota (T13):** a faxina registra só a quantidade de propostas expiradas (log `Transaction proposals expired`, com `count`). Uma métrica de expiradas por proposta exige apagar por ID e contar cada uma na faxina.
+
+**Nota (T20):** os `DomainEvent` (proposta criada, confirmada e cancelada, e comando não entendido) existem para contar as taxas: `confirmadas / (confirmadas + canceladas + não entendidos)`. A expiração não tem evento, então a taxa de expiradas vem de um contador na faxina.
 
 <a id="t23"></a>
 ### T23 — Medição de consumo de IA

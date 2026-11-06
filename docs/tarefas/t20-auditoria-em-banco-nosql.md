@@ -170,21 +170,21 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
 
 ## Definição de pronto
 
-- [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] comando de registro → uma entrada `TRANSACTION_PROPOSAL_CREATED` com `userId`, `occurredAt`, `traceId` igual ao
+- [x] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
+- [x] comando de registro → uma entrada `TRANSACTION_PROPOSAL_CREATED` com `userId`, `occurredAt`, `traceId` igual ao
       `X-Request-Id`, `transactionProposalId`, `audio`, `transcription` e `proposal` (`amount` em
       `Decimal128`)
-- [ ] comando não entendido → `VOICE_COMMAND_NOT_UNDERSTOOD` com `audio` e `transcription`
-- [ ] confirmar → `TRANSACTION_PROPOSAL_CONFIRMED` com o `transactionId` da resposta; cancelar →
+- [x] comando não entendido → `VOICE_COMMAND_NOT_UNDERSTOOD` com `audio` e `transcription`
+- [x] confirmar → `TRANSACTION_PROPOSAL_CONFIRMED` com o `transactionId` da resposta; cancelar →
       `TRANSACTION_PROPOSAL_CANCELED`
-- [ ] consulta de gastos e decisão 404 → nenhuma entrada
-- [ ] a gravação roda em `@Async` + `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`, com
+- [x] consulta de gastos e decisão 404 → nenhuma entrada
+- [x] a gravação roda em `@Async` + `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`, com
       comentário do porquê; uma falha do use case de auditoria não escapa do listener
-- [ ] `spring.threads.virtual.enabled=true` e `spring.task.execution.propagate-context=true` no
+- [x] `spring.threads.virtual.enabled=true` e `spring.task.execution.propagate-context=true` no
       `application.properties`
-- [ ] `docker compose config` válido com o serviço `audit-database` (`mongo:9.0`); a aplicação sobe localmente e
+- [x] `docker compose config` válido com o serviço `audit-database` (`mongo:9.0`); a aplicação sobe localmente e
       `/actuator/health` responde `UP`
-- [ ] ADR 0007, `CLAUDE.md`, regras, README e `docs/tarefas.md` atualizados; checkbox da T20
+- [x] ADR 0007, `CLAUDE.md`, regras, README e `docs/tarefas.md` atualizados; checkbox da T20
       marcado no último commit
 
 ## Para futuros agentes
@@ -370,7 +370,7 @@ confirmei no relatório que os 5 testes rodaram. A Fase 4 é só documentação.
 
 ## Fase 4: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] ADR `docs/adr/0007-auditoria-em-banco-de-documentos-separado.md` a partir do `template.md`:
       opções MySQL, MongoDB e Cassandra; decisão MongoDB; consequências (tecnologia a mais para operar, nenhuma
@@ -384,7 +384,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       listener como adaptador de entrada, `AFTER_COMMIT` + `@Async`, porta `append`); `error-handling.md` (`WARN`
       `Audit entry not appended`; o conteúdo vai para a auditoria); `testing.md` (container do MongoDB, limpeza entre
       testes, Awaitility e usuário novo por teste para a gravação assíncrona)
-- [ ] [verificação] `docs/tarefas.md`: nota na T18 (o executor assíncrono não espera as tarefas pendentes ao desligar;
+- [x] [verificação] `docs/tarefas.md`: nota na T18 (o executor assíncrono não espera as tarefas pendentes ao desligar;
       o health passa a incluir o MongoDB); nota na T21 (o `DomainEventAuditListener` e o `MongoAuditEntryRepository`
       são os pontos a reforçar; perdas possíveis: MongoDB fora do ar, queda entre o commit e a gravação, tarefas
       pendentes no desligamento); nota na T22 (os `DomainEvent` existem para contar as taxas; a expiração não tem
@@ -401,8 +401,35 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: ADR 0007 (opções MySQL, MongoDB e Cassandra; decisão MongoDB; consequências); `CLAUDE.md` (stack, estrutura e
+nomenclatura); README (MongoDB nos pré-requisitos e `MONGO_USERNAME`/`MONGO_PASSWORD` na tabela de variáveis); as regras
+`architecture.md`, `error-handling.md` e `testing.md`; e `docs/tarefas.md` (notas da T20 na T18, T21 e T22, e o checkbox
+da T20).
+
+Decisões: o termo é "registro de auditoria" (não "trilha"); `docs/arquitetura.md` não muda (ver Decisões).
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `grep` do ADR (arquivo e `status: aceito`), do `CLAUDE.md`, do
+`MONGO_USERNAME` (README e `.env.example`), das três notas e do checkbox da T20 → presentes; `bootRun` →
+`{"status":"UP"}`.
+
+Para uma sessão nova: a tarefa está pronta para PR (`/pr`).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Os quatro fatos do fluxo de voz e da decisão sobre a proposta (proposta criada, comando não entendido, proposta
+confirmada e proposta cancelada) viram registros de auditoria em um MongoDB 9.0 separado do MySQL, com usuário,
+instante, `traceId`, metadados do áudio, transcrição e proposta. Os use cases publicam eventos de domínio
+(`domain/event/`); o `DomainEventAuditListener` os grava de forma assíncrona (`@Async`) e só depois do commit
+(`AFTER_COMMIT`, com `fallbackExecution` para o comando de voz), e uma falha da gravação vira só um `WARN`. As
+requisições, o `@Async` e o `@Scheduled` passaram a rodar em virtual threads, com propagação de contexto para o
+`traceId` chegar à thread assíncrona.
+
+Desvios do plano original, todos por decisão do usuário e registrados em Decisões: o driver `mongodb-driver-sync` fixado
+em 5.14.0 (o 5.8.1 do Boot não é testado com o servidor 9.0); o `User-Agent` fora da auditoria (sai o canal/dispositivo
+da SEG-04); e `docs/arquitetura.md` sem seção de auditoria.
+
+Pontos de atenção: a linha `ext['mongodb.version']` do `build.gradle` deve sair quando o Boot gerenciar o driver 5.14 ou
+mais novo; o `.env` local precisa de `MONGO_USERNAME` e `MONGO_PASSWORD`; a falha do MongoDB em `*IT` e a garantia de
+entrega ficam para a T21.
+
+Sem plano de deploy: a tarefa não o prevê.
