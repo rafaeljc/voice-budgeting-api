@@ -198,7 +198,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: BOM `spring-modulith-bom` 2.1.x por `platform(...)` e
       `spring-modulith-starter-jpa`; conferir a compatibilidade com o Boot 4.1.2 e o Jackson 3
-- [ ] [verificação] `application.properties`: `spring.modulith.events.completion-mode=DELETE`, com comentário (a
+- [x] [verificação] `application.properties`: `spring.modulith.events.completion-mode=DELETE`, com comentário (a
       publicação carrega a transcrição)
 - [ ] [TDD] `DomainEventId` e `DomainEvent.id()` nos quatro eventos; `TransactionProposalCreatedEvent` com os dados da
       proposta no lugar da entidade; os três use cases criam o ID: `ProcessVoiceCommandUseCaseTest`,
