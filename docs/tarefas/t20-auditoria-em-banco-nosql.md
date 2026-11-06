@@ -251,7 +251,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `application.properties`: `spring.threads.virtual.enabled=true`,
       `spring.task.execution.propagate-context=true`, `spring.mongodb.representation.uuid=standard` e
       `budgeting.audit.*` (3 s, 3 s, 5 s), cada grupo com comentário do porquê
-- [ ] [verificação] `AuditProperties` + `MongoConfiguration` (`MongoClientSettingsBuilderCustomizer` com
+- [x] [verificação] `AuditProperties` + `MongoConfiguration` (`MongoClientSettingsBuilderCustomizer` com
       `connectTimeout`, `readTimeout` e `serverSelectionTimeout`) e `AsyncConfiguration` (`@EnableAsync`) em
       `infrastructure/config/`
 - [ ] [TDD] `support/mongo/`: `MongoTestContainer`, `MongoCleaner`, `ResetMongoExtension`; `MongoCleanerIT` →
