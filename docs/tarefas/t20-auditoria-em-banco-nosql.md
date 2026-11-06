@@ -298,7 +298,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `domain/UserAgent`: `UserAgentTest` → `parse` de nulo e de texto em branco → vazio; texto com espaços nas
       pontas → sem eles; texto com mais de 256 caracteres → truncado em 256; o construtor recusa nulo, em branco e
       mais de 256
-- [ ] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
+- [x] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
 - [ ] [TDD] `ProcessVoiceCommandUseCase` publica: `ProcessVoiceCommandUseCaseTest` → proposta →
       `TransactionProposalCreatedEvent` com `userAgent`, `AudioMetadata` (formato e tamanho do input), transcrição, a
       proposta gravada e `occurredAt` = `createdAt` dela; não entendido → `VoiceCommandNotUnderstoodEvent` com
