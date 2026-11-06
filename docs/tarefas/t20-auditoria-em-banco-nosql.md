@@ -2,37 +2,32 @@
 
 Registrar em um MongoDB separado do MySQL os fatos essenciais do fluxo de voz e da decisão sobre a proposta (SEG-04):
 proposta criada, comando não entendido, proposta confirmada e proposta cancelada, com autor, data e hora,
-dispositivo (`User-Agent`), metadados do áudio, transcrição e proposta. A gravação é assíncrona e nunca segura a
+metadados do áudio, transcrição e proposta. A gravação é assíncrona e nunca segura a
 requisição. Registrar em ADR a decisão de manter a auditoria em um banco separado do transacional (DOC-03).
 
 ## Escopo
 
 **Dentro:**
-- Eventos de domínio em `domain/event/`, `record`s que implementam a `sealed interface DomainEvent` (`userId()`,
-  `userAgent()`, `occurredAt()`), sem validação própria (só os use cases os criam, a partir de dados já válidos):
-  - `TransactionProposalCreatedEvent(UserId userId, Optional<UserAgent> userAgent, Instant occurredAt,
+- Eventos de domínio em `domain/event/`, `record`s que implementam a `sealed interface DomainEvent` (`userId()` e
+  `occurredAt()`), sem validação própria (só os use cases os criam, a partir de dados já válidos):
+  - `TransactionProposalCreatedEvent(UserId userId, Instant occurredAt,
     AudioMetadata audio, String transcription, TransactionProposal proposal)` — publicado pelo
     `ProcessVoiceCommandUseCase` logo depois de gravar a proposta; `occurredAt` = `createdAt` da proposta gravada
-  - `VoiceCommandNotUnderstoodEvent(UserId userId, Optional<UserAgent> userAgent, Instant occurredAt,
+  - `VoiceCommandNotUnderstoodEvent(UserId userId, Instant occurredAt,
     AudioMetadata audio, String transcription)` — publicado pelo `ProcessVoiceCommandUseCase` depois da síntese de
     voz, no mesmo ponto em que a proposta seria gravada; `occurredAt` = `Instant.now(clock)`
-  - `TransactionProposalConfirmedEvent(UserId userId, Optional<UserAgent> userAgent, Instant occurredAt,
+  - `TransactionProposalConfirmedEvent(UserId userId, Instant occurredAt,
     TransactionProposalId transactionProposalId, TransactionId transactionId)` — publicado pelo
     `ConfirmTransactionProposalUseCase` depois de criar a transação e apagar a proposta; `occurredAt` = `now`
-  - `TransactionProposalCanceledEvent(UserId userId, Optional<UserAgent> userAgent, Instant occurredAt,
+  - `TransactionProposalCanceledEvent(UserId userId, Instant occurredAt,
     TransactionProposalId transactionProposalId)` — publicado pelo `CancelTransactionProposalUseCase` depois de
     apagar a proposta; `occurredAt` = `now`
   - `AudioMetadata(String format, long sizeBytes)` — o `ProcessVoiceCommandUseCase` monta com
     `input.format().name()` e `input.audio().length` (o `AudioFormat` continua em `application/input`)
   - consulta de gastos, falha da síntese de voz, 422, 503, 500 e 404 não publicam nada
-- `domain/UserAgent(String value)` — value object; o construtor compacto recusa nulo, em branco e mais de 256
-  caracteres; `static Optional<UserAgent> parse(String header)`: nulo ou em branco → vazio; senão `strip` e trunca em
-  256
 - Use cases: `ProcessVoiceCommandUseCase`, `ConfirmTransactionProposalUseCase` e `CancelTransactionProposalUseCase`
-  recebem `Optional<UserAgent> userAgent` como segundo parâmetro (depois do `UserId`; contexto da requisição, fora do
-  `Input`) e o `ApplicationEventPublisher` pelo construtor; publicam com `publishEvent`
-- Controllers (`TransactionController.transcribe`, `TransactionProposalController.confirm`/`cancel`): leem
-  `@RequestHeader(name = HttpHeaders.USER_AGENT, required = false)` e passam `UserAgent.parse(header)`
+  recebem o `ApplicationEventPublisher` pelo construtor e publicam com `publishEvent`; a assinatura de `execute` não
+  muda e os controllers não mudam
 - Trilha de auditoria:
   - porta `domain/AuditEntryRepository` — `void append(DomainEvent event)` (só acrescenta, nunca altera)
   - `application/AppendAuditEntryUseCase` — `execute(DomainEvent event)`, delega à porta; sem `@Transactional`
@@ -46,7 +41,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
     `static AuditEntryDocument from(DomainEvent event, String traceId)` com `switch` sobre a `sealed interface`
     (sem `default`); campos `id` (`ObjectId` gerado), `type` (`AuditEntryType`: `TRANSACTION_PROPOSAL_CREATED`,
     `TRANSACTION_PROPOSAL_CONFIRMED`, `TRANSACTION_PROPOSAL_CANCELED`, `VOICE_COMMAND_NOT_UNDERSTOOD`), `userId`
-    (`UUID`), `occurredAt`, `traceId`, `userAgent`, `transactionProposalId` (`UUID`), `transactionId` (`UUID`),
+    (`UUID`), `occurredAt`, `traceId`, `transactionProposalId` (`UUID`), `transactionId` (`UUID`),
     `audio` (`format`, `sizeBytes`), `transcription`, `proposal` (`description`, `amount` com
     `@Field(targetType = FieldType.DECIMAL128)`, `currency`, `category`, `expiresAt`); campo nulo não é gravado
   - `infrastructure/persistence/document/AuditEntryType` — enum do `type`
@@ -74,10 +69,10 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
     `@NotNull`) e `infrastructure/config/MongoConfiguration` com um `MongoClientSettingsBuilderCustomizer` que
     aplica os três timeouts
 - Testes:
-  - `UserAgentTest`; publicação no `ProcessVoiceCommandUseCaseTest`, `ConfirmTransactionProposalUseCaseTest` e
+  - publicação no `ProcessVoiceCommandUseCaseTest`, `ConfirmTransactionProposalUseCaseTest` e
     `CancelTransactionProposalUseCaseTest`; `DomainEventAuditListenerTest` (a falha do use case não escapa)
   - `AuditTrailIT` pela API, com Awaitility: os quatro tipos com todos os campos, `amount` gravado como `Decimal128`,
-    `traceId` igual ao `X-Request-Id`, `userAgent` igual ao cabeçalho enviado; consulta e 404 sem entrada
+    `traceId` igual ao `X-Request-Id`; consulta e 404 sem entrada
   - `support/mongo/`: `MongoTestContainer` (`mongo:9.0`, `@ServiceConnection`, um por JVM), `MongoCleaner`,
     `ResetMongoExtension` e `MongoCleanerIT`, incluídos no `@IntegrationTest`
 - ADR `docs/adr/0007-auditoria-em-banco-de-documentos-separado.md`
@@ -89,7 +84,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
   sem apagar por ID (desvio da SEG-04, ver Decisões)
 - evento para o 422 `invalid-command`, para falhas (503, 500), para decisões 404 e para os endpoints manuais
 - o áudio em si, a duração e o hash do áudio
-- IP do cliente e cabeçalhos próprios de canal/dispositivo
+- canal/dispositivo (`User-Agent`, IP do cliente e cabeçalhos próprios), ver Decisões
 - índices e retenção (TTL) na coleção
 - endpoint de leitura da auditoria
 - garantia de entrega, retentativas, outbox e testes com o MongoDB fora do ar (T21)
@@ -115,8 +110,11 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
   usuário)
 - 422 `invalid-command` fora — separá-lo do "não entendido" invadiria o caminho de erro e o escopo de outra tarefa
   (decisão do usuário)
-- Canal/dispositivo = `User-Agent` (opcional, truncado em 256) — não muda o contrato; sem IP (dado pessoal, exige
-  configurar proxy) nem cabeçalhos próprios (mudam o contrato e não são verificáveis) (decisão do usuário)
+- Sem canal/dispositivo na auditoria — o `User-Agent` foi excluído da tarefa (decisão do usuário, depois de
+  avaliadas as formas de levá-lo ao listener assíncrono: parâmetro dos use cases, publicação no controller e
+  propagação de contexto, todas com custo maior que o ganho); desvia da SEG-04, que cita "canal/dispositivo". IP
+  (dado pessoal, exige configurar proxy) e cabeçalhos próprios (mudam o contrato) seguem fora. Se voltar, será
+  tarefa própria
 - Metadados do áudio = formato detectado pelos bytes e tamanho — sem o áudio (dado biométrico, a transcrição já
   registra o conteúdo), sem duração (exige decodificar) e sem hash (reenvio é a T17) (decisão do usuário)
 - Gravação obrigatoriamente assíncrona (`@Async`) — a auditoria não pode segurar o fluxo; a falha do MongoDB só
@@ -142,11 +140,8 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
   auditoria (seria síncrono, dentro da transação, e um use case não chama outro) (decisão do usuário)
 - `AppendAuditEntryUseCase` sem teste unitário — só delega à porta (como o
   `DeleteExpiredTransactionProposalBatchUseCase`); coberto pelo `AuditTrailIT`
-- `User-Agent` viaja no evento; `traceId` é lido pelo adaptador — o `User-Agent` não sobrevive à requisição e é um
-  fato auditado (SEG-04: "canal/dispositivo"); o `traceId` é metadado técnico e chega à thread assíncrona pela
-  propagação de contexto (decisão do usuário)
-- `Optional<UserAgent>` como parâmetro dos use cases e componente dos eventos — o cabeçalho é opcional; mesmo uso de
-  `Optional` em componente que o `VoiceCommandOutput.proposal`
+- `traceId` é lido pelo adaptador — é metadado técnico e chega à thread assíncrona pela propagação de contexto
+  (decisão do usuário)
 - Virtual threads (`spring.threads.virtual.enabled=true`) para requisições, `@Async` e `@Scheduled` — Java 25 já tem a
   JEP 491 (sem *pinning* em `synchronized`); o limite real do banco continua sendo o Hikari (10 conexões, 3 s);
   sem teste próprio e sem ADR (decisão do usuário)
@@ -177,7 +172,7 @@ requisição. Registrar em ADR a decisão de manter a auditoria em um banco sepa
 
 - [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
 - [ ] comando de registro → uma entrada `TRANSACTION_PROPOSAL_CREATED` com `userId`, `occurredAt`, `traceId` igual ao
-      `X-Request-Id`, `userAgent`, `transactionProposalId`, `audio`, `transcription` e `proposal` (`amount` em
+      `X-Request-Id`, `transactionProposalId`, `audio`, `transcription` e `proposal` (`amount` em
       `Decimal128`)
 - [ ] comando não entendido → `VOICE_COMMAND_NOT_UNDERSTOOD` com `audio` e `transcription`
 - [ ] confirmar → `TRANSACTION_PROPOSAL_CONFIRMED` com o `transactionId` da resposta; cancelar →
@@ -225,8 +220,8 @@ Contexto para uma sessão nova:
   MongoCleaner.class})` e `@ExtendWith({ResetMySqlExtension.class, ResetMongoExtension.class})`. O `MongoCleaner`
   apaga os documentos de todas as coleções do banco (`MongoTemplate`).
 - Awaitility já vem no `spring-boot-starter-test`. `AuditTrailIT` lê os documentos crus
-  (`MongoTemplate.find(..., Document.class, "audit_entries")`) para conferir o tipo BSON `Decimal128`; envia o
-  `User-Agent` explicitamente (o MockMvc não envia um por padrão) e usa `AccessTokens.authorization(userId)` com um
+  (`MongoTemplate.find(..., Document.class, "audit_entries")`) para conferir o tipo BSON `Decimal128`; usa
+  `AccessTokens.authorization(userId)` com um
   `UserId` novo por teste; a IA é simulada pelo `@AutoConfigureAiStub` (`givenTranscription`, `givenToolCall`,
   `givenAnswer`, `givenSpeech`).
 - O `ContextPropagatingTaskDecorator` exige `io.micrometer:context-propagation` no classpath (vem com o Micrometer
@@ -288,32 +283,27 @@ Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `MongoCleanerIT` passa;
 propriedades presentes no `application.properties`.
 
 Para uma sessão nova: o `.env` local precisa de `MONGO_USERNAME` e `MONGO_PASSWORD` (copie do `.env.example`), senão
-o `bootRun` falha na interpolação do `compose.yml`. Nenhum `AuditEntry*` existe ainda; a Fase 2 começa pelo
-`UserAgent`.
+o `bootRun` falha na interpolação do `compose.yml`. Nenhum `AuditEntry*` existe ainda; a Fase 2 começa pelos
+eventos de domínio.
 
 ## Fase 2: Eventos de domínio e publicação
 
 Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [x] [TDD] `domain/UserAgent`: `UserAgentTest` → `parse` de nulo e de texto em branco → vazio; texto com espaços nas
-      pontas → sem eles; texto com mais de 256 caracteres → truncado em 256; o construtor recusa nulo, em branco e
-      mais de 256
 - [x] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
 - [ ] [TDD] `ProcessVoiceCommandUseCase` publica: `ProcessVoiceCommandUseCaseTest` → proposta →
-      `TransactionProposalCreatedEvent` com `userAgent`, `AudioMetadata` (formato e tamanho do input), transcrição, a
+      `TransactionProposalCreatedEvent` com `AudioMetadata` (formato e tamanho do input), transcrição, a
       proposta gravada e `occurredAt` = `createdAt` dela; não entendido → `VoiceCommandNotUnderstoodEvent` com
       `occurredAt` = `Instant.now(clock)`; consulta → nada publicado; falha na síntese → nada publicado
 - [ ] [TDD] Confirmar e cancelar publicam: `ConfirmTransactionProposalUseCaseTest` →
-      `TransactionProposalConfirmedEvent` com os dois IDs, `userAgent` e `occurredAt` = instante da confirmação;
+      `TransactionProposalConfirmedEvent` com os dois IDs e `occurredAt` = instante da confirmação;
       `CancelTransactionProposalUseCaseTest` → `TransactionProposalCanceledEvent`; proposta inexistente ou vencida →
       nada publicado nos dois
-- [ ] [verificação] Controllers leem o `User-Agent` (`required = false`) e passam `UserAgent.parse(header)` aos três
-      use cases
 
 ### Plano de verificação
 
 - `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`
-- `./gradlew test --tests dio.budgeting.domain.UserAgentTest --tests dio.budgeting.application.ProcessVoiceCommandUseCaseTest --tests 'dio.budgeting.application.*TransactionProposalUseCaseTest'`
+- `./gradlew test --tests dio.budgeting.application.ProcessVoiceCommandUseCaseTest --tests 'dio.budgeting.application.*TransactionProposalUseCaseTest'`
   → testes passam
 - `grep -rn "import org.springframework\|import jakarta\|import tools.jackson" src/main/java/dio/budgeting/domain` →
   nenhuma linha
@@ -331,7 +321,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       não a propaga
 - [ ] [TDD] `AuditEntryDocument`, `AuditEntryType`, `MongoAuditEntryRepository` e `AuditEntryDocumentRepository`:
       `AuditTrailIT` → comando de registro → `TRANSACTION_PROPOSAL_CREATED` com todos os campos (`amount`
-      `Decimal128`, `traceId` = `X-Request-Id`, `userAgent` = cabeçalho); não entendido →
+      `Decimal128`, `traceId` = `X-Request-Id`); não entendido →
       `VOICE_COMMAND_NOT_UNDERSTOOD` com `audio` e `transcription`; confirmar → `TRANSACTION_PROPOSAL_CONFIRMED` com o
       `transactionId` da resposta; cancelar → `TRANSACTION_PROPOSAL_CANCELED`; consulta e decisão 404 → nenhuma
       entrada (conferido depois de uma entrada seguinte do mesmo usuário)
@@ -360,7 +350,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       transação comum entre os bancos — motivo da T21 —, retenção aplicável depois sem tocar no MySQL, esquema por
       tipo de evento)
 - [ ] [verificação] `docs/arquitetura.md`: seção "Auditoria" (os quatro eventos, publicação nos use cases, gravação
-      assíncrona depois do commit, `User-Agent` e `traceId`) com diagrama de sequência; menção à publicação nos fluxos
+      assíncrona depois do commit e `traceId`) com diagrama de sequência; menção à publicação nos fluxos
       de voz e de decisão
 - [ ] [verificação] `CLAUDE.md`: stack (MongoDB 9.0 no `compose.yml`, virtual threads), estrutura (`domain/event/`,
       `infrastructure/event/`, `persistence/document/`) e nomenclatura (`<Fato>Event`, `Mongo<X>Repository`,
