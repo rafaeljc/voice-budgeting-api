@@ -46,7 +46,8 @@ idempotente, com reenvio periódico das que falharam.
     `@ConditionalOnBooleanProperty(name = "budgeting.audit.resubmission-enabled", matchIfMissing = true)`,
     `@Scheduled(fixedDelayString = "${budgeting.audit.resubmission-interval}")`; chama
     `FailedEventPublications.resubmit(ResubmissionOptions.defaults().withMinAge(...).withBatchSize(...))` direto, sem
-    use case (operação técnica do framework, sem regra de negócio); sem log próprio
+    use case (operação técnica do framework, sem regra de negócio); um `INFO` ao iniciar (`Event publication resubmission scheduled`, com `interval`,
+    `minAge` e `batchSize`), como o job de expiração
   - `AuditProperties` ganha `@NotNull Duration resubmissionInterval`, `@NotNull Duration resubmissionMinAge`,
     `@Positive int resubmissionBatchSize` e `boolean resubmissionEnabled` (como o `TransactionProposalProperties`)
   - `application.properties`: `budgeting.audit.resubmission-interval=1m`, `resubmission-min-age=1m`,
@@ -137,6 +138,10 @@ idempotente, com reenvio periódico das que falharam.
   (`schema-initialization.enabled=true`), sem DDL nosso, `schema.sql` nem migração. O registro e o comportamento
   (outbox, reenvio, *staleness*, `completion-mode`) são os mesmos. Limite do schema oficial: `SERIALIZED_EVENT` é
   `VARCHAR(4000)`; a transcrição de um áudio de até 1 MB cabe com folga
+- Log do job de reenvio: só o `INFO` do agendamento, no `ApplicationReadyEvent`, como o `TransactionProposalExpirationJob`
+  (decisão do usuário, no lugar de "sem log próprio"); o `resubmit` devolve `void`, então não há contagem por rodada
+- O job é necessário mesmo com o *staleness*: o monitor só chama `markStalePublicationsFailed` (marca `FAILED`), e não
+  reenvia; sem o job, uma publicação `FAILED` só sairia de lá à mão ou no reinício
 - Supressão do `ParameterNumber` do Checkstyle para o `ProcessVoiceCommandUseCase` (8 parâmetros com o
   `TransactionOperations`), em `config/checkstyle/suppressions.xml` (decisão do usuário)
 - Registros locais antigos com `_id` `ObjectId` ficam como estão — ambiente de desenvolvimento
@@ -250,7 +255,7 @@ maiúsculas); o Boot derruba o compose ao encerrar o `bootRun`, então consulte 
 
 ## Fase 2: Falha, idempotência e reenvio
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `DomainEventAuditListener.on` devolve `CompletableFuture<Void>`: `DomainEventAuditListenerTest` → sucesso
       → *future* concluído e use case chamado com o evento; use case lança `RuntimeException` → *future* concluído
@@ -264,7 +269,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `AuditProperties` com `resubmissionInterval`, `resubmissionMinAge`, `resubmissionBatchSize` e
       `resubmissionEnabled`; `budgeting.audit.resubmission-*` no `application.properties` (1m, 1m, 100, `true`) e
       `budgeting.audit.resubmission-enabled=false` no `application-test.properties`, com comentário
-- [ ] [verificação] `EventPublicationResubmissionJob` em `infrastructure/scheduling/` (`@ConditionalOnBooleanProperty`,
+- [x] [verificação] `EventPublicationResubmissionJob` em `infrastructure/scheduling/` (`@ConditionalOnBooleanProperty`,
       `@Scheduled(fixedDelayString = ...)`, `FailedEventPublications.resubmit` com idade mínima e lote), com comentário
       do porquê da idade mínima
 
@@ -284,7 +289,24 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `DomainEventAuditListener.on` devolve `CompletableFuture<Void>` (`failedFuture` na falha, com o `WARN`
+mantido); `MongoAuditEntryRepository.append` trata `DuplicateKeyException` como sucesso (`_id` = ID do evento);
+*staleness* de 1 min nos três estados, com `check-interval=1m`, e `CompletionRegisteringAdvisor=WARN`;
+`AuditProperties` com as quatro propriedades de reenvio (desligado no perfil `test`); `EventPublicationResubmissionJob`
+com `FailedEventPublications.resubmit` (idade mínima e lote) e o `INFO` de agendamento na subida.
+
+Decisões: `check-interval=1m` explícito (a propriedade existe e não tem padrão nos metadados); `INFO` de agendamento
+no job, no lugar de "sem log próprio"; job mantido, porque o *staleness* só marca `FAILED` e não reenvia (ver
+Decisões). O teste da idempotência ficou em `infrastructure/persistence/`, com os demais `*IT` de persistência.
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; `DomainEventAuditListenerTest`
+e `MongoAuditEntryRepositoryIT` → passam; o jar do `spring-modulith-events-core` 2.1.2 tem
+`CompletionRegisteringAdvisor` e a aninhada `$CompletionRegisteringMethodInterceptor`; greps das propriedades →
+presentes, com `resubmission-enabled=false` no perfil `test`; `bootRun` → `{"status":"UP"}` e o log
+`Event publication resubmission scheduled`.
+
+Para uma sessão nova: ao parar o `bootRun` com `pgrep -f`, use `[B]udgetingApplication` (o padrão sem colchetes casa
+com o próprio shell e o mata).
 
 ## Fase 3: Documentação
 
