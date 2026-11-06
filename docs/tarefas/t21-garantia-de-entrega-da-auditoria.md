@@ -204,7 +204,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       proposta no lugar da entidade; os três use cases criam o ID: `ProcessVoiceCommandUseCaseTest`,
       `ConfirmTransactionProposalUseCaseTest` e `CancelTransactionProposalUseCaseTest` conferem o evento com
       `ArgumentCaptor`, ignorando o `id`, e que ele não é nulo
-- [ ] [verificação] `ProcessVoiceCommandUseCase` recebe `TransactionOperations` e grava a proposta e publica o
+- [x] [verificação] `ProcessVoiceCommandUseCase` recebe `TransactionOperations` e grava a proposta e publica o
       `TransactionProposalCreatedEvent` dentro de `execute(...)`, com comentário do porquê; o teste recebe
       `@Spy TransactionOperations.withoutTransaction()`
 - [ ] [verificação] `AuditEntryDocument` com `@Id UUID id` = `event.id().uuid()` e campos da proposta lidos do evento;

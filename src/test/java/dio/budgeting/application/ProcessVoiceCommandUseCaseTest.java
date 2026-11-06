@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionOperations;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessVoiceCommandUseCaseTest {
@@ -66,6 +67,9 @@ class ProcessVoiceCommandUseCaseTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Spy
+    private TransactionOperations transactionOperations = TransactionOperations.withoutTransaction();
 
     @Mock
     private Clock clock;
