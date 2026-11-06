@@ -291,7 +291,7 @@ eventos de domínio.
 Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `domain/event/`: `DomainEvent` (`sealed`), `AudioMetadata` e os quatro `*Event`
-- [ ] [TDD] `ProcessVoiceCommandUseCase` publica: `ProcessVoiceCommandUseCaseTest` → proposta →
+- [x] [TDD] `ProcessVoiceCommandUseCase` publica: `ProcessVoiceCommandUseCaseTest` → proposta →
       `TransactionProposalCreatedEvent` com `AudioMetadata` (formato e tamanho do input), transcrição, a
       proposta gravada e `occurredAt` = `createdAt` dela; não entendido → `VoiceCommandNotUnderstoodEvent` com
       `occurredAt` = `Instant.now(clock)`; consulta → nada publicado; falha na síntese → nada publicado
