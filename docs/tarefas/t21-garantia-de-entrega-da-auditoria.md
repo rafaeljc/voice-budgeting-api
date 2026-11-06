@@ -10,8 +10,8 @@ idempotente, com reenvio periódico das que falharam.
 **Dentro:**
 - Spring Modulith como outbox:
   - `build.gradle`: `implementation platform("org.springframework.modulith:spring-modulith-bom:<2.1.x>")` (como o
-    Spring AI) e `implementation 'org.springframework.modulith:spring-modulith-starter-jpa'`; a tabela
-    `event_publication` é criada pelo `ddl-auto=update`, como as nossas
+    Spring AI) e `implementation 'org.springframework.modulith:spring-modulith-starter-jdbc'`; a tabela
+    `EVENT_PUBLICATION` é criada pelo próprio Modulith, com `spring.modulith.events.jdbc.schema-initialization.enabled=true`
   - o registro grava uma publicação por `@TransactionalEventListener` na transação de quem publica e a conclui quando o
     listener termina sem erro; com `spring.modulith.events.completion-mode=DELETE`, a publicação concluída é apagada
   - *staleness monitor*: `spring.modulith.events.staleness.published=1m`, `.processing=1m` e `.resubmitted=1m` — uma
@@ -131,13 +131,21 @@ idempotente, com reenvio periódico das que falharam.
   exceção; o nosso `WARN` com `eventType` e `errorType` continua sendo o registro da falha (decisão do usuário)
 - `DomainEventId` tipado, primeiro componente de cada evento; `TransactionProposalCreatedEvent` com os dados da
   proposta no mesmo nível (decisão do usuário)
+- Starter JDBC do Modulith, e não o JPA (mudança aprovada na execução da Fase 1) — a entidade JPA do Modulith não
+  define o tamanho de `serialized_event`, e o `ddl-auto=update` a cria como `VARCHAR(255)`, pequeno demais para o evento
+  serializado (`Data too long`, vários `*IT` falharam). O starter JDBC traz o schema oficial do Modulith e o cria sozinho
+  (`schema-initialization.enabled=true`), sem DDL nosso, `schema.sql` nem migração. O registro e o comportamento
+  (outbox, reenvio, *staleness*, `completion-mode`) são os mesmos. Limite do schema oficial: `SERIALIZED_EVENT` é
+  `VARCHAR(4000)`; a transcrição de um áudio de até 1 MB cabe com folga
+- Supressão do `ParameterNumber` do Checkstyle para o `ProcessVoiceCommandUseCase` (8 parâmetros com o
+  `TransactionOperations`), em `config/checkstyle/suppressions.xml` (decisão do usuário)
 - Registros locais antigos com `_id` `ObjectId` ficam como estão — ambiente de desenvolvimento
 - Três fases; tipo `feat`
 
 ## Definição de pronto
 
 - [ ] `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` passa (Spotless, Checkstyle, `*Test`, `*IT`, JaCoCo)
-- [ ] Spring Modulith 2.1.x no `build.gradle` com `spring-modulith-starter-jpa`; `event_publication` criada no MySQL
+- [ ] Spring Modulith 2.1.x no `build.gradle` com `spring-modulith-starter-jdbc`; `EVENT_PUBLICATION` criada pelo Modulith no MySQL
       local; `completion-mode=DELETE` e *staleness* de 1 min nos três estados no `application.properties`
 - [ ] os quatro eventos têm `DomainEventId id()`; o `TransactionProposalCreatedEvent` não carrega a entidade
 - [ ] no comando de voz, a gravação da proposta e a publicação rodam no mesmo `TransactionOperations.execute`
@@ -187,17 +195,17 @@ Contexto para uma sessão nova:
 - Os testes unitários dos use cases hoje conferem o evento com `verify(eventPublisher).publishEvent(new XEvent(...))`;
   com o ID aleatório, passam a usar `ArgumentCaptor` e `usingRecursiveComparison().ignoringFields("id")`.
 - O `MySqlCleaner` faz `TRUNCATE` de todas as tabelas lidas de `information_schema`, incluindo a `event_publication`.
-- Se a tabela `event_publication` não for criada pelo `ddl-auto=update` (entidade do Modulith fora do *entity scan*),
+- Se a tabela `EVENT_PUBLICATION` não for criada pelo inicializador de schema do Modulith,
   parar e perguntar.
 - Logs: nunca transcrição, descrição, valor, categoria nem mensagem da exceção (`error-handling.md`).
 - Comentários em inglês, só o porquê; documentação em pt-BR; Spotless confere `.properties`, `.yml` e `.md`.
 
 ## Fase 1: Outbox, ID do evento e transação do comando de voz
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: BOM `spring-modulith-bom` 2.1.x por `platform(...)` e
-      `spring-modulith-starter-jpa`; conferir a compatibilidade com o Boot 4.1.2 e o Jackson 3
+      `spring-modulith-starter-jdbc`; conferir a compatibilidade com o Boot 4.1.2 e o Jackson 3
 - [x] [verificação] `application.properties`: `spring.modulith.events.completion-mode=DELETE`, com comentário (a
       publicação carrega a transcrição)
 - [x] [TDD] `DomainEventId` e `DomainEvent.id()` nos quatro eventos; `TransactionProposalCreatedEvent` com os dados da
@@ -207,7 +215,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `ProcessVoiceCommandUseCase` recebe `TransactionOperations` e grava a proposta e publica o
       `TransactionProposalCreatedEvent` dentro de `execute(...)`, com comentário do porquê; o teste recebe
       `@Spy TransactionOperations.withoutTransaction()`
-- [ ] [verificação] `AuditEntryDocument` com `@Id UUID id` = `event.id().uuid()` e campos da proposta lidos do evento;
+- [x] [verificação] `AuditEntryDocument` com `@Id UUID id` = `event.id().uuid()` e campos da proposta lidos do evento;
       `AuditEntryDocumentRepository` com chave `UUID`; `AuditTrailIT` passa sem mudança
 
 ### Plano de verificação
@@ -221,11 +229,24 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - `grep -n "TransactionProposal proposal" src/main/java/dio/budgeting/domain/event/*.java` → nenhuma linha
 - `bootRun` com o `.env` carregado e `curl -s localhost:8080/actuator/health` → `{"status":"UP"}`; com o MySQL do
   compose, `docker compose exec database sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" transaction -e "SHOW TABLES
-  LIKE '\''event_publication'\''"'` → uma linha; encerrar o processo depois
+  LIKE '\''EVENT_PUBLICATION'\''"'` → uma linha; encerrar o processo depois
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: Spring Modulith 2.1.2 (BOM) com `spring-modulith-starter-jdbc`, `completion-mode=DELETE` e criação do schema pelo
+Modulith; `DomainEventId` e `DomainEvent.id()` nos quatro eventos (`TransactionProposalCreatedEvent` sem a entidade);
+os três use cases criam o ID; no comando de voz, a proposta e a publicação rodam em `TransactionOperations.execute`;
+`AuditEntryDocument` com `_id` UUID igual ao ID do evento.
+
+Decisões: starter JDBC no lugar do JPA e supressão do `ParameterNumber` (ver Decisões).
+
+Verificação: `env -u OPENAI_API_KEY -u JWT_SECRET ./gradlew build` → `BUILD SUCCESSFUL`; `dependencyInsight` →
+`spring-modulith-events-core` 2.1.2 (o serializador usa Jackson 3); `AuditTrailIT` → 5 testes passam; greps do
+`domain` e dos eventos → nenhuma linha; `bootRun` → `{"status":"UP"}` e `EVENT_PUBLICATION` criada no MySQL
+(`SERIALIZED_EVENT varchar(4000)`).
+
+Para uma sessão nova: a tabela se chama `EVENT_PUBLICATION` (maiúsculas; no MySQL do Linux o nome é sensível a
+maiúsculas); o Boot derruba o compose ao encerrar o `bootRun`, então consulte o banco com a aplicação de pé.
 
 ## Fase 2: Falha, idempotência e reenvio
 

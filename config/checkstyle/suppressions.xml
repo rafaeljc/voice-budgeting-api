@@ -8,4 +8,6 @@
     <suppress id="NoFieldInjection" files="[\\/]src[\\/]test[\\/]"/>
     <!-- Controllers wire one collaborator per use case, so their constructors grow with the API -->
     <suppress id="ParameterNumber" files="[\\/]infrastructure[\\/]http[\\/][^\\/]*Controller\.java"/>
+    <!-- The voice command orchestrates one gateway per AI step plus the proposal write and its transaction -->
+    <suppress id="ParameterNumber" files="[\\/]application[\\/]ProcessVoiceCommandUseCase\.java"/>
 </suppressions>

@@ -143,23 +143,7 @@ class ProcessVoiceCommandUseCaseTest {
             assertThat(returned.category()).isEqualTo("GROCERIES");
             assertThat(returned.expiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(5)));
         });
-        var published = ArgumentCaptor.forClass(TransactionProposalCreatedEvent.class);
-        verify(eventPublisher).publishEvent(published.capture());
-        assertThat(published.getValue().id()).isNotNull();
-        assertThat(published.getValue())
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .isEqualTo(new TransactionProposalCreatedEvent(
-                        new DomainEventId(),
-                        USER_ID,
-                        NOW,
-                        new AudioMetadata("M4A", 1),
-                        COMMAND,
-                        saved.getValue().getId(),
-                        "Mercado",
-                        new Money(new BigDecimal("80.00")),
-                        Category.GROCERIES,
-                        NOW.plus(Duration.ofMinutes(5))));
+        assertProposalCreatedEventPublished(saved.getValue());
     }
 
     @Test
@@ -195,5 +179,25 @@ class ProcessVoiceCommandUseCaseTest {
                 .isInstanceOf(AiProviderUnavailableException.class);
         verifyNoInteractions(proposalRepository);
         verifyNoInteractions(eventPublisher);
+    }
+
+    private void assertProposalCreatedEventPublished(TransactionProposal saved) {
+        var published = ArgumentCaptor.forClass(TransactionProposalCreatedEvent.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue().id()).isNotNull();
+        assertThat(published.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(new TransactionProposalCreatedEvent(
+                        new DomainEventId(),
+                        USER_ID,
+                        NOW,
+                        new AudioMetadata("M4A", 1),
+                        COMMAND,
+                        saved.getId(),
+                        "Mercado",
+                        new Money(new BigDecimal("80.00")),
+                        Category.GROCERIES,
+                        NOW.plus(Duration.ofMinutes(5))));
     }
 }

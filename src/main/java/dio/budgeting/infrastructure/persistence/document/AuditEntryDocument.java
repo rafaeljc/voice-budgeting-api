@@ -13,7 +13,6 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -26,7 +25,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 @NoArgsConstructor
 public class AuditEntryDocument {
     @Id
-    private ObjectId id;
+    private UUID id;
 
     private AuditEntryType type;
     private UUID userId;
@@ -93,6 +92,7 @@ public class AuditEntryDocument {
 
     private static AuditEntryDocument of(AuditEntryType type, DomainEvent event, String traceId) {
         var entry = new AuditEntryDocument();
+        entry.setId(event.id().uuid());
         entry.setType(type);
         entry.setUserId(event.userId().uuid());
         entry.setOccurredAt(event.occurredAt());
