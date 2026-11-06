@@ -328,18 +328,18 @@ cria o listener, a porta `AuditEntryRepository`, o documento e o `AuditTrailIT` 
 
 ## Fase 3: Trilha de auditoria
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `DomainEventAuditListener` + `AppendAuditEntryUseCase` + porta `AuditEntryRepository`:
+- [x] [TDD] `DomainEventAuditListener` + `AppendAuditEntryUseCase` + porta `AuditEntryRepository`:
       `DomainEventAuditListenerTest` → o use case recebe o evento; o use case lança `RuntimeException` → o listener
       não a propaga
-- [ ] [TDD] `AuditEntryDocument`, `AuditEntryType`, `MongoAuditEntryRepository` e `AuditEntryDocumentRepository`:
+- [x] [TDD] `AuditEntryDocument`, `AuditEntryType`, `MongoAuditEntryRepository` e `AuditEntryDocumentRepository`:
       `AuditTrailIT` → comando de registro → `TRANSACTION_PROPOSAL_CREATED` com todos os campos (`amount`
       `Decimal128`, `traceId` = `X-Request-Id`); não entendido →
       `VOICE_COMMAND_NOT_UNDERSTOOD` com `audio` e `transcription`; confirmar → `TRANSACTION_PROPOSAL_CONFIRMED` com o
       `transactionId` da resposta; cancelar → `TRANSACTION_PROPOSAL_CANCELED`; consulta e decisão 404 → nenhuma
       entrada (conferido depois de uma entrada seguinte do mesmo usuário)
-- [ ] [verificação] Comentário do porquê no `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)` e
+- [x] [verificação] Comentário do porquê no `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)` e
       no `@Async`
 
 ### Plano de verificação
@@ -353,7 +353,20 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: porta `domain/AuditEntryRepository` (`append`), `AppendAuditEntryUseCase`, `DomainEventAuditListener`
+(`@Async` + `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`, com comentário do porquê; captura
+`RuntimeException` e registra `WARN` `Audit entry not appended` só com `eventType` e `errorType`),
+`AuditEntryDocument` (`switch` sobre a `sealed interface`, `amount` em `Decimal128`, campo nulo não gravado),
+`AuditEntryType`, `AuditEntryDocumentRepository` e `MongoAuditEntryRepository` (lê o `traceId` do `Tracer`).
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `DomainEventAuditListenerTest` passa; `AuditTrailIT` (5 testes)
+passa: os quatro tipos com todos os campos, `traceId` igual ao `X-Request-Id`, `amount` como `Decimal128`, e consulta
+e 404 sem entrada. O `grep` de `addKeyValue` com `transcription` acha uma linha, o `transcriptionLength` que já existia
+no `ProcessVoiceCommandUseCase` (só o tamanho, nunca o conteúdo); nenhum log novo leva conteúdo.
+
+Para uma sessão nova: os itens do listener e do documento foram commitados juntos (`de820d7`), porque o contexto
+Spring só sobe com uma implementação da porta. Não houve RED isolado do `AuditTrailIT`: ele passou de primeira, e
+confirmei no relatório que os 5 testes rodaram. A Fase 4 é só documentação.
 
 ## Fase 4: Documentação
 
