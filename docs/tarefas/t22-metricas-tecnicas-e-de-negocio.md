@@ -145,7 +145,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   seção de métricas do README, com as consultas das três taxas; ajustar o trecho dos traces
 - [x] [verificação] `.claude/rules/architecture.md`: regra "Listener de evento com lógica de negócio que não passa por
   um use case"
-- [ ] [verificação] `docs/escopo.md`: justificativa do FUT-16
+- [x] [verificação] `docs/escopo.md`: justificativa do FUT-16
 - [ ] [verificação] `CLAUDE.md`: stack de observabilidade com o Grafana LGTM local
 - [ ] [verificação] `docs/tarefas.md`: nota na T15 sobre as métricas do Resilience4j
 - [ ] [verificação] `docs/tarefas.md`: checkbox da T22 (último commit)
