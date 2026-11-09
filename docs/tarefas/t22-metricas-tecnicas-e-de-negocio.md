@@ -127,9 +127,9 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Métricas expostas e visualizadas no Grafana
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] criar `infrastructure/event/DomainEventMetricsListener` (`@EventListener`, `switch` no
+- [x] [verificação] criar `infrastructure/event/DomainEventMetricsListener` (`@EventListener`, `switch` no
   `DomainEvent`, contador `budgeting.ai.interpretations` com `outcome` = `confirmed` | `canceled` | `not_understood`;
   `TransactionProposalCreatedEvent` não conta) — sem teste, por decisão do usuário
 - [ ] [verificação] `application.properties`: `management.endpoints.web.exposure.include=health,metrics` e
