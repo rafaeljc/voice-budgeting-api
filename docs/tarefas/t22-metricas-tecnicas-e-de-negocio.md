@@ -143,7 +143,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   exportação em `application-test.properties` com comentário
 - [x] [verificação] subir a aplicação, conferir os nomes reais das métricas no Prometheus (via Grafana) e escrever a
   seção de métricas do README, com as consultas das três taxas; ajustar o trecho dos traces
-- [ ] [verificação] `.claude/rules/architecture.md`: regra "Listener de evento com lógica de negócio que não passa por
+- [x] [verificação] `.claude/rules/architecture.md`: regra "Listener de evento com lógica de negócio que não passa por
   um use case"
 - [ ] [verificação] `docs/escopo.md`: justificativa do FUT-16
 - [ ] [verificação] `CLAUDE.md`: stack de observabilidade com o Grafana LGTM local
