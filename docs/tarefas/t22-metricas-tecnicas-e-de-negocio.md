@@ -132,7 +132,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] criar `infrastructure/event/DomainEventMetricsListener` (`@EventListener`, `switch` no
   `DomainEvent`, contador `budgeting.ai.interpretations` com `outcome` = `confirmed` | `canceled` | `not_understood`;
   `TransactionProposalCreatedEvent` não conta) — sem teste, por decisão do usuário
-- [ ] [verificação] `application.properties`: `management.endpoints.web.exposure.include=health,metrics` e
+- [x] [verificação] `application.properties`: `management.endpoints.web.exposure.include=health,metrics` e
   `management.otlp.metrics.export.enabled=true`, com comentários
 - [ ] [verificação] `SecurityConfiguration`: `permitAll` para `/actuator/metrics` e `/actuator/metrics/**`, com o
   comentário sobre produção
