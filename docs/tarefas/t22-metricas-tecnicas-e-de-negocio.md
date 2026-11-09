@@ -147,7 +147,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   um use case"
 - [x] [verificação] `docs/escopo.md`: justificativa do FUT-16
 - [x] [verificação] `CLAUDE.md`: stack de observabilidade com o Grafana LGTM local
-- [ ] [verificação] `docs/tarefas.md`: nota na T15 sobre as métricas do Resilience4j
+- [x] [verificação] `docs/tarefas.md`: nota na T15 sobre as métricas do Resilience4j
 - [ ] [verificação] `docs/tarefas.md`: checkbox da T22 (último commit)
 
 ### Plano de verificação

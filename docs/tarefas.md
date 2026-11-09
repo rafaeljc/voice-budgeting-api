@@ -285,6 +285,8 @@ Aplicar circuit breaker e limite de chamadas simultâneas a cada dependência de
 
 **Nota (T10):** o circuit breaker vê a falha depois dos retries do SDK; timeout e retry por etapa no `application.properties`.
 
+**Nota (T22):** expor as métricas do Resilience4j com `resilience4j-micrometer` (estado do circuit breaker e do bulkhead), que o OBS-02 pede e a T22 não cobriu.
+
 <a id="t16"></a>
 ### T16 — Degradação controlada
 
