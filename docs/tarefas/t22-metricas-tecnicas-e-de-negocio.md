@@ -80,6 +80,8 @@ Grafana do container `grafana/otel-lgtm`.
 - Visualização pelo `grafana/otel-lgtm` no `compose.yml` + exportação OTLP de métricas ligada — uma imagem com Grafana,
   Prometheus e coletor já ligados, reconhecida pelo `spring-boot-docker-compose`, sem código nem dependência nova
   (`micrometer-registry-otlp` já está no classpath); antecipa a parte local do FUT-16 (decisão do usuário)
+- Intervalo de exportação OTLP explícito em `application.properties` (`management.otlp.metrics.export.step=1m`, o
+  padrão do Spring Boot) — o tempo até uma métrica aparecer no Grafana fica visível na configuração (decisão do usuário)
 - Sem dashboard; o Explore do Grafana e as consultas no README bastam — dashboard é o FUT-13 (decisão do usuário)
 - O objetivo da métrica de negócio é avaliar se a IA identifica corretamente o comando e propõe a ação certa: confirmada
   = acertou, cancelada = errou na proposta, não entendido = não identificou o comando (decisão do usuário)
