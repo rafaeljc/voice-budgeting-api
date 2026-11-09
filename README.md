@@ -91,11 +91,51 @@ técnicos. Para ler no terminal:
 ./gradlew bootRun | jq 'select(.traceId != null) | {"@timestamp", message, traceId}'
 ```
 
-Os traces não são exportados enquanto não houver um endpoint OTLP configurado. Para enviá-los a um coletor (por
-exemplo, ADOT Collector ou CloudWatch Agent, que os repassam ao X-Ray), defina a variável de ambiente:
+Localmente, os traces vão para o container `grafana/otel-lgtm` do `compose.yml`: o `spring-boot-docker-compose` aponta a
+aplicação para o coletor. Em Grafana → Explore → Tempo, procure pelo serviço `budgeting`. Em outros ambientes, defina o
+endpoint OTLP (por exemplo, para um ADOT Collector ou CloudWatch Agent, que os repassam ao X-Ray):
 
 ```bash
 export MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT=http://localhost:4318/v1/traces
+```
+
+## Métricas
+
+O `GET /actuator/metrics` lista as métricas:
+
+```bash
+curl -s http://localhost:8080/actuator/metrics | jq -r '.names[]'
+curl -s 'http://localhost:8080/actuator/metrics/budgeting.ai.interpretations?tag=outcome:confirmed' | jq '.measurements'
+```
+
+As métricas também são enviadas ao container `grafana/otel-lgtm` (a cada 1 minuto, `management.otlp.metrics.export.step`).
+O Grafana fica em http://localhost:3000 (`admin`/`admin`): Explore → fonte de dados Prometheus. O contador e as
+consultas abaixo só dão resultado depois de o primeiro valor ser exportado.
+
+| Métrica (Actuator)                      | Nome no Prometheus                               | O que mostra                                         |
+|-----------------------------------------|--------------------------------------------------|------------------------------------------------------|
+| `gen_ai.client.operation`               | `gen_ai_client_operation_milliseconds_*`         | latência por etapa da IA (`gen_ai_operation_name` = `transcription`, `chat`, `text_to_speech`) |
+| `http.server.requests`                  | `http_server_requests_milliseconds_*`            | requisições e erros, por `uri`, `status` e `outcome` |
+| `hikaricp.connections.active`/`pending` | `hikaricp_connections_active`/`_pending`         | conexões do pool do banco                            |
+| `jvm.memory.used`                       | `jvm_memory_used_bytes`                          | memória da JVM                                       |
+| `process.cpu.usage`                     | `process_cpu_usage`                              | uso de CPU                                           |
+| `budgeting.ai.interpretations`          | `budgeting_ai_interpretations_total`             | desfecho das interpretações da IA, tag `outcome`: `confirmed`, `canceled`, `not_understood` |
+
+O contador conta, desde que a aplicação subiu, quantas interpretações da IA terminaram em cada desfecho: a proposta
+confirmada (a IA acertou), a cancelada (errou a proposta) e o comando não entendido (não identificou o comando). Ele é
+incrementado antes do commit da decisão; propostas expiradas não contam.
+
+Taxas (valores acumulados desde que a aplicação subiu; sem dados, a consulta devolve vazio ou `NaN`):
+
+```promql
+# acerto das propostas: confirmadas / (confirmadas + canceladas)
+sum(budgeting_ai_interpretations_total{outcome="confirmed"}) / sum(budgeting_ai_interpretations_total{outcome=~"confirmed|canceled"})
+
+# comandos não entendidos / respostas 200 de /api/v1/transactions/ai
+sum(budgeting_ai_interpretations_total{outcome="not_understood"}) / sum(http_server_requests_milliseconds_count{uri="/api/v1/transactions/ai",status="200"})
+
+# comandos com argumentos inválidos (422) / total de /api/v1/transactions/ai
+sum(http_server_requests_milliseconds_count{uri="/api/v1/transactions/ai",status="422"}) / sum(http_server_requests_milliseconds_count{uri="/api/v1/transactions/ai"})
 ```
 
 ## Testes

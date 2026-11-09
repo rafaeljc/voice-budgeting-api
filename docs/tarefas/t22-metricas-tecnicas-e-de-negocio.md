@@ -141,7 +141,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `compose.yml`: serviço `grafana/otel-lgtm` (tag fixa, portas `3000`, `4317`, `4318`)
 - [x] [verificação] rodar `./gradlew integrationTest` e, se o log mostrar falhas de exportação OTLP, desligar a
   exportação em `application-test.properties` com comentário
-- [ ] [verificação] subir a aplicação, conferir os nomes reais das métricas no Prometheus (via Grafana) e escrever a
+- [x] [verificação] subir a aplicação, conferir os nomes reais das métricas no Prometheus (via Grafana) e escrever a
   seção de métricas do README, com as consultas das três taxas; ajustar o trecho dos traces
 - [ ] [verificação] `.claude/rules/architecture.md`: regra "Listener de evento com lógica de negócio que não passa por
   um use case"
