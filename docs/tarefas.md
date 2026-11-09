@@ -42,7 +42,7 @@
 - [x] [T21 — Garantia de entrega da auditoria](#t21)
 
 **Fase 8 — Observabilidade e custo**
-- [ ] [T22 — Métricas técnicas e de negócio](#t22)
+- [x] [T22 — Métricas técnicas e de negócio](#t22)
 - [ ] [T23 — Medição de consumo de IA](#t23)
 
 **Fase 9 — Desempenho**
@@ -284,6 +284,8 @@ Aplicar circuit breaker e limite de chamadas simultâneas a cada dependência de
 **Nota (T09):** um circuit breaker e um bulkhead por gateway (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`), pois as três dependências falham de forma independente.
 
 **Nota (T10):** o circuit breaker vê a falha depois dos retries do SDK; timeout e retry por etapa no `application.properties`.
+
+**Nota (T22):** expor as métricas do Resilience4j com `resilience4j-micrometer` (estado do circuit breaker e do bulkhead), que o OBS-02 pede e a T22 não cobriu.
 
 <a id="t16"></a>
 ### T16 — Degradação controlada

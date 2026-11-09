@@ -156,7 +156,7 @@ Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptado
 ## Não fazer
 
 - Use case importando client, controller, repositório JPA ou documento do MongoDB de `infrastructure`.
-- Listener de evento que não passa por um use case.
+- Listener de evento com lógica de negócio que não passa por um use case.
 - Anotações do Spring AI (`@Tool`, `@ToolParam`) em `domain` ou `application`.
 - Lógica de negócio em controller ou adaptador.
 - Injeção por campo; `System.out` / `System.err`.
