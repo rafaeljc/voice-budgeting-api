@@ -103,18 +103,22 @@ Grafana do container `grafana/otel-lgtm`.
   aplicação e confere as métricas (decisão do usuário)
 - Sem ADR — nenhuma decisão importante e não óbvia de arquitetura; o ADR 0002 ("exportação OTLP de métricas desligada
   até a T22") fica como histórico
+- Sem a verificação com a chave da OpenAI — não há chave disponível: os comandos de voz reais
+  (`/api/v1/transactions/ai`) saem do plano de verificação, e confirmar e cancelar usam propostas inseridas direto no
+  MySQL. Ficam sem verificação o `outcome=not_understood` e os valores das taxas de não entendidos e de 422 (as
+  consultas são validadas só na sintaxe) (decisão do usuário)
 - Uma fase; tipo `feat`; branch `feat/metricas-tecnicas-e-de-negocio`
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
-- [ ] `GET /actuator/metrics` responde 200 sem token e lista `budgeting.ai.interpretations`, `gen_ai.client.operation`,
+- [x] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
+- [x] `GET /actuator/metrics` responde 200 sem token e lista `budgeting.ai.interpretations`, `gen_ai.client.operation`,
   `http.server.requests`, `hikaricp.connections.active`, `jvm.memory.used` e `process.cpu.usage`
-- [ ] depois de confirmar uma proposta e cancelar outra, `budgeting.ai.interpretations` tem `outcome=confirmed` e
+- [x] depois de confirmar uma proposta e cancelar outra, `budgeting.ai.interpretations` tem `outcome=confirmed` e
   `outcome=canceled` com 1 cada
-- [ ] o Prometheus do `grafana/otel-lgtm` (consultado pelo Grafana) retorna `budgeting_ai_interpretations_total`
-- [ ] README documenta o endpoint, o Grafana, as métricas e as consultas das três taxas com os nomes reais
-- [ ] `architecture.md`, `escopo.md`, `CLAUDE.md` e `tarefas.md` atualizados como no escopo
+- [x] o Prometheus do `grafana/otel-lgtm` (consultado pelo Grafana) retorna `budgeting_ai_interpretations_total`
+- [x] README documenta o endpoint, o Grafana, as métricas e as consultas das três taxas com os nomes reais
+- [x] `architecture.md`, `escopo.md`, `CLAUDE.md` e `tarefas.md` atualizados como no escopo
 
 ## Para futuros agentes
 
@@ -129,7 +133,7 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Métricas expostas e visualizadas no Grafana
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] criar `infrastructure/event/DomainEventMetricsListener` (`@EventListener`, `switch` no
   `DomainEvent`, contador `budgeting.ai.interpretations` com `outcome` = `confirmed` | `canceled` | `not_understood`;
@@ -148,21 +152,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/escopo.md`: justificativa do FUT-16
 - [x] [verificação] `CLAUDE.md`: stack de observabilidade com o Grafana LGTM local
 - [x] [verificação] `docs/tarefas.md`: nota na T15 sobre as métricas do Resilience4j
-- [ ] [verificação] `docs/tarefas.md`: checkbox da T22 (último commit)
+- [x] [verificação] `docs/tarefas.md`: checkbox da T22 (último commit)
 
 ### Plano de verificação
 
 - `./gradlew build` → `BUILD SUCCESSFUL`
 - `./gradlew integrationTest 2>&1 | grep -i -E "otlp|failed to (publish|export)"` → sem saída
-- `set -a && source .env && set +a && ./gradlew bootRun` (em segundo plano; exige `OPENAI_API_KEY`) → aplicação e
+- `set -a && source .env && set +a && ./gradlew bootRun` (em segundo plano) → aplicação e
   container `grafana/otel-lgtm` no ar (`docker compose ps` lista o serviço)
 - `curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/metrics` (sem token) → `200`
 - `curl -s http://localhost:8080/actuator/metrics | jq -r '.names[]' | grep -E
   '^(budgeting.ai.interpretations|gen_ai.client.operation|http.server.requests|hikaricp.connections.active|jvm.memory.used|process.cpu.usage)$'`
   → as seis métricas (o `budgeting.ai.interpretations` aparece depois do primeiro incremento, e o
-  `gen_ai.client.operation`, depois do primeiro comando de voz)
-- dois comandos de voz com `src/test/resources/audio/recording-1.m4a` (`POST /api/v1/transactions/ai` com
-  `TOKEN=$(python3 scripts/generate_token.py)`), um seguido de `POST .../confirm` e outro de `POST .../cancel` →
+  `gen_ai.client.operation`, depois da primeira chamada à IA)
+- duas propostas inseridas direto na tabela `transaction_proposal_entity` do MySQL (sem chamar a IA), uma seguida de
+  `POST /api/v1/transaction-proposals/{id}/confirm` e outra de `.../cancel`, com
+  `TOKEN=$(python3 scripts/generate_token.py)` →
   `curl -s 'http://localhost:8080/actuator/metrics/budgeting.ai.interpretations?tag=outcome:confirmed' | jq
   '.measurements[0].value'` → `1.0`, e o mesmo com `outcome:canceled` → `1.0`
 - depois do intervalo de exportação (~1 min): `curl -s -G
@@ -173,8 +178,36 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `DomainEventMetricsListener` (`@EventListener`, `switch` no `DomainEvent`, contador
+`budgeting.ai.interpretations` com `outcome` = `confirmed` | `canceled` | `not_understood`); `/actuator/metrics` exposto e
+público; serviço `grafana/otel-lgtm:0.40.0` no `compose.yml` (a tag mais recente na execução, mesmo digest do `latest`);
+exportação OTLP de métricas ligada, com o intervalo explícito (`management.otlp.metrics.export.step=1m`) e desligada em
+`application-test.properties` (sem isso, o fechamento de cada contexto de teste logava `Failed to publish metrics to OTLP
+receiver` com stack trace); README com a seção de métricas, as três consultas PromQL e o trecho dos traces; regra do
+`architecture.md`, FUT-16, `CLAUDE.md` e notas do `tarefas.md` ajustados.
+
+Decisões da execução (usuário): intervalo de exportação explícito; sem a verificação com a chave da OpenAI (ver
+Decisões).
+
+Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; `integrationTest` sem falha de OTLP; `/actuator/metrics` → `200` sem
+token, com as seis métricas; `outcome=confirmed` e `outcome=canceled` com `1.0` cada (propostas inseridas no MySQL);
+`budgeting_ai_interpretations_total` no Prometheus com as duas séries; traces do serviço `budgeting` no Tempo; as três
+consultas PromQL com `"status":"success"`, só a de acerto com valor (0,5). Não verificados, por falta de chave:
+`not_understood`, `gen_ai.client.operation` com sucesso e as taxas de não entendidos e de 422.
+
+Para uma sessão nova: no Prometheus os nomes diferem do Actuator e vêm em milissegundos
+(`http_server_requests_milliseconds_count`, `gen_ai_client_operation_milliseconds_*`), com os rótulos `uri` e `status`;
+a fonte de dados tem `uid` `prometheus`. A verificação deixou no MySQL de desenvolvimento uma transação "teste" de
+R$ 10,00 (GROCERIES) e os containers do `compose.yml` no ar.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A T22 expõe as métricas técnicas (latência por etapa da IA, erros HTTP e recursos, já coletadas pelo Spring AI e pelo
+Actuator) e cria a única métrica de negócio, `budgeting.ai.interpretations{outcome}`, para avaliar se a IA identifica o
+comando e propõe a ação certa. O Grafana local (`grafana/otel-lgtm`) recebe métricas e traces por OTLP; as taxas de
+acerto, de não entendidos e de comandos inválidos estão em consultas PromQL no README. Sem testes automatizados e sem
+circuit breaker e bulkhead (T15), por decisão do escopo. Lacuna: o fluxo de voz real não foi exercitado, por falta de
+chave da OpenAI.
+
+Definição de pronto conferida: todos os critérios marcados; o terceiro foi verificado com propostas inseridas no banco
+(ver Decisões).

@@ -42,7 +42,7 @@
 - [x] [T21 — Garantia de entrega da auditoria](#t21)
 
 **Fase 8 — Observabilidade e custo**
-- [ ] [T22 — Métricas técnicas e de negócio](#t22)
+- [x] [T22 — Métricas técnicas e de negócio](#t22)
 - [ ] [T23 — Medição de consumo de IA](#t23)
 
 **Fase 9 — Desempenho**
