@@ -134,7 +134,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `TransactionProposalCreatedEvent` não conta) — sem teste, por decisão do usuário
 - [x] [verificação] `application.properties`: `management.endpoints.web.exposure.include=health,metrics` e
   `management.otlp.metrics.export.enabled=true`, com comentários
-- [ ] [verificação] `SecurityConfiguration`: `permitAll` para `/actuator/metrics` e `/actuator/metrics/**`, com o
+- [x] [verificação] `SecurityConfiguration`: `permitAll` para `/actuator/metrics` e `/actuator/metrics/**`, com o
   comentário sobre produção
 - [ ] [verificação] `compose.yml`: serviço `grafana/otel-lgtm` (tag fixa, portas `3000`, `4317`, `4318`)
 - [ ] [verificação] rodar `./gradlew integrationTest` e, se o log mostrar falhas de exportação OTLP, desligar a
