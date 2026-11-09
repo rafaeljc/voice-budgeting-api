@@ -136,7 +136,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `management.otlp.metrics.export.enabled=true`, com comentários
 - [x] [verificação] `SecurityConfiguration`: `permitAll` para `/actuator/metrics` e `/actuator/metrics/**`, com o
   comentário sobre produção
-- [ ] [verificação] `compose.yml`: serviço `grafana/otel-lgtm` (tag fixa, portas `3000`, `4317`, `4318`)
+- [x] [verificação] `compose.yml`: serviço `grafana/otel-lgtm` (tag fixa, portas `3000`, `4317`, `4318`)
 - [ ] [verificação] rodar `./gradlew integrationTest` e, se o log mostrar falhas de exportação OTLP, desligar a
   exportação em `application-test.properties` com comentário
 - [ ] [verificação] subir a aplicação, conferir os nomes reais das métricas no Prometheus (via Grafana) e escrever a

@@ -43,6 +43,13 @@ services:
     volumes:
       - ./docs/openapi.yaml:/spec/openapi.yaml:ro
 
+  grafana:
+    image: grafana/otel-lgtm:0.40.0
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+
 volumes:
   transaction_data:
   audit_data:
