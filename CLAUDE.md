@@ -14,7 +14,8 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
 - Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
   por `scripts/generate_token.py`
-- Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`)
+- Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`); métricas e
+  traces exportados por OTLP ao Grafana LGTM local (`grafana/otel-lgtm` no `compose.yml`)
 - Lombok (`io.freefair.lombok`), Jackson 3 (`tools.jackson.*`)
 - JUnit 5, AssertJ, Mockito, Testcontainers, WireMock
 - Spotless (palantir-java-format) e Checkstyle (convenções, sem formatação), verificados no `build`
