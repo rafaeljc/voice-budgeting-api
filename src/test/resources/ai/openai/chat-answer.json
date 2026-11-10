@@ -10,5 +10,10 @@
       "finish_reason": "stop"
     }
   ],
-  "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 30,
+    "total_tokens": 150,
+    "prompt_tokens_details": {"cached_tokens": 64}
+  }
 }

@@ -1,0 +1,6 @@
+{
+  "task": "transcribe",
+  "language": "portuguese",
+  "duration": 3.5,
+  "text": ${text}
+}

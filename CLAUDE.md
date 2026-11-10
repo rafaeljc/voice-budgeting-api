@@ -42,16 +42,18 @@ src/main/java/dio/budgeting/
   infrastructure/
     http/                       # *Controller
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
-    ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect
+    ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect,
+                                # AiUsageObservationHandler (consumo da IA pela observation do Spring AI)
+      event/                    # AiUsageMeasuredEvent (evento de aplicação, não de domínio)
       tool/                     # *Tools, InterpretationCollector, ToolExecutionConfiguration (adaptador de entrada)
         argument/               # *ToolArguments
     config/                     # *Configuration (ex.: Clock), *Properties
-    event/                      # *Listener (ouvem eventos de domínio: adaptador de entrada)
+    event/                      # *Listener (ouvem eventos de domínio e de aplicação: adaptador de entrada)
     scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository, Mongo*Repository, *DocumentRepository
-      document/                 # *Document (MongoDB), irmão de entity/
+      document/                 # *Document (MongoDB, ex.: AuditEntryDocument, AiUsageEntryDocument), irmão de entity/
 src/main/resources/
   application.properties
   prompts/                      # prompts do sistema (*.st, UTF-8)

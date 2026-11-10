@@ -57,6 +57,11 @@ O job de reenvio das publicações de auditoria (`EventPublicationResubmissionJo
 `FailedEventPublications` do Modulith direto, sem use case, porque reenviar é operação técnica do framework, sem regra
 de negócio (um use case em `application` teria de importar o Modulith).
 
+O consumo da IA é outra exceção: o `AiUsageObservationHandler` publica um evento de aplicação (`AiUsageMeasuredEvent`,
+não de domínio: o fato só é conhecido dentro do Spring AI, e um `DomainEvent` iria para a auditoria e para o outbox) e o
+`AiUsageMeasuredEventListener` grava direto pelo Spring Data (`AiUsageEntryDocumentRepository`), sem porta nem use
+case, porque consumo é dado técnico, sem regra de negócio.
+
 O adaptador de tools é irmão do controller: o modelo escolhe os argumentos, como um cliente HTTP escolhe o corpo.
 `@Tool` e `@ToolParam` descrevem o canal (nome, prompt, schema) e ficam só nele; o use case não os conhece.
 

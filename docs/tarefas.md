@@ -43,7 +43,7 @@
 
 **Fase 8 — Observabilidade e custo**
 - [x] [T22 — Métricas técnicas e de negócio](#t22)
-- [ ] [T23 — Medição de consumo de IA](#t23)
+- [x] [T23 — Medição de consumo de IA](#t23)
 
 **Fase 9 — Desempenho**
 - [ ] [T24 — Cache de consultas](#t24)

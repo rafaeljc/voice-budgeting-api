@@ -46,7 +46,8 @@ paths:
 - `@AutoConfigureAiStub` (opt-in) injeta o bean `AiStub`, que simula a IA: `givenTranscription`, `givenToolCall`,
   `givenToolCalls(AiToolCall...)`, `givenAnswer`, `givenSpeech` e `givenFailure(AiStage, AiFailure)` (falha por etapa).
   O stub tem uma única resposta de chat por comando, e `speechText()`, `assistantCommand()` e `assistantCallCount()`
-  leem o que foi enviado à síntese e ao assistente. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor.
+  leem o que foi enviado à síntese e ao assistente. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor. O stub devolve a duração da transcrição
+  (`verbose_json`) e tokens do chat, inclusive em cache; o `AiUsageMeasurementIT` espera a gravação com Awaitility.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em
