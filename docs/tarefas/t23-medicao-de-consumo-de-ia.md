@@ -146,7 +146,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] transcrição em `verbose_json` no `application.properties` e no stub (`givenTranscription`
   responde JSON com `text`, `duration` e `language`); payloads do chat com tokens diferentes de zero, inclusive
   `cached_tokens` — `VoiceCommandIT` continua passando
-- [ ] [TDD] `AiUsageMeasurementIT`: comando de voz concluído grava três documentos em `ai_usage_entries` com `userId`,
+- [x] [TDD] `AiUsageMeasurementIT`: comando de voz concluído grava três documentos em `ai_usage_entries` com `userId`,
   `traceId`, modelo e consumos da etapa — implementar `AiUsageObservationHandler`, `AiUsageMeasuredEvent`,
   `AiUsageMeasuredEventListener`, `AiUsageEntryDocument`, `AiStage` e `AiUsageEntryDocumentRepository`
 - [ ] [TDD] `AiUsageMeasurementIT`: 422 `invalid-command` grava o documento `ASSISTANT`
