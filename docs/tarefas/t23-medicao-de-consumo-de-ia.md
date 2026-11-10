@@ -152,7 +152,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `AiUsageMeasurementIT`: 422 `invalid-command` grava o documento `ASSISTANT`
 - [x] [verificação] `CLAUDE.md`: estrutura (`ai/`, `event/`, `persistence/document/`)
 - [x] [verificação] `.claude/rules/architecture.md`: precedente do evento de aplicação e do listener sem use case
-- [ ] [verificação] `.claude/rules/ai-integration.md`: captura pela observation e `verbose_json`
+- [x] [verificação] `.claude/rules/ai-integration.md`: captura pela observation e `verbose_json`
 - [ ] [verificação] `.claude/rules/testing.md`: stub com duração e tokens e o `AiUsageMeasurementIT`
 - [ ] [verificação] `docs/tarefas.md`: checkbox da T23 (último commit)
 

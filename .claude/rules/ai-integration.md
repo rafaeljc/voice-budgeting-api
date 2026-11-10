@@ -63,6 +63,13 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - `MethodToolCallback` em `ERROR` no `application.properties`: o `WARN` de conversão traz o valor recusado no stack
   trace.
 
+## Consumo
+
+- O consumo (segundos de áudio, tokens, caracteres) é capturado pela observation do Spring AI
+  (`AiUsageObservationHandler`), não pelas portas: cobre o 422 `invalid-command`, cuja resposta do chat não chega ao
+  gateway. A gravação é assíncrona e de melhor esforço, em `ai_usage_entries`.
+- A transcrição usa `response-format=verbose_json`: é o único formato em que o `whisper-1` devolve a duração do áudio.
+
 ## Regras de produto
 
 - A IA nunca grava: a tool de escrita só anota uma proposta; a transação só nasce quando o usuário a confirma por
