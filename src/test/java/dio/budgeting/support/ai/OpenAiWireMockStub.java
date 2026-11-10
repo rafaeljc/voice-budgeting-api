@@ -35,7 +35,7 @@ public class OpenAiWireMockStub implements AiStub {
     @Override
     public void givenTranscription(String text) {
         server.stubFor(post(urlEqualTo(TRANSCRIPTION_PATH))
-                .willReturn(aResponse().withHeader("Content-Type", "text/plain").withBody(text)));
+                .willReturn(json(payload("transcription.json").replace("${text}", quoted(text)))));
     }
 
     @Override

@@ -141,9 +141,9 @@ Fatos conferidos no Spring AI 2.0.2 durante o planejamento (reconfirmar ao imple
 
 ## Fase 1: Consumo de IA registrado no MongoDB
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] transcrição em `verbose_json` no `application.properties` e no stub (`givenTranscription`
+- [x] [verificação] transcrição em `verbose_json` no `application.properties` e no stub (`givenTranscription`
   responde JSON com `text`, `duration` e `language`); payloads do chat com tokens diferentes de zero, inclusive
   `cached_tokens` — `VoiceCommandIT` continua passando
 - [ ] [TDD] `AiUsageMeasurementIT`: comando de voz concluído grava três documentos em `ai_usage_entries` com `userId`,
