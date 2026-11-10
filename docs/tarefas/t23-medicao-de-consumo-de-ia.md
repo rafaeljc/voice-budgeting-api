@@ -112,12 +112,12 @@ provedor permite.
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
-- [ ] um comando de voz concluído grava três documentos em `ai_usage_entries` (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`)
+- [x] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
+- [x] um comando de voz concluído grava três documentos em `ai_usage_entries` (`TRANSCRIPTION`, `ASSISTANT`, `SPEECH`)
   com o `userId` e o `traceId` da requisição, modelo e consumos da etapa
-- [ ] um 422 `invalid-command` grava o documento `ASSISTANT`
-- [ ] a transcrição usa `verbose_json` e o `VoiceCommandIT` continua passando
-- [ ] `CLAUDE.md`, `architecture.md`, `ai-integration.md`, `testing.md` e `tarefas.md` atualizados como no escopo
+- [x] um 422 `invalid-command` grava o documento `ASSISTANT`
+- [x] a transcrição usa `verbose_json` e o `VoiceCommandIT` continua passando
+- [x] `CLAUDE.md`, `architecture.md`, `ai-integration.md`, `testing.md` e `tarefas.md` atualizados como no escopo
 
 ## Para futuros agentes
 
@@ -141,7 +141,7 @@ Fatos conferidos no Spring AI 2.0.2 durante o planejamento (reconfirmar ao imple
 
 ## Fase 1: Consumo de IA registrado no MongoDB
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] transcrição em `verbose_json` no `application.properties` e no stub (`givenTranscription`
   responde JSON com `text`, `duration` e `language`); payloads do chat com tokens diferentes de zero, inclusive
@@ -154,7 +154,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `.claude/rules/architecture.md`: precedente do evento de aplicação e do listener sem use case
 - [x] [verificação] `.claude/rules/ai-integration.md`: captura pela observation e `verbose_json`
 - [x] [verificação] `.claude/rules/testing.md`: stub com duração e tokens e o `AiUsageMeasurementIT`
-- [ ] [verificação] `docs/tarefas.md`: checkbox da T23 (último commit)
+- [x] [verificação] `docs/tarefas.md`: checkbox da T23 (último commit)
 
 ### Plano de verificação
 
@@ -168,8 +168,21 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Cada resposta de modelo (transcrição, assistente, síntese) vira um documento em `ai_usage_entries`, com `userId`,
+`traceId`, modelo e consumo da etapa.
+
+- Transcrição em `verbose_json` no `application.properties`; o stub da OpenAI devolve `duration` e o chat devolve
+  tokens, inclusive `cached_tokens`.
+- `AiUsageObservationHandler` (observation do Spring AI) publica `AiUsageMeasuredEvent`; o
+  `AiUsageMeasuredEventListener` (`@Async @EventListener`) grava por `AiUsageEntryDocumentRepository`.
+- Decisão de pacote (do usuário, na execução): o `AiUsageMeasuredEvent` ficou em `infrastructure/ai/event/`, não em
+  `infrastructure/ai/`; `CLAUDE.md` já reflete isso.
+- Verificação: `AiUsageMeasurementIT` (2 testes) e `VoiceCommandIT` (39) passam; `./gradlew build` →
+  `BUILD SUCCESSFUL`; `grep` do `verbose_json` → uma linha; `grep` de `AiUsage` → `CLAUDE.md`, `architecture.md`,
+  `ai-integration.md` e `testing.md`.
+- Para uma sessão nova: nada pendente; falta só o PR. Não verificado com a OpenAI real (duração no `verbose_json`
+  real, versão do modelo, tokens em cache).
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Tarefa concluída em uma fase; ver o resumo da fase acima. Definição de pronto conferida. Sem plano de deploy.
