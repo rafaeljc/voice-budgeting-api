@@ -150,7 +150,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `traceId`, modelo e consumos da etapa — implementar `AiUsageObservationHandler`, `AiUsageMeasuredEvent`,
   `AiUsageMeasuredEventListener`, `AiUsageEntryDocument`, `AiStage` e `AiUsageEntryDocumentRepository`
 - [x] [TDD] `AiUsageMeasurementIT`: 422 `invalid-command` grava o documento `ASSISTANT`
-- [ ] [verificação] `CLAUDE.md`: estrutura (`ai/`, `event/`, `persistence/document/`)
+- [x] [verificação] `CLAUDE.md`: estrutura (`ai/`, `event/`, `persistence/document/`)
 - [ ] [verificação] `.claude/rules/architecture.md`: precedente do evento de aplicação e do listener sem use case
 - [ ] [verificação] `.claude/rules/ai-integration.md`: captura pela observation e `verbose_json`
 - [ ] [verificação] `.claude/rules/testing.md`: stub com duração e tokens e o `AiUsageMeasurementIT`
