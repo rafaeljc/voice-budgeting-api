@@ -80,6 +80,31 @@ class AiUsageMeasurementIT {
                 .isEqualTo(aiStub.speechText().length());
     }
 
+    @Test
+    void should_recordAssistantEntry_when_toolArgumentsAreInvalid() throws Exception {
+        // given
+        var user = newUser();
+        aiStub.givenTranscription("gastei menos 10 no mercado");
+        aiStub.givenToolCall("propose-transaction", """
+                {"arguments": {"description": "Mercado", "amount": -10, "category": "GROCERIES"}}
+                """);
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+
+        // when
+        mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                        .file(recording())
+                        .header(AUTHORIZATION, AccessTokens.authorization(user)))
+                .andExpect(status().isUnprocessableContent());
+
+        // then: the chat response is measured before the tool throws, and the synthesis never happens
+        var entries = awaitEntries(user, 2);
+        assertThat(entries)
+                .extracting(entry -> entry.getString("stage"))
+                .containsExactlyInAnyOrder("TRANSCRIPTION", "ASSISTANT");
+        assertThat(entry(entries, "ASSISTANT").get("inputTokens", Number.class).longValue())
+                .isEqualTo(120);
+    }
+
     private MvcResult sendVoiceCommand(UserId user) throws Exception {
         return mockMvc.perform(multipart(VOICE_COMMAND_PATH)
                         .file(recording())

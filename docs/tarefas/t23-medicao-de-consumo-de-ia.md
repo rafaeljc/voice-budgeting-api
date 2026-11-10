@@ -149,7 +149,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `AiUsageMeasurementIT`: comando de voz concluído grava três documentos em `ai_usage_entries` com `userId`,
   `traceId`, modelo e consumos da etapa — implementar `AiUsageObservationHandler`, `AiUsageMeasuredEvent`,
   `AiUsageMeasuredEventListener`, `AiUsageEntryDocument`, `AiStage` e `AiUsageEntryDocumentRepository`
-- [ ] [TDD] `AiUsageMeasurementIT`: 422 `invalid-command` grava o documento `ASSISTANT`
+- [x] [TDD] `AiUsageMeasurementIT`: 422 `invalid-command` grava o documento `ASSISTANT`
 - [ ] [verificação] `CLAUDE.md`: estrutura (`ai/`, `event/`, `persistence/document/`)
 - [ ] [verificação] `.claude/rules/architecture.md`: precedente do evento de aplicação e do listener sem use case
 - [ ] [verificação] `.claude/rules/ai-integration.md`: captura pela observation e `verbose_json`
