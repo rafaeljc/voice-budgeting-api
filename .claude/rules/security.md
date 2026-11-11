@@ -16,7 +16,7 @@ Detalhes e uso em `docs/autenticacao.md`. Rate limiting fica para a T19.
 - O token carrega só `sub` (UUID do usuário) e `exp`, ambos obrigatórios; sem `iss`, `aud`, papéis nem 403. Qualquer
   JWT bem assinado, dentro da validade e com `sub` UUID identifica um usuário.
 - Sem senha nem `PasswordEncoder`: não há cadastro, login, *refresh* nem revogação.
-- Negar por padrão: só `/actuator/health` é público; sessão `STATELESS`, sem CSRF, *form login* e HTTP Basic.
+- Negar por padrão: só `/actuator/health`, `/actuator/health/liveness` e `/actuator/health/readiness` são públicos; sessão `STATELESS`, sem CSRF, *form login* e HTTP Basic.
 - O 401 sai pelo `ApiExceptionHandler` (Problem Details `unauthenticated`, `WWW-Authenticate: Bearer`), um só corpo
   para qualquer token inválido; o `WARN` `Authentication failed` nunca traz o token.
 - Em produção, um provedor de identidade emite os tokens e a API os valida pela chave pública do emissor
@@ -38,5 +38,5 @@ Detalhes e uso em `docs/autenticacao.md`. Rate limiting fica para a T19.
 - Credenciais, chaves ou tokens em arquivos versionados; `JWT_SECRET` real fora do `.env`.
 - Classe de usuário ou de token do Spring Security em `domain` ou `application`.
 - Logar o token ou o `Authorization`.
-- Rota nova sem autenticação por padrão; `permitAll` além do `/actuator/health`.
+- Rota nova sem autenticação por padrão; `permitAll` além de `/actuator/health`, `/actuator/health/liveness` e `/actuator/health/readiness`.
 - `userId` como argumento da tool escolhido pelo modelo, ou como critério opcional de filtro.
