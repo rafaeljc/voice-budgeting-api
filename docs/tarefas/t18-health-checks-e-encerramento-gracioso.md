@@ -100,7 +100,7 @@ Fatos conferidos durante o planejamento (reconfirmar ao implementar):
 
 ## Fase 1: Probes e encerramento gracioso
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `AuthenticationIT.should_answerLivenessWithoutToken_when_livenessIsRequested` — liberar
   `/actuator/health/liveness` na `SecurityConfiguration` e ajustar o comentário
@@ -109,7 +109,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   comentário
 - [x] [verificação] `management.endpoint.health.show-details=always` com comentário
 - [x] [verificação] `server.shutdown=graceful` e `spring.lifecycle.timeout-per-shutdown-phase=100s` com comentário
-- [ ] [verificação] `spring.task.execution.shutdown.*` e `spring.task.scheduling.shutdown.*` (`true`, `10s`) com
+- [x] [verificação] `spring.task.execution.shutdown.*` e `spring.task.scheduling.shutdown.*` (`true`, `10s`) com
   comentário
 
 ### Plano de verificação
@@ -122,7 +122,18 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Os probes de liveness e readiness passam a responder sem token (caminhos explícitos na `SecurityConfiguration`, sem
+`/actuator/health/**`), e a configuração de health e de encerramento está em `application.properties`, cada bloco
+com o porquê.
+
+- Readiness = `readinessState` + `db`; liveness segue o grupo padrão do Boot (sem propriedade nova).
+- `show-details=always`; `server.shutdown=graceful` e `timeout-per-shutdown-phase=100s`; espera de 10 s para
+  `@Async` e para `@Scheduled`.
+- Os dois testes novos em `AuthenticationIT` falharam com 401 antes e passam agora.
+- Verificação: `integrationTest` do `AuthenticationIT` → `BUILD SUCCESSFUL`; `grep` das propriedades → 8 linhas
+  esperadas; `./gradlew build` → `BUILD SUCCESSFUL`.
+- Para a sessão nova: falta só a Fase 2 (documentação); os valores (100 s, 10 s, 10 s) e os motivos estão nos
+  comentários do `application.properties`, base do README.
 
 ## Fase 2: Documentação
 
