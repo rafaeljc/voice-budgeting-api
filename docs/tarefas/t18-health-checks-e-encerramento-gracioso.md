@@ -139,7 +139,7 @@ com o porquê.
 
 Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `README.md`: seção "Health checks e encerramento"
+- [x] [verificação] `README.md`: seção "Health checks e encerramento"
 - [ ] [verificação] `.claude/rules/security.md`, `.claude/rules/api-conventions.md`, `docs/autenticacao.md`: rotas
   públicas
 - [ ] [verificação] `docs/tarefas.md`: checkbox da T18 (último commit)

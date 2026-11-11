@@ -139,6 +139,38 @@ sum(budgeting_ai_interpretations_total{outcome="not_understood"}) / sum(http_ser
 sum(http_server_requests_milliseconds_count{uri="/api/v1/transactions/ai",status="422"}) / sum(http_server_requests_milliseconds_count{uri="/api/v1/transactions/ai"})
 ```
 
+## Health checks e encerramento
+
+| Endpoint                         | O que verifica                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| `GET /actuator/health`           | Saúde geral: MySQL, MongoDB, disco etc., com detalhes                           |
+| `GET /actuator/health/liveness`  | Só o estado da própria aplicação, sem dependência externa                       |
+| `GET /actuator/health/readiness` | Estado da aplicação e MySQL, sem o qual nenhuma rota funciona                   |
+
+Os três são públicos (sem token) para orquestradores e monitoramento:
+
+```bash
+curl -s http://localhost:8080/actuator/health/readiness | jq
+```
+
+A readiness olha só o MySQL. O MongoDB fica de fora porque a auditoria tem outbox: com ele fora do ar a API segue
+atendendo e o registro é reenviado depois. A OpenAI fica de fora porque cada verificação teria custo e latência e
+derrubaria até as consultas, que não usam IA; a queda dela já vira 503 com `Retry-After`. A liveness não depende de
+banco algum, para o orquestrador não reiniciar a instância por um banco fora do ar.
+
+`management.endpoint.health.show-details=always` mostra os detalhes (produto do banco, erro, disco) para facilitar o
+diagnóstico; em produção o endpoint estaria protegido ou em uma porta de gerenciamento não exposta publicamente.
+
+No desligamento, a readiness passa a `REFUSING_TRAFFIC` e a aplicação:
+
+- espera até 100 s as requisições em andamento (cobre o pior comando de voz, cerca de 96 s); sem requisição em
+  andamento, desliga na hora;
+- espera até 10 s as entregas da auditoria (o que não terminar é reenviado pelo outbox);
+- espera até 10 s o lote em andamento dos jobs agendados.
+
+O orquestrador precisa de um prazo de término maior que 100 s (no Kubernetes, `terminationGracePeriodSeconds`; o
+padrão é 30 s).
+
 ## Testes
 
 ```bash
