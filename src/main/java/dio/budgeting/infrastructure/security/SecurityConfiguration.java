@@ -49,10 +49,14 @@ public class SecurityConfiguration {
         // The ApiExceptionHandler builds the 401 body, so authentication failures go through the MVC resolver
         AuthenticationEntryPoint entryPoint =
                 (request, response, ex) -> exceptionResolver.resolveException(request, response, null, ex);
-        // The metrics endpoint is public only because the project does not go to production; in production, access
-        // would be controlled or the Actuator would sit on a management port not exposed publicly
+        // Orchestrators call the health probes without a token, so each one is listed explicitly instead of
+        // /actuator/health/**. The metrics endpoint is public only because the project does not go to production; in
+        // production, access would be controlled or the Actuator would sit on a management port not exposed publicly
         return http.authorizeHttpRequests(requests -> requests.requestMatchers(
-                                "/actuator/health", "/actuator/metrics", "/actuator/metrics/**")
+                                "/actuator/health",
+                                "/actuator/health/liveness",
+                                "/actuator/metrics",
+                                "/actuator/metrics/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

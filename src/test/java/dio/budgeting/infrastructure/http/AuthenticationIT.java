@@ -114,6 +114,15 @@ class AuthenticationIT {
     }
 
     @Test
+    void should_answerLivenessWithoutToken_when_livenessIsRequested() throws Exception {
+        // when
+        var response = mockMvc.perform(get("/actuator/health/liveness"));
+
+        // then
+        response.andExpect(status().isOk());
+    }
+
+    @Test
     void should_returnRequestIdAndLogWarnWithoutToken_when_authenticationFails(CapturedOutput output) throws Exception {
         // given
         var token = AccessTokens.sign(

@@ -100,9 +100,9 @@ Fatos conferidos durante o planejamento (reconfirmar ao implementar):
 
 ## Fase 1: Probes e encerramento gracioso
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `AuthenticationIT.should_answerLivenessWithoutToken_when_livenessIsRequested` — liberar
+- [x] [TDD] `AuthenticationIT.should_answerLivenessWithoutToken_when_livenessIsRequested` — liberar
   `/actuator/health/liveness` na `SecurityConfiguration` e ajustar o comentário
 - [ ] [TDD] `AuthenticationIT.should_answerReadinessWithoutToken_when_readinessIsRequested` — liberar
   `/actuator/health/readiness` e definir `management.endpoint.health.group.readiness.include=readinessState,db` com
