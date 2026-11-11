@@ -47,7 +47,7 @@
 
 **Fase 9 — Desempenho**
 - [ ] [T24 — Cache de consultas](#t24)
-- [ ] [T25 — Cache da síntese de voz](#t25)
+- [x] [T25 — Cache da síntese de voz](#t25)
 
 **Fase 10 — Entrega**
 - [ ] [T26 — Conclusão do README](#t26)

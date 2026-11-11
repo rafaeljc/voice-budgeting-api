@@ -119,6 +119,7 @@ consultas abaixo só dão resultado depois de o primeiro valor ser exportado.
 | `hikaricp.connections.active`/`pending` | `hikaricp_connections_active`/`_pending`         | conexões do pool do banco                            |
 | `jvm.memory.used`                       | `jvm_memory_used_bytes`                          | memória da JVM                                       |
 | `process.cpu.usage`                     | `process_cpu_usage`                              | uso de CPU                                           |
+| `cache.gets`                            | `cache_gets_total`                               | acertos e erros do cache da síntese de voz, tags `cache` (`speech`) e `result` (`hit`, `miss`) |
 | `budgeting.ai.interpretations`          | `budgeting_ai_interpretations_total`             | desfecho das interpretações da IA, tag `outcome`: `confirmed`, `canceled`, `not_understood` |
 
 O contador conta, desde que a aplicação subiu, quantas interpretações da IA terminaram em cada desfecho: a proposta

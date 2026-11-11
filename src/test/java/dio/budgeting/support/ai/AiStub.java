@@ -1,5 +1,7 @@
 package dio.budgeting.support.ai;
 
+import java.time.Duration;
+
 public interface AiStub {
 
     void givenTranscription(String text);
@@ -12,6 +14,8 @@ public interface AiStub {
 
     void givenSpeech(byte[] audio);
 
+    void givenDelayedSpeech(byte[] audio, Duration delay);
+
     String transcribedAudioFilename();
 
     String speechText();
@@ -19,6 +23,8 @@ public interface AiStub {
     String assistantCommand();
 
     int assistantCallCount();
+
+    int speechCallCount();
 
     void givenFailure(AiStage stage, AiFailure failure);
 

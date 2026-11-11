@@ -10,6 +10,7 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
 - Spring Web MVC, Spring Data JPA, MySQL 9.6, Spring Data MongoDB, MongoDB 9.0 (`compose.yml`,
   iniciados pelo `spring-boot-docker-compose`); requisições, `@Async` e `@Scheduled` em virtual threads
+- Spring Cache + Caffeine: cache local da síntese de voz
 - Spring Modulith (registro de publicação de eventos, JDBC): outbox transacional da auditoria no MySQL, com reenvio
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
 - Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
@@ -47,7 +48,7 @@ src/main/java/dio/budgeting/
       event/                    # AiUsageMeasuredEvent (evento de aplicação, não de domínio)
       tool/                     # *Tools, InterpretationCollector, ToolExecutionConfiguration (adaptador de entrada)
         argument/               # *ToolArguments
-    config/                     # *Configuration (ex.: Clock), *Properties
+    config/                     # *Configuration (ex.: Clock, Caching), *Properties
     event/                      # *Listener (ouvem eventos de domínio e de aplicação: adaptador de entrada)
     scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)

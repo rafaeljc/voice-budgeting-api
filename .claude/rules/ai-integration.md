@@ -57,6 +57,10 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - A proposta é gravada por último, depois da síntese de voz (`ProcessVoiceCommandUseCase`): nada é registrado antes
   de a resposta que o anuncia estar pronta, e uma falha de voz não deixa proposta órfã. A síntese nunca fica dentro
   de uma transação de banco.
+- A síntese passa pelo cache `speech` (`@Cacheable(cacheNames = "speech", sync = true)` no
+  `SpringAiTextToSpeechGateway`): a chave é o texto do `SpokenAnswers`, e o TTL e o tamanho ficam no
+  `application.properties` (ver ADR 0008). Um acerto do cache não chama o provedor nem gera consumo. Os testes do cache
+  estão no `SpeechCacheIT`.
 - Argumentos inválidos da tool (inclusive categoria inexistente) → 422 `invalid-command` sem resposta do modelo e sem
   voz (ver `error-handling.md`). Falhas de tool nunca voltam ao modelo como texto: o
   `ToolExecutionExceptionProcessor` relança, e qualquer outra falha vira 500.

@@ -81,6 +81,10 @@ Os tipos das portas são neutros: `Audio`, `byte[]` e `String`, nunca `Multipart
 Spring AI. A falha do provedor sai da porta como `AiProviderUnavailableException` (transitória) ou
 `AiProviderFailedException` (definitiva), em `application/`, sem tipo do provedor.
 
+Cache é detalhe do adaptador: `@Cacheable` fica no adaptador (`SpringAiTextToSpeechGateway`), nunca na porta nem no use
+case. O tamanho e o TTL ficam só em `application.properties` (`spring.cache.*`), e nenhum tipo do provedor de cache
+(Caffeine) aparece em Java, para que trocar por um cache distribuído mude só dependência e propriedades (ADR 0008).
+
 Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e
 `XEntity.from(domain)` (`AuditEntryDocument.from(event, traceId)` para a auditoria).
 

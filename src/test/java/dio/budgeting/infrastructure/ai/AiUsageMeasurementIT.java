@@ -105,6 +105,30 @@ class AiUsageMeasurementIT {
                 .isEqualTo(120);
     }
 
+    @Test
+    void should_notMeasureSpeech_when_speechComesFromCache() throws Exception {
+        // given
+        var user = newUser();
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("propose-transaction", """
+                {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                """);
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+
+        // when
+        sendVoiceCommand(user);
+        sendVoiceCommand(user);
+
+        // then: the second command's ASSISTANT entry arrives, so a SPEECH entry for it would have too
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(entriesOf(user))
+                .filteredOn(entry -> "ASSISTANT".equals(entry.getString("stage")))
+                .hasSize(2));
+        assertThat(entriesOf(user))
+                .filteredOn(entry -> "SPEECH".equals(entry.getString("stage")))
+                .hasSize(1);
+        assertThat(aiStub.speechCallCount()).isEqualTo(1);
+    }
+
     private MvcResult sendVoiceCommand(UserId user) throws Exception {
         return mockMvc.perform(multipart(VOICE_COMMAND_PATH)
                         .file(recording())
