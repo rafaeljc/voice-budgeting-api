@@ -185,7 +185,7 @@ Para a próxima sessão: a fase 2 é só ADR 0008 e documentação; o `docs/tare
 Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] ADR `docs/adr/0008-cache-local-da-sintese-de-voz.md`, status `aceito`, com o conteúdo do escopo
-- [ ] [verificação] `CLAUDE.md`: stack e estrutura (`config/`)
+- [x] [verificação] `CLAUDE.md`: stack e estrutura (`config/`)
 - [ ] [verificação] `.claude/rules/architecture.md`: cache como detalhe do adaptador
 - [ ] [verificação] `.claude/rules/ai-integration.md`: cache `speech` na síntese e seus testes
 - [ ] [verificação] `.claude/rules/testing.md`: `ResetCacheExtension`, `speechCallCount`, `givenDelayedSpeech`,
