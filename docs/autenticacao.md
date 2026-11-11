@@ -1,6 +1,7 @@
 # Autenticação
 
-Toda rota da API, exceto `GET /actuator/health`, exige um token JWT no cabeçalho `Authorization`. Cada usuário vê e
+Toda rota da API, exceto `GET /actuator/health`, `GET /actuator/health/liveness` e
+`GET /actuator/health/readiness`, exige um token JWT no cabeçalho `Authorization`. Cada usuário vê e
 altera só as próprias transações: a transação de outro usuário responde 404, como se não existisse.
 
 ## Gerar um token (desenvolvimento)

@@ -79,7 +79,8 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 
 ## Cabeçalhos
 
-- `Authorization: Bearer <token>` em toda requisição, exceto `/actuator/health`; sem ele, ou com token inválido, a
+- `Authorization: Bearer <token>` em toda requisição, exceto `/actuator/health`, `/actuator/health/liveness` e
+  `/actuator/health/readiness`; sem ele, ou com token inválido, a
   resposta é 401 com `WWW-Authenticate: Bearer` (ver `security.md`).
 - `Location` em toda resposta 201.
 - `X-Request-Id` em toda resposta, com o `traceId` da requisição (32 hex); um `X-Request-Id` enviado pelo cliente é
