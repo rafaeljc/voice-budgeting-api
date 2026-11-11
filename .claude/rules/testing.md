@@ -48,6 +48,10 @@ paths:
   O stub tem uma única resposta de chat por comando, e `speechText()`, `assistantCommand()` e `assistantCallCount()`
   leem o que foi enviado à síntese e ao assistente. O stub é zerado antes de cada teste. Nenhum `*IT` cita o provedor. O stub devolve a duração da transcrição
   (`verbose_json`) e tokens do chat, inclusive em cache; o `AiUsageMeasurementIT` espera a gravação com Awaitility.
+- Cache: o `ResetCacheExtension` (registrado no `@IntegrationTest`) limpa todos os caches pelo `CacheManager` antes de
+  cada teste, porque os `*IT` compartilham o contexto e um áudio em cache quebraria as asserções de `speechText()`.
+  `AiStub.speechCallCount()` e `givenDelayedSpeech(byte[], Duration)` leem e atrasam a síntese. O `SpeechCacheIT`
+  chama a porta `TextToSpeechGateway` direto, sem HTTP, e o teste de concorrência falha sem o `sync = true`.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em

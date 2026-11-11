@@ -188,7 +188,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `CLAUDE.md`: stack e estrutura (`config/`)
 - [x] [verificação] `.claude/rules/architecture.md`: cache como detalhe do adaptador
 - [x] [verificação] `.claude/rules/ai-integration.md`: cache `speech` na síntese e seus testes
-- [ ] [verificação] `.claude/rules/testing.md`: `ResetCacheExtension`, `speechCallCount`, `givenDelayedSpeech`,
+- [x] [verificação] `.claude/rules/testing.md`: `ResetCacheExtension`, `speechCallCount`, `givenDelayedSpeech`,
   `SpeechCacheIT`
 - [ ] [verificação] `README.md`: linha `cache.gets` na tabela de métricas
 - [ ] [verificação] `docs/arquitetura.md`: reaproveitamento do áudio no fluxo de voz
