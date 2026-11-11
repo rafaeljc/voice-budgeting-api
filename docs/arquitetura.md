@@ -40,7 +40,7 @@ exemplo, um comando fora do escopo ou uma injeção que não resulta em tool), a
 que ele devolveu é descartado; uma segunda chamada de tool no mesmo comando é recusada (422).
 
 A aplicação monta a frase falada a partir da interpretação (`SpokenAnswers`), sempre a mesma para a mesma entrada, e a
-sintetiza em voz. Só depois de a voz estar pronta a proposta é gravada. O cliente recebe a fala e, no registro, a
+sintetiza em voz; o áudio de uma frase já sintetizada é reaproveitado de um cache local da instância (ADR 0008). Só depois de a voz estar pronta a proposta é gravada. O cliente recebe a fala e, no registro, a
 proposta (`id`, descrição, valor, categoria e `expiresAt`). A consulta de gastos, ou um comando não entendido, recebe só
 a fala.
 

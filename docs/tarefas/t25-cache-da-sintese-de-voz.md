@@ -191,7 +191,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `.claude/rules/testing.md`: `ResetCacheExtension`, `speechCallCount`, `givenDelayedSpeech`,
   `SpeechCacheIT`
 - [x] [verificação] `README.md`: linha `cache.gets` na tabela de métricas
-- [ ] [verificação] `docs/arquitetura.md`: reaproveitamento do áudio no fluxo de voz
+- [x] [verificação] `docs/arquitetura.md`: reaproveitamento do áudio no fluxo de voz
 - [ ] [verificação] `docs/tarefas.md`: checkbox da T25 (último commit)
 
 ### Plano de verificação
