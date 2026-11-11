@@ -140,7 +140,7 @@ Fatos conferidos durante o planejamento (reconfirmar ao implementar):
 
 ## Fase 1: Cache da síntese de voz
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `AiStub.speechCallCount()` e `AiStub.givenDelayedSpeech(byte[], Duration)` no
   `OpenAiWireMockStub` — `VoiceCommandIT` continua passando
@@ -150,7 +150,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `SpeechCacheIT.should_synthesizeEachText_when_textsDiffer`
 - [x] [TDD] `SpeechCacheIT.should_synthesizeAgain_when_previousSynthesisFailed`
 - [x] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedConcurrently` — acrescentar `sync = true`
-- [ ] [TDD] `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`
+- [x] [TDD] `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`
 
 ### Plano de verificação
 
@@ -163,7 +163,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `AiStub.speechCallCount()` e `givenDelayedSpeech(byte[], Duration)` no `OpenAiWireMockStub`; dependências
+`spring-boot-starter-cache` e `caffeine`; `CachingConfiguration` (`@EnableCaching`, vazia); propriedades `spring.cache.*`
+(`maximumSize=500,expireAfterWrite=1h,recordStats`) com comentário do porquê; `@Cacheable(cacheNames = "speech",
+sync = true)` em `SpringAiTextToSpeechGateway.synthesize`; `ResetCacheExtension` registrada no `@IntegrationTest`;
+`SpeechCacheIT` (4 testes) e `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`.
+
+Decisões: nenhuma mudança no plano. O `@Cacheable` nasceu sem `sync` no ciclo 1 e ganhou `sync = true` no ciclo do
+teste de concorrência, que falhou antes (várias chamadas ao provedor) e passou depois. Os testes de textos diferentes
+e de falha passaram de primeira; só o de cache em `AiUsageMeasurementIT` e o de mesma frase foram confirmados com a
+mutação (sem `@Cacheable` falham); trocar a chave não foi testado. Os dois testes de falha e de textos diferentes
+protegem a chave e o cache-aside e não falham sem `@Cacheable`.
+
+Verificação: `SpeechCacheIT` (4 testes), `AiUsageMeasurementIT` (3), `VoiceCommandIT` e `./gradlew build` →
+`BUILD SUCCESSFUL`; `grep -rni caffeine src/main/java` → nenhuma linha.
+
+Para a próxima sessão: a fase 2 é só ADR 0008 e documentação; o `docs/tarefas.md` é marcado no último commit.
 
 ## Fase 2: ADR e documentação
 
