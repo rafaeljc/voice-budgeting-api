@@ -55,6 +55,7 @@ public class SecurityConfiguration {
         return http.authorizeHttpRequests(requests -> requests.requestMatchers(
                                 "/actuator/health",
                                 "/actuator/health/liveness",
+                                "/actuator/health/readiness",
                                 "/actuator/metrics",
                                 "/actuator/metrics/**")
                         .permitAll()
