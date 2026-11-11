@@ -140,9 +140,9 @@ Fatos conferidos durante o planejamento (reconfirmar ao implementar):
 
 ## Fase 1: Cache da síntese de voz
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `AiStub.speechCallCount()` e `AiStub.givenDelayedSpeech(byte[], Duration)` no
+- [x] [verificação] `AiStub.speechCallCount()` e `AiStub.givenDelayedSpeech(byte[], Duration)` no
   `OpenAiWireMockStub` — `VoiceCommandIT` continua passando
 - [ ] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedTwice` — implementar dependências,
   `CachingConfiguration`, propriedades `spring.cache.*`, `@Cacheable(cacheNames = "speech")` no

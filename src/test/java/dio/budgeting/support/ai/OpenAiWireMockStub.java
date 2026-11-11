@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
@@ -93,6 +94,15 @@ public class OpenAiWireMockStub implements AiStub {
     }
 
     @Override
+    public void givenDelayedSpeech(byte[] audio, Duration delay) {
+        server.stubFor(post(urlEqualTo(SPEECH_PATH))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "audio/mpeg")
+                        .withBody(audio)
+                        .withFixedDelay((int) delay.toMillis())));
+    }
+
+    @Override
     public String speechText() {
         var body = server.findAll(postRequestedFor(urlEqualTo(SPEECH_PATH)))
                 .getLast()
@@ -115,6 +125,11 @@ public class OpenAiWireMockStub implements AiStub {
     @Override
     public int assistantCallCount() {
         return server.findAll(postRequestedFor(urlEqualTo(CHAT_PATH))).size();
+    }
+
+    @Override
+    public int speechCallCount() {
+        return server.findAll(postRequestedFor(urlEqualTo(SPEECH_PATH))).size();
     }
 
     @Override
