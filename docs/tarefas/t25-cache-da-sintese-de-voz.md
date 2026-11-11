@@ -187,7 +187,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] ADR `docs/adr/0008-cache-local-da-sintese-de-voz.md`, status `aceito`, com o conteúdo do escopo
 - [x] [verificação] `CLAUDE.md`: stack e estrutura (`config/`)
 - [x] [verificação] `.claude/rules/architecture.md`: cache como detalhe do adaptador
-- [ ] [verificação] `.claude/rules/ai-integration.md`: cache `speech` na síntese e seus testes
+- [x] [verificação] `.claude/rules/ai-integration.md`: cache `speech` na síntese e seus testes
 - [ ] [verificação] `.claude/rules/testing.md`: `ResetCacheExtension`, `speechCallCount`, `givenDelayedSpeech`,
   `SpeechCacheIT`
 - [ ] [verificação] `README.md`: linha `cache.gets` na tabela de métricas
