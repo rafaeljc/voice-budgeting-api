@@ -105,14 +105,14 @@ configuração. Registrar a estratégia em ADR.
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
-- [ ] a mesma frase sintetizada duas vezes chama o provedor uma vez e devolve o mesmo áudio
-- [ ] frases diferentes não compartilham áudio; uma síntese que falhou não fica em cache
-- [ ] chamadas concorrentes com a mesma frase chamam o provedor uma vez; o teste falha sem `sync = true`
-- [ ] um acerto do cache não gera documento `SPEECH` em `ai_usage_entries`
-- [ ] os testes de falha da síntese do `VoiceCommandIT` continuam passando (exceções atravessam o `sync` sem embrulho)
-- [ ] nenhum import do Caffeine em `src/main/java`
-- [ ] ADR 0008 aceito; `CLAUDE.md`, `architecture.md`, `ai-integration.md`, `testing.md`, `README.md`,
+- [x] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
+- [x] a mesma frase sintetizada duas vezes chama o provedor uma vez e devolve o mesmo áudio
+- [x] frases diferentes não compartilham áudio; uma síntese que falhou não fica em cache
+- [x] chamadas concorrentes com a mesma frase chamam o provedor uma vez; o teste falha sem `sync = true`
+- [x] um acerto do cache não gera documento `SPEECH` em `ai_usage_entries`
+- [x] os testes de falha da síntese do `VoiceCommandIT` continuam passando (exceções atravessam o `sync` sem embrulho)
+- [x] nenhum import do Caffeine em `src/main/java`
+- [x] ADR 0008 aceito; `CLAUDE.md`, `architecture.md`, `ai-integration.md`, `testing.md`, `README.md`,
   `docs/arquitetura.md` e `tarefas.md` atualizados como no escopo
 
 ## Para futuros agentes
@@ -182,7 +182,7 @@ Para a próxima sessão: a fase 2 é só ADR 0008 e documentação; o `docs/tare
 
 ## Fase 2: ADR e documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] ADR `docs/adr/0008-cache-local-da-sintese-de-voz.md`, status `aceito`, com o conteúdo do escopo
 - [x] [verificação] `CLAUDE.md`: stack e estrutura (`config/`)
@@ -192,7 +192,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `SpeechCacheIT`
 - [x] [verificação] `README.md`: linha `cache.gets` na tabela de métricas
 - [x] [verificação] `docs/arquitetura.md`: reaproveitamento do áudio no fluxo de voz
-- [ ] [verificação] `docs/tarefas.md`: checkbox da T25 (último commit)
+- [x] [verificação] `docs/tarefas.md`: checkbox da T25 (último commit)
 
 ### Plano de verificação
 
@@ -205,8 +205,21 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: ADR 0008 (aceito) com opções, decisão, consequências, o `sync = true` e o caminho para um cache distribuído;
+`CLAUDE.md` (stack e `config/`), `architecture.md`, `ai-integration.md`, `testing.md`, `README.md` (linha `cache.gets`),
+`docs/arquitetura.md` e o checkbox da T25 em `docs/tarefas.md`. Um commit por item.
+
+Decisões: nenhuma mudança no plano.
+
+Verificação: ADR existe com uma linha `status: aceito`; o `grep` nas regras lista `CLAUDE.md`, `architecture.md`,
+`ai-integration.md` e `testing.md`; `cache.gets` aparece uma vez no `README.md`; `[x] [T25` aparece uma vez em
+`tarefas.md`; `./gradlew build` → `BUILD SUCCESSFUL`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+A síntese de voz passa por um cache local da instância (Caffeine, pela abstração de cache do Spring): o mesmo texto
+sintetizado de novo reaproveita o áudio, sem chamar o provedor e sem gerar consumo de IA. O `@Cacheable(cacheNames =
+"speech", sync = true)` fica só no `SpringAiTextToSpeechGateway`; tamanho (500 entradas), TTL (1 h) e `recordStats` ficam
+em `application.properties`, e nenhum tipo do Caffeine aparece em Java. O `sync = true` evita a síntese duplicada de
+chamadas concorrentes com a mesma frase. A estratégia, as alternativas e o caminho para um cache distribuído estão no
+ADR 0008. Cobertura nova: `SpeechCacheIT` (4 testes) e `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`.
