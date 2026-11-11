@@ -107,7 +107,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `AuthenticationIT.should_answerReadinessWithoutToken_when_readinessIsRequested` — liberar
   `/actuator/health/readiness` e definir `management.endpoint.health.group.readiness.include=readinessState,db` com
   comentário
-- [ ] [verificação] `management.endpoint.health.show-details=always` com comentário
+- [x] [verificação] `management.endpoint.health.show-details=always` com comentário
 - [ ] [verificação] `server.shutdown=graceful` e `spring.lifecycle.timeout-per-shutdown-phase=100s` com comentário
 - [ ] [verificação] `spring.task.execution.shutdown.*` e `spring.task.scheduling.shutdown.*` (`true`, `10s`) com
   comentário
