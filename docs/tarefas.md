@@ -34,7 +34,7 @@
 - [ ] [T15 — Circuit breaker e bulkhead](#t15)
 - [ ] [T16 — Degradação controlada](#t16)
 - [ ] [T17 — Idempotência no envio de áudio](#t17)
-- [ ] [T18 — Health checks e encerramento gracioso](#t18)
+- [x] [T18 — Health checks e encerramento gracioso](#t18)
 
 **Fase 7 — Segurança e rastreabilidade**
 - [ ] [T19 — Rate limiting por usuário](#t19)

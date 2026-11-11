@@ -67,12 +67,12 @@ desligar a aplicação.
 
 ## Definição de pronto
 
-- [ ] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
-- [ ] `/actuator/health/liveness` e `/actuator/health/readiness` respondem 200 sem token
-- [ ] readiness inclui só `readinessState` e `db`; liveness só `livenessState`; health geral com detalhes
-- [ ] propriedades de encerramento (`server.shutdown`, `timeout-per-shutdown-phase`, `task.execution.shutdown.*`,
+- [x] `./gradlew build` passa (Spotless, Checkstyle, testes e cobertura)
+- [x] `/actuator/health/liveness` e `/actuator/health/readiness` respondem 200 sem token
+- [x] readiness inclui só `readinessState` e `db`; liveness só `livenessState`; health geral com detalhes
+- [x] propriedades de encerramento (`server.shutdown`, `timeout-per-shutdown-phase`, `task.execution.shutdown.*`,
   `task.scheduling.shutdown.*`) definidas e comentadas
-- [ ] `README.md`, `security.md`, `api-conventions.md`, `docs/autenticacao.md` e `tarefas.md` atualizados como no escopo
+- [x] `README.md`, `security.md`, `api-conventions.md`, `docs/autenticacao.md` e `tarefas.md` atualizados como no escopo
 
 ## Para futuros agentes
 
@@ -137,12 +137,12 @@ com o porquê.
 
 ## Fase 2: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `README.md`: seção "Health checks e encerramento"
 - [x] [verificação] `.claude/rules/security.md`, `.claude/rules/api-conventions.md`, `docs/autenticacao.md`: rotas
   públicas
-- [ ] [verificação] `docs/tarefas.md`: checkbox da T18 (último commit)
+- [x] [verificação] `docs/tarefas.md`: checkbox da T18 (último commit)
 
 ### Plano de verificação
 
@@ -154,8 +154,14 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+README com a seção "Health checks e encerramento" (endpoints, por que a readiness olha só o MySQL, `curl`,
+`show-details`, 100 s/10 s/10 s e o prazo do orquestrador); `security.md`, `api-conventions.md` e
+`docs/autenticacao.md` listam os três endpoints públicos; checkbox da T18 marcado. Verificação: os quatro `grep`
+deram o esperado e `./gradlew build` → `BUILD SUCCESSFUL` (Spotless cobre os `.md`). Nada pendente.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Probes de liveness e readiness públicos (caminhos explícitos), readiness só com `readinessState` e `db`, health
+geral com detalhes, e encerramento gracioso configurado (100 s para requisições, 10 s para a auditoria `@Async` e
+10 s para os jobs), tudo comentado em `application.properties` e documentado no README. Dois testes novos em
+`AuthenticationIT`; sem teste de encerramento nem ADR, por decisão do usuário.
