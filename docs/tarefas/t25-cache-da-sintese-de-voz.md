@@ -144,7 +144,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `AiStub.speechCallCount()` e `AiStub.givenDelayedSpeech(byte[], Duration)` no
   `OpenAiWireMockStub` — `VoiceCommandIT` continua passando
-- [ ] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedTwice` — implementar dependências,
+- [x] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedTwice` — implementar dependências,
   `CachingConfiguration`, propriedades `spring.cache.*`, `@Cacheable(cacheNames = "speech")` no
   `SpringAiTextToSpeechGateway` e `ResetCacheExtension` no `@IntegrationTest`
 - [ ] [TDD] `SpeechCacheIT.should_synthesizeEachText_when_textsDiffer`
