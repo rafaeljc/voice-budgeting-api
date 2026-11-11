@@ -14,7 +14,7 @@ public class SpringAiTextToSpeechGateway implements TextToSpeechGateway {
     }
 
     @Override
-    @Cacheable(cacheNames = "speech")
+    @Cacheable(cacheNames = "speech", sync = true)
     public byte[] synthesize(String text) {
         return textToSpeechModel.call(text);
     }

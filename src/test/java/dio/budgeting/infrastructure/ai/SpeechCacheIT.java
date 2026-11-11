@@ -10,6 +10,11 @@ import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStage;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 
 @IntegrationTest
@@ -67,5 +72,32 @@ class SpeechCacheIT {
         // then
         assertThat(result).isEqualTo(audio);
         assertThat(aiStub.speechCallCount()).isEqualTo(2);
+    }
+
+    @Test
+    void should_synthesizeOnce_when_sameTextIsSynthesizedConcurrently() throws Exception {
+        // given
+        var audio = new byte[] {1, 2, 3, 4};
+        var callers = 8;
+        aiStub.givenDelayedSpeech(audio, Duration.ofMillis(500));
+        var start = new CountDownLatch(1);
+
+        // when
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var futures = new ArrayList<Future<byte[]>>();
+            for (var i = 0; i < callers; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    return textToSpeechGateway.synthesize("Registrar mercado de 80 reais?");
+                }));
+            }
+            start.countDown();
+
+            // then
+            for (var future : futures) {
+                assertThat(future.get()).isEqualTo(audio);
+            }
+        }
+        assertThat(aiStub.speechCallCount()).isEqualTo(1);
     }
 }

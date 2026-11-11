@@ -149,7 +149,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
   `SpringAiTextToSpeechGateway` e `ResetCacheExtension` no `@IntegrationTest`
 - [x] [TDD] `SpeechCacheIT.should_synthesizeEachText_when_textsDiffer`
 - [x] [TDD] `SpeechCacheIT.should_synthesizeAgain_when_previousSynthesisFailed`
-- [ ] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedConcurrently` — acrescentar `sync = true`
+- [x] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedConcurrently` — acrescentar `sync = true`
 - [ ] [TDD] `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`
 
 ### Plano de verificação
