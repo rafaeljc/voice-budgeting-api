@@ -147,8 +147,8 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedTwice` — implementar dependências,
   `CachingConfiguration`, propriedades `spring.cache.*`, `@Cacheable(cacheNames = "speech")` no
   `SpringAiTextToSpeechGateway` e `ResetCacheExtension` no `@IntegrationTest`
-- [ ] [TDD] `SpeechCacheIT.should_synthesizeEachText_when_textsDiffer`
-- [ ] [TDD] `SpeechCacheIT.should_synthesizeAgain_when_previousSynthesisFailed`
+- [x] [TDD] `SpeechCacheIT.should_synthesizeEachText_when_textsDiffer`
+- [x] [TDD] `SpeechCacheIT.should_synthesizeAgain_when_previousSynthesisFailed`
 - [ ] [TDD] `SpeechCacheIT.should_synthesizeOnce_when_sameTextIsSynthesizedConcurrently` — acrescentar `sync = true`
 - [ ] [TDD] `AiUsageMeasurementIT.should_notMeasureSpeech_when_speechComesFromCache`
 
