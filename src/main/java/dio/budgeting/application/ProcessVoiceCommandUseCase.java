@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionOperations;
 public class ProcessVoiceCommandUseCase {
     private static final Logger log = LoggerFactory.getLogger(ProcessVoiceCommandUseCase.class);
 
+    private final VoiceCommandLock voiceCommandLock;
     private final SpeechToTextGateway speechToText;
     private final AssistantGateway assistant;
     private final TextToSpeechGateway textToSpeech;
@@ -36,6 +37,7 @@ public class ProcessVoiceCommandUseCase {
     private final Clock clock;
 
     public ProcessVoiceCommandUseCase(
+            VoiceCommandLock voiceCommandLock,
             SpeechToTextGateway speechToText,
             AssistantGateway assistant,
             TextToSpeechGateway textToSpeech,
@@ -44,6 +46,7 @@ public class ProcessVoiceCommandUseCase {
             ApplicationEventPublisher eventPublisher,
             TransactionOperations transactionOperations,
             Clock clock) {
+        this.voiceCommandLock = voiceCommandLock;
         this.speechToText = speechToText;
         this.assistant = assistant;
         this.textToSpeech = textToSpeech;
@@ -55,6 +58,8 @@ public class ProcessVoiceCommandUseCase {
     }
 
     public VoiceCommandOutput execute(UserId userId, ProcessVoiceCommandInput input) {
+        input.idempotencyKey().ifPresent(key -> voiceCommandLock.acquire(userId, key, input.toAudio()));
+
         var command = speechToText.transcribe(input.toAudio());
         log.atInfo().addKeyValue("transcriptionLength", command.length()).log("Audio transcribed");
 

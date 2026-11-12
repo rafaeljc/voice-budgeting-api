@@ -153,9 +153,9 @@ Verificação: `SpeechCacheIT` passou sem mudança; nenhuma ocorrência de `spri
 
 ## Fase 2: Trava do comando de voz pela chave de idempotência
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, `acquire` lança `DuplicateVoiceCommandException` → a
+- [x] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, `acquire` lança `DuplicateVoiceCommandException` → a
       exceção sobe, sem interação com transcrição, assistente, voz e repositório (`IdempotencyKey`,
       `Optional<IdempotencyKey>` no `ProcessVoiceCommandInput`, porta `VoiceCommandLock`, exceção, `acquire` no
       início do `execute`)
