@@ -159,7 +159,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       exceção sobe, sem interação com transcrição, assistente, voz e repositório (`IdempotencyKey`,
       `Optional<IdempotencyKey>` no `ProcessVoiceCommandInput`, porta `VoiceCommandLock`, exceção, `acquire` no
       início do `execute`)
-- [ ] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, falha em uma etapa → `release(userId, key)` chamado e a
+- [x] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, falha em uma etapa → `release(userId, key)` chamado e a
       mesma exceção relançada
 - [ ] [TDD] `SpringCacheVoiceCommandLockTest` (unitário, com `ConcurrentMapCache` do Spring): mesma chave e mesmo
       áudio → `DuplicateVoiceCommandException`; mesma chave e outro áudio → `IdempotencyKeyReusedException`; depois do

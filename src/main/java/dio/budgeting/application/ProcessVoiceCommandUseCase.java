@@ -59,7 +59,17 @@ public class ProcessVoiceCommandUseCase {
 
     public VoiceCommandOutput execute(UserId userId, ProcessVoiceCommandInput input) {
         input.idempotencyKey().ifPresent(key -> voiceCommandLock.acquire(userId, key, input.toAudio()));
+        try {
+            return process(userId, input);
+        } catch (RuntimeException e) {
+            // A failure leaves nothing recorded, so the client may retry with the same key; a success keeps the lock
+            // until the window ends
+            input.idempotencyKey().ifPresent(key -> voiceCommandLock.release(userId, key));
+            throw e;
+        }
+    }
 
+    private VoiceCommandOutput process(UserId userId, ProcessVoiceCommandInput input) {
         var command = speechToText.transcribe(input.toAudio());
         log.atInfo().addKeyValue("transcriptionLength", command.length()).log("Audio transcribed");
 

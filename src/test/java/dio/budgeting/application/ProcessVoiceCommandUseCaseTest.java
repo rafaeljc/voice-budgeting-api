@@ -221,4 +221,17 @@ class ProcessVoiceCommandUseCaseTest {
         assertThatThrownBy(() -> useCase.execute(USER_ID, input)).isInstanceOf(DuplicateVoiceCommandException.class);
         verifyNoInteractions(speechToText, assistant, textToSpeech, proposalRepository, eventPublisher);
     }
+
+    @Test
+    void should_releaseLockAndRethrow_when_stepFails() {
+        // given
+        var key = new IdempotencyKey(UUID.randomUUID());
+        var input = new ProcessVoiceCommandInput(new byte[] {9, 8, 7}, AudioFormat.M4A, Optional.of(key));
+        var failure = new AiProviderUnavailableException(503, null);
+        when(speechToText.transcribe(any(Audio.class))).thenThrow(failure);
+
+        // when / then
+        assertThatThrownBy(() -> useCase.execute(USER_ID, input)).isSameAs(failure);
+        verify(voiceCommandLock).release(USER_ID, key);
+    }
 }
