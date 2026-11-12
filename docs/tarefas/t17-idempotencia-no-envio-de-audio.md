@@ -104,14 +104,14 @@ de IA. O critério para identificar um reenvio fica registrado em ADR (RES-06, Q
 
 ## Definição de pronto
 
-- [ ] Com a mesma chave e o mesmo áudio, dois envios simultâneos resultam em um `200` e um `409` imediato, uma
+- [x] Com a mesma chave e o mesmo áudio, dois envios simultâneos resultam em um `200` e um `409` imediato, uma
       chamada ao chat e uma proposta (`VoiceCommandIdempotencyIT`)
-- [ ] Depois de um `503`, a mesma chave é aceita (`VoiceCommandIdempotencyIT`)
-- [ ] Mesma chave com outro áudio → `422` `idempotency-key-reused`; chave malformada → `400` (`ErrorResponseIT`)
-- [ ] Sem chave, nenhum teste existente muda e todos passam
-- [ ] `Caffeine` só no `CachingConfiguration`; sem `spring.cache.caffeine.spec` nem `spring.cache.cache-names`
-- [ ] ADR 0009 e documentação atualizados
-- [ ] `./gradlew build` passa
+- [x] Depois de um `503`, a mesma chave é aceita (`VoiceCommandIdempotencyIT`)
+- [x] Mesma chave com outro áudio → `422` `idempotency-key-reused`; chave malformada → `400` (`ErrorResponseIT`)
+- [x] Sem chave, nenhum teste existente muda e todos passam
+- [x] `Caffeine` só no `CachingConfiguration`; sem `spring.cache.caffeine.spec` nem `spring.cache.cache-names`
+- [x] ADR 0009 e documentação atualizados
+- [x] `./gradlew build` passa
 
 ## Para futuros agentes
 
@@ -218,7 +218,7 @@ construtor com o `AiStub`); `./gradlew build` → `BUILD SUCCESSFUL`.
 
 ## Fase 3: ADR e documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/adr/0009-trava-de-idempotencia-em-caffeine-local.md` (a partir de `docs/adr/template.md`):
       por que o Caffeine local e não MySQL, MongoDB (índice TTL) ou Redis — simplicidade e escopo (uma instância,
@@ -237,7 +237,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `ResetCacheExtension` também zera as travas)
 - [x] [verificação] `CLAUDE.md`: `infrastructure/cache/` na estrutura; a linha do Spring Cache + Caffeine inclui a
       trava do comando de voz
-- [ ] [verificação] `docs/tarefas.md`: nota da T10 na T17 com a conclusão; no último commit, checkbox da T17
+- [x] [verificação] `docs/tarefas.md`: nota da T10 na T17 com a conclusão; no último commit, checkbox da T17
 
 ### Plano de verificação
 
@@ -251,8 +251,28 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Documentação da idempotência: ADR 0009 (por que o Caffeine local e não MySQL, MongoDB ou Redis, sem detalhes de
+implementação), `docs/openapi.yaml` (cabeçalho, 400, 409 e 422), `docs/exemplos/voz.http` (reenvio com a mesma chave),
+`docs/escopo.md` (RES-06), as cinco regras (`architecture.md`, `api-conventions.md`, `error-handling.md`,
+`ai-integration.md`, `testing.md`), `CLAUDE.md` e `docs/tarefas.md` (nota da T10 e checkbox da T17).
+
+Decisões da fase: o cabeçalho `Idempotency-Key` é padrão de mercado e não é decisão de ADR; os itens de
+`docs/arquitetura.md` e `README.md` saíram da fase a pedido do usuário (o README só tem o filtro `cache="speech"` na
+linha `cache.gets`, da Fase 2).
+
+Verificação: o ADR 0009 existe com `status: aceito`; `Idempotency-Key` aparece nos três arquivos; as duas linhas do
+`error-handling.md`; o RES-06 com a chave de idempotência; `[x] [T17` no `docs/tarefas.md`; `./gradlew build` →
+`BUILD SUCCESSFUL`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+O `POST /api/v1/transactions/ai` aceita o cabeçalho opcional `Idempotency-Key` (UUID). Com ele, o
+`ProcessVoiceCommandUseCase` adquire, antes de qualquer chamada à IA, uma trava por usuário e chave (porta
+`VoiceCommandLock`, adaptador `SpringCacheVoiceCommandLock` sobre o cache `voice-command-locks` do Caffeine, janela de
+2 min e até 10.000 marcas): mesmo áudio dentro da janela → `409` `duplicate-voice-command`; outro áudio → `422`
+`idempotency-key-reused`; qualquer falha libera a trava e o sucesso a mantém até o fim da janela. Sem o cabeçalho, nada
+muda. Os caches `speech` e `voice-command-locks` passaram a ser montados no `CachingConfiguration` com o
+`CachingProperties` (`budgeting.cache.*`); o cache da trava é injetado por `@Qualifier`. Cobertura: unitários do use
+case e do adaptador, `ErrorResponseIT` (409, 422, 400) e `VoiceCommandIdempotencyIT` (envios simultâneos e retry após
+503). ADR 0009 registra a escolha do Caffeine local. Fora do escopo, como planejado: trava distribuída, guardar a
+resposta do primeiro envio e retry no `AssistantGateway`.
