@@ -96,6 +96,8 @@ de IA. O critério para identificar um reenvio fica registrado em ADR (RES-06, Q
 - README: a linha `cache.gets` só ganha o filtro `cache="speech"`, sem citar a trava — ela usa o Caffeine por
   simplicidade e pelo escopo, é detalhe de implementação e não entra como cache documentado (decisão do usuário, na
   Fase 2)
+- O ADR 0009 registra só por que o Caffeine local e não MySQL, MongoDB ou Redis, sem detalhes de implementação; o
+  cabeçalho `Idempotency-Key` é padrão de mercado e não é decisão de ADR (decisão do usuário, na Fase 3)
 - Um ADR só (0009), apenas sobre a idempotência; o ADR 0008 não muda — a mudança da configuração dos caches não é
   decisão para ADR; o estado vigente fica no `architecture.md` e no `application.properties` (decisão do usuário)
 
@@ -215,14 +217,12 @@ construtor com o `AiStub`); `./gradlew build` → `BUILD SUCCESSFUL`.
 
 ## Fase 3: ADR e documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/adr/0009-chave-de-idempotencia-no-comando-de-voz.md` (a partir de `docs/adr/template.md`):
-      critério (`Idempotency-Key` opcional, UUID, por usuário, com SHA-256 do áudio como fingerprint), trava no
-      Caffeine com `putIfAbsent`, 409 imediato, 422 para chave reutilizada, janela de 2 min, liberação na falha;
-      opções consideradas: só o hash do áudio (mesmos bytes não são a mesma intenção), MySQL, MongoDB com TTL, Redis
-      (`SET NX EX`), guardar a resposta (idempotência ≠ cache); consequências: memória local por instância, perdida
-      no reinício; em produção, Redis
+- [x] [verificação] `docs/adr/0009-trava-de-idempotencia-em-caffeine-local.md` (a partir de `docs/adr/template.md`):
+      por que o Caffeine local e não MySQL, MongoDB (índice TTL) ou Redis — simplicidade e escopo (uma instância,
+      janela curta, sem serviço novo); consequências: memória por instância, perdida no reinício; sem detalhes de
+      implementação
 - [ ] [verificação] `docs/openapi.yaml`: cabeçalho `Idempotency-Key` (opcional, `format: uuid`) no
       `POST /transactions/ai`; respostas `409` e `422` (`idempotency-key-reused` ao lado do `invalid-command`); `400`
       da chave malformada; descrições em pt-BR
