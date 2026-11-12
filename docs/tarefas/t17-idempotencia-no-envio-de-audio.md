@@ -161,7 +161,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       início do `execute`)
 - [x] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, falha em uma etapa → `release(userId, key)` chamado e a
       mesma exceção relançada
-- [ ] [TDD] `SpringCacheVoiceCommandLockTest` (unitário, com `ConcurrentMapCache` do Spring): mesma chave e mesmo
+- [x] [TDD] `SpringCacheVoiceCommandLockTest` (unitário, com `ConcurrentMapCache` do Spring): mesma chave e mesmo
       áudio → `DuplicateVoiceCommandException`; mesma chave e outro áudio → `IdempotencyKeyReusedException`; depois do
       `release`, a mesma chave é aceita; a mesma chave de outro usuário é aceita
 - [ ] [TDD] `ErrorResponseIT`: dois envios com a mesma chave e o mesmo áudio → o segundo é `409`
