@@ -235,7 +235,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       (linhas do 409 e do 422); `ai-integration.md` (linha do retry sobre o laço de tools: retry é do SDK, uma única
       chamada ao chat); `testing.md` (`VoiceCommandIdempotencyIT`, `SpringCacheVoiceCommandLockTest`, o
       `ResetCacheExtension` também zera as travas)
-- [ ] [verificação] `CLAUDE.md`: `infrastructure/cache/` na estrutura; a linha do Spring Cache + Caffeine inclui a
+- [x] [verificação] `CLAUDE.md`: `infrastructure/cache/` na estrutura; a linha do Spring Cache + Caffeine inclui a
       trava do comando de voz
 - [ ] [verificação] `docs/tarefas.md`: nota da T10 na T17 com a conclusão; no último commit, checkbox da T17
 
