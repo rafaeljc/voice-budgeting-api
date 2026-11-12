@@ -167,7 +167,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `SpringCacheVoiceCommandLockTest` (unitário, com `ConcurrentMapCache` do Spring): mesma chave e mesmo
       áudio → `DuplicateVoiceCommandException`; mesma chave e outro áudio → `IdempotencyKeyReusedException`; depois do
       `release`, a mesma chave é aceita; a mesma chave de outro usuário é aceita
-- [ ] [TDD] `ErrorResponseIT`: dois envios com a mesma chave e o mesmo áudio → o segundo é `409`
+- [x] [TDD] `ErrorResponseIT`: dois envios com a mesma chave e o mesmo áudio → o segundo é `409`
       `duplicate-voice-command` (`title`, `detail`, sem `Retry-After`); mesma chave e outro áudio → `422`
       `idempotency-key-reused`; chave malformada → `400` `validation-error` com `parameter: "Idempotency-Key"`
       (`@RequestHeader` no controller, `ProblemType`, handler, `messages.properties`)

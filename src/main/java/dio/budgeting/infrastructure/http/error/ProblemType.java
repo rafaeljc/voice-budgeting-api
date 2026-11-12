@@ -7,6 +7,8 @@ enum ProblemType {
     MALFORMED_REQUEST("malformed-request"),
     ASSISTANT_UNAVAILABLE("assistant-unavailable"),
     INVALID_COMMAND("invalid-command"),
+    DUPLICATE_VOICE_COMMAND("duplicate-voice-command"),
+    IDEMPOTENCY_KEY_REUSED("idempotency-key-reused"),
     TRANSACTION_NOT_FOUND("transaction-not-found"),
     TRANSACTION_PROPOSAL_NOT_FOUND("transaction-proposal-not-found"),
     UNAUTHENTICATED("unauthenticated");

@@ -16,6 +16,7 @@ import dio.budgeting.infrastructure.http.response.VoiceCommandResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -88,9 +90,12 @@ public class TransactionController {
             value = "/ai",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    VoiceCommandResponse transcribe(@AuthenticationPrincipal Jwt jwt, @Valid VoiceCommandRequest request)
+    VoiceCommandResponse transcribe(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestHeader(name = "Idempotency-Key", required = false) UUID idempotencyKey,
+            @Valid VoiceCommandRequest request)
             throws IOException {
-        var input = request.toInput();
+        var input = request.toInput(idempotencyKey);
         log.atInfo()
                 .addKeyValue("audioSizeBytes", input.audio().length)
                 .addKeyValue("audioFormat", input.format())

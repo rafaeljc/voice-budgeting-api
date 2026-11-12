@@ -12,13 +12,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.ai.AiStub;
+import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.security.AccessTokens;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -30,11 +36,14 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 @IntegrationTest
 @AutoConfigureMockMvc
+@AutoConfigureAiStub
 @ExtendWith(OutputCaptureExtension.class)
 class ErrorResponseIT {
 
@@ -45,8 +54,11 @@ class ErrorResponseIT {
     @MockitoBean
     private TransactionRepository transactionRepository;
 
-    ErrorResponseIT(MockMvc mockMvc) {
+    private final AiStub aiStub;
+
+    ErrorResponseIT(MockMvc mockMvc, AiStub aiStub) {
         this.mockMvc = mockMvc;
+        this.aiStub = aiStub;
     }
 
     @Test
@@ -177,6 +189,58 @@ class ErrorResponseIT {
                 .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
                 .andExpect(jsonPath("$.errors[0].parameter").value("file"))
                 .andExpect(jsonPath("$.errors[0].detail").value("Campo obrigatório ausente."));
+    }
+
+    @Test
+    void should_returnDuplicateVoiceCommandProblem_when_sameKeyAndSameAudioAreSentTwice() throws Exception {
+        // given
+        givenNotUnderstoodCommand();
+        var key = UUID.randomUUID().toString();
+        mockMvc.perform(voiceCommand("recording-1.m4a", key)).andExpect(status().isOk());
+
+        // when
+        var response = mockMvc.perform(voiceCommand("recording-1.m4a", key));
+
+        // then
+        response.andExpect(status().isConflict())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(header().doesNotExist("Retry-After"))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:duplicate-voice-command"))
+                .andExpect(jsonPath("$.title").value("Comando de voz duplicado"))
+                .andExpect(jsonPath("$.detail")
+                        .value("Este comando de voz já foi recebido com a mesma chave de idempotência."));
+    }
+
+    @Test
+    void should_returnIdempotencyKeyReusedProblem_when_sameKeyIsSentWithOtherAudio() throws Exception {
+        // given
+        givenNotUnderstoodCommand();
+        var key = UUID.randomUUID().toString();
+        mockMvc.perform(voiceCommand("recording-1.m4a", key)).andExpect(status().isOk());
+
+        // when
+        var response = mockMvc.perform(voiceCommand("recording-2.m4a", key));
+
+        // then
+        response.andExpect(status().isUnprocessableContent())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:idempotency-key-reused"))
+                .andExpect(jsonPath("$.title").value("Chave de idempotência reutilizada"))
+                .andExpect(jsonPath("$.detail")
+                        .value("A chave de idempotência já foi usada com outro áudio. Use uma chave nova."));
+    }
+
+    @Test
+    void should_returnValidationProblemWithParameter_when_idempotencyKeyIsMalformed() throws Exception {
+        // when
+        var response = mockMvc.perform(voiceCommand("recording-1.m4a", "not-a-uuid"));
+
+        // then
+        response.andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:validation-error"))
+                .andExpect(jsonPath("$.errors[0].parameter").value("Idempotency-Key"))
+                .andExpect(jsonPath("$.errors[0].detail").value("Valor inválido."));
     }
 
     @Test
@@ -318,5 +382,21 @@ class ErrorResponseIT {
         assertThat(event.path("log").path("level").asString()).isEqualTo("ERROR");
         assertThat(event.path("error").path("stack_trace").asString()).contains("RuntimeException");
         assertThat(event.path("traceId").asString()).isEqualTo(response.getHeader("X-Request-Id"));
+    }
+
+    private void givenNotUnderstoodCommand() {
+        aiStub.givenTranscription("bom dia");
+        aiStub.givenAnswer("Não entendi, tente novamente.");
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+    }
+
+    private static MockMultipartHttpServletRequestBuilder voiceCommand(String recording, String idempotencyKey)
+            throws IOException {
+        var file = new MockMultipartFile(
+                "file", recording, "audio/mp4", Files.readAllBytes(Path.of("src/test/resources/audio", recording)));
+        return multipart(VOICE_COMMAND_PATH)
+                .file(file)
+                .header(AUTHORIZATION, AccessTokens.authorization())
+                .header("Idempotency-Key", idempotencyKey);
     }
 }
