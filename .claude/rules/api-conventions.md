@@ -83,6 +83,9 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
   `/actuator/health/readiness`; sem ele, ou com token inválido, a
   resposta é 401 com `WWW-Authenticate: Bearer` (ver `security.md`).
 - `Location` em toda resposta 201.
+- `Idempotency-Key` opcional (UUID) no `POST /transactions/ai`, lido com `@RequestHeader(required = false) UUID`; fora
+  do formato, a resposta é 400 `validation-error` com `parameter: "Idempotency-Key"`. Sem ele, o comando é
+  processado sem trava.
 - `X-Request-Id` em toda resposta, com o `traceId` da requisição (32 hex); um `X-Request-Id` enviado pelo cliente é
   ignorado. A correlação de entrada é pelo `traceparent` (W3C).
 

@@ -1,6 +1,8 @@
 package dio.budgeting.infrastructure.http.error;
 
 import dio.budgeting.application.AiProviderUnavailableException;
+import dio.budgeting.application.DuplicateVoiceCommandException;
+import dio.budgeting.application.IdempotencyKeyReusedException;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.infrastructure.ai.tool.MultipleToolCallsException;
@@ -103,6 +105,20 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         var status = HttpStatus.UNPROCESSABLE_CONTENT;
         return handleExceptionInternal(
                 ex, problem(ProblemType.INVALID_COMMAND, status, null), new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(DuplicateVoiceCommandException.class)
+    ResponseEntity<Object> handleDuplicateVoiceCommand(DuplicateVoiceCommandException ex, WebRequest request) {
+        var status = HttpStatus.CONFLICT;
+        return handleExceptionInternal(
+                ex, problem(ProblemType.DUPLICATE_VOICE_COMMAND, status, null), new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(IdempotencyKeyReusedException.class)
+    ResponseEntity<Object> handleIdempotencyKeyReused(IdempotencyKeyReusedException ex, WebRequest request) {
+        var status = HttpStatus.UNPROCESSABLE_CONTENT;
+        return handleExceptionInternal(
+                ex, problem(ProblemType.IDEMPOTENCY_KEY_REUSED, status, null), new HttpHeaders(), status, request);
     }
 
     @ExceptionHandler(TransactionNotFoundException.class)

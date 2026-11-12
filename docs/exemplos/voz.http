@@ -23,6 +23,33 @@ Content-Type: audio/mp4
 < ../../src/test/resources/audio/recording-1.m4a
 --boundary--
 
+### Reenviar o comando com a mesma chave de idempotência: o primeiro 200, o segundo 409 duplicate-voice-command
+# Com o cabeçalho Idempotency-Key (UUID), o mesmo áudio reenviado dentro de 2 minutos não é processado de novo.
+POST {{baseUrl}}/transactions/ai
+Authorization: Bearer {{token}}
+Idempotency-Key: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="recording-1.m4a"
+Content-Type: audio/mp4
+
+< ../../src/test/resources/audio/recording-1.m4a
+--boundary--
+
+###
+POST {{baseUrl}}/transactions/ai
+Authorization: Bearer {{token}}
+Idempotency-Key: 6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="recording-1.m4a"
+Content-Type: audio/mp4
+
+< ../../src/test/resources/audio/recording-1.m4a
+--boundary--
+
 ### Confirmar a proposta (usa o id da proposta acima): 201 + Location da transação criada
 POST {{baseUrl}}/transaction-proposals/{{sendVoiceCommand.response.body.$.transactionProposal.id}}/confirm
 Authorization: Bearer {{token}}

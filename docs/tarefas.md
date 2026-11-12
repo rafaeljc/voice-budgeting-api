@@ -33,7 +33,7 @@
 **Fase 6 — Resiliência e recuperação de falhas**
 - [ ] [T15 — Circuit breaker e bulkhead](#t15)
 - [ ] [T16 — Degradação controlada](#t16)
-- [ ] [T17 — Idempotência no envio de áudio](#t17)
+- [x] [T17 — Idempotência no envio de áudio](#t17)
 - [x] [T18 — Health checks e encerramento gracioso](#t18)
 
 **Fase 7 — Segurança e rastreabilidade**
@@ -318,7 +318,7 @@ Garantir que o reenvio do mesmo comando não gere proposta duplicada nem nova co
 - QA-03 — Testes de falha (parcial)
 - DOC-03 — ADRs (critério para identificar um reenvio)
 
-**Nota (T10):** com a escrita idempotente, o retry pode subir para o `AssistantGateway` (laço de tools).
+**Nota (T10):** o retry não sobe para o `AssistantGateway`: desde a T12 as tools não gravam e o `returnDirect` faz uma única chamada ao chat, já repetida pelo SDK.
 
 <a id="t18"></a>
 ### T18 — Health checks e encerramento gracioso

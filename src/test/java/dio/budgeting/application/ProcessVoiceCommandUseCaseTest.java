@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import dio.budgeting.application.input.Audio;
 import dio.budgeting.application.input.AudioFormat;
+import dio.budgeting.application.input.IdempotencyKey;
 import dio.budgeting.application.input.ProcessVoiceCommandInput;
 import dio.budgeting.application.input.ProposeTransactionInput;
 import dio.budgeting.application.output.AssistantOutput;
@@ -29,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +77,9 @@ class ProcessVoiceCommandUseCaseTest {
 
     @Mock
     private Clock clock;
+
+    @Mock
+    private VoiceCommandLock voiceCommandLock;
 
     @InjectMocks
     private ProcessVoiceCommandUseCase useCase;
@@ -199,5 +206,32 @@ class ProcessVoiceCommandUseCaseTest {
                         new Money(new BigDecimal("80.00")),
                         Category.GROCERIES,
                         NOW.plus(Duration.ofMinutes(5))));
+    }
+
+    @Test
+    void should_failWithoutCallingAnything_when_voiceCommandIsDuplicate() {
+        // given
+        var key = new IdempotencyKey(UUID.randomUUID());
+        var input = new ProcessVoiceCommandInput(new byte[] {9, 8, 7}, AudioFormat.M4A, Optional.of(key));
+        doThrow(new DuplicateVoiceCommandException())
+                .when(voiceCommandLock)
+                .acquire(eq(USER_ID), eq(key), any(Audio.class));
+
+        // when / then
+        assertThatThrownBy(() -> useCase.execute(USER_ID, input)).isInstanceOf(DuplicateVoiceCommandException.class);
+        verifyNoInteractions(speechToText, assistant, textToSpeech, proposalRepository, eventPublisher);
+    }
+
+    @Test
+    void should_releaseLockAndRethrow_when_stepFails() {
+        // given
+        var key = new IdempotencyKey(UUID.randomUUID());
+        var input = new ProcessVoiceCommandInput(new byte[] {9, 8, 7}, AudioFormat.M4A, Optional.of(key));
+        var failure = new AiProviderUnavailableException(503, null);
+        when(speechToText.transcribe(any(Audio.class))).thenThrow(failure);
+
+        // when / then
+        assertThatThrownBy(() -> useCase.execute(USER_ID, input)).isSameAs(failure);
+        verify(voiceCommandLock).release(USER_ID, key);
     }
 }
