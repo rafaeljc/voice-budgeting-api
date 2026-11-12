@@ -156,7 +156,7 @@ Verificação: `SpeechCacheIT` passou sem mudança; nenhuma ocorrência de `spri
 
 ## Fase 2: Trava do comando de voz pela chave de idempotência
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `ProcessVoiceCommandUseCaseTest`: com chave, `acquire` lança `DuplicateVoiceCommandException` → a
       exceção sobe, sem interação com transcrição, assistente, voz e repositório (`IdempotencyKey`,
@@ -171,11 +171,11 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `duplicate-voice-command` (`title`, `detail`, sem `Retry-After`); mesma chave e outro áudio → `422`
       `idempotency-key-reused`; chave malformada → `400` `validation-error` com `parameter: "Idempotency-Key"`
       (`@RequestHeader` no controller, `ProblemType`, handler, `messages.properties`)
-- [ ] [TDD] `VoiceCommandIdempotencyIT` (`@IntegrationTest`, `RANDOM_PORT` + `RestClient`, como o
+- [x] [TDD] `VoiceCommandIdempotencyIT` (`@IntegrationTest`, `RANDOM_PORT` + `RestClient`, como o
       `TransactionProposalConcurrencyIT`; voz atrasada com `AiStub.givenDelayedSpeech`): dois envios simultâneos com
       a mesma chave e o mesmo áudio → um `200` e um `409` que chega antes de o primeiro terminar;
       `assistantCallCount() == 1`; uma proposta no banco
-- [ ] [TDD] `VoiceCommandIdempotencyIT`: primeiro envio com `AiStub.givenFailure` (503) → o mesmo envio com a mesma
+- [x] [TDD] `VoiceCommandIdempotencyIT`: primeiro envio com `AiStub.givenFailure` (503) → o mesmo envio com a mesma
       chave em seguida → `200`
 
 ### Plano de verificação
@@ -190,7 +190,28 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+O `Idempotency-Key` (UUID, opcional) é lido no `TransactionController` e vira `Optional<IdempotencyKey>` no
+`ProcessVoiceCommandInput` (que mantém o construtor de dois argumentos, para nenhum teste existente mudar). O
+`ProcessVoiceCommandUseCase.execute` adquire a trava pela porta `VoiceCommandLock` antes de qualquer chamada à IA e, se
+uma etapa falhar, libera e relança; o sucesso mantém a trava até o fim da janela. O adaptador
+`SpringCacheVoiceCommandLock` usa `putIfAbsent` no cache `voice-command-locks` (chave = usuário + `IdempotencyKey`;
+valor = SHA-256 do áudio): mesmo áudio → `409` `duplicate-voice-command`, outro áudio → `422`
+`idempotency-key-reused`. O `ApiExceptionHandler`, o `ProblemType` e o `messages.properties` ganharam os dois erros.
+
+Decisões da fase:
+- o cache da trava é injetado por um `@Bean Cache voiceCommandLocksCache` com `@Qualifier` no `CachingConfiguration`
+  (mesma instância do manager, então métricas e `ResetCacheExtension` continuam valendo); o `CachingConfiguration`
+  passou a ter um `builder` que devolve o `Caffeine` e o `build()` é chamado no registro;
+- o README só ganhou o filtro `cache="speech"` na linha `cache.gets`, sem citar a trava (ver Decisões);
+- `ErrorResponseIT` passou a usar `@AutoConfigureAiStub` (o construtor recebe o `AiStub`), sem mudar os outros casos.
+
+O que uma sessão nova precisa saber: o `ResetCacheExtension` já limpa todos os caches do `CacheManager`, inclusive
+`voice-command-locks`, então a Fase 3 só documenta isso no `testing.md`. Os dois casos do `VoiceCommandIdempotencyIT`
+nasceram verdes (o código vinha dos itens anteriores); confirmei que cada um falha sem o `release` e sem o `acquire`.
+
+Verificação: `ProcessVoiceCommandUseCaseTest`, `SpringCacheVoiceCommandLockTest`, `VoiceCommandIdempotencyIT` e
+`ErrorResponseIT` passam; `git diff main --stat -- src/test` só mostra casos novos (no `ErrorResponseIT`, também o
+construtor com o `AiStub`); `./gradlew build` → `BUILD SUCCESSFUL`.
 
 ## Fase 3: ADR e documentação
 
