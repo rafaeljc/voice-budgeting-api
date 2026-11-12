@@ -226,7 +226,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/openapi.yaml`: cabeçalho `Idempotency-Key` (opcional, `format: uuid`) no
       `POST /transactions/ai`; respostas `409` e `422` (`idempotency-key-reused` ao lado do `invalid-command`); `400`
       da chave malformada; descrições em pt-BR
-- [ ] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
+- [x] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
 - [ ] [verificação] `docs/arquitetura.md`: parágrafo da trava e o passo no diagrama de sequência do comando de voz
 - [ ] [verificação] `README.md`: frase sobre o cabeçalho, o 409 e o 422; na linha `cache.gets`, só o filtro `cache="speech"`
 - [ ] [verificação] `docs/escopo.md`: RES-06 → "Reenvio do mesmo comando com a mesma chave de idempotência (ex.:
