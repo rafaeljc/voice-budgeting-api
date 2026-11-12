@@ -289,6 +289,18 @@ paths:
         Consultas respondem direto. Um comando de registro só gera uma **proposta** de transação, devolvida junto da
         fala; nenhuma transação é criada até o usuário confirmá-la em `POST /transaction-proposals/{id}/confirm`. Um
         comando propõe no máximo uma transação.
+
+        O cabeçalho `Idempotency-Key` (UUID) é opcional e protege contra o reenvio do mesmo comando: dentro de 2
+        minutos, o mesmo áudio enviado com a mesma chave recebe `409` e não é processado de novo, sem nova cobrança
+        de IA. Se o envio falhar, a chave volta a ser aceita.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Chave de idempotência do envio, escolhida pelo cliente. Gere uma nova para cada comando.
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -332,8 +344,8 @@ paths:
                       content: SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA
         '400':
           description: >-
-            Parte `file` ausente, vazia ou fora de M4A, MP3 ou WAV (`validation-error`, com
-            `errors[].parameter`).
+            Parte `file` ausente, vazia ou fora de M4A, MP3 ou WAV, ou cabeçalho `Idempotency-Key` que não é um UUID
+            (`validation-error`, com `errors[].parameter`).
           content:
             application/problem+json:
               schema:
@@ -372,6 +384,32 @@ paths:
                     errors:
                       - parameter: file
                         detail: Envie o áudio em M4A, MP3 ou WAV.
+                malformedIdempotencyKey:
+                  summary: Chave de idempotência malformada
+                  value:
+                    type: urn:problem-type:budgeting:validation-error
+                    title: Dados inválidos
+                    status: 400
+                    detail: Um ou mais campos são inválidos.
+                    instance: /api/v1/transactions/ai
+                    errors:
+                      - parameter: Idempotency-Key
+                        detail: Valor inválido.
+        '409':
+          description: |
+            O mesmo áudio já foi recebido com essa `Idempotency-Key` nos últimos 2 minutos (o primeiro envio ainda
+            processa ou já terminou). Nada é processado nem gravado, e não há `Retry-After`: repetir depois da
+            janela processa o comando de novo.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: urn:problem-type:budgeting:duplicate-voice-command
+                title: Comando de voz duplicado
+                status: 409
+                detail: Este comando de voz já foi recebido com a mesma chave de idempotência.
+                instance: /api/v1/transactions/ai
         '413':
           description: Arquivo acima do tamanho máximo permitido.
           content:
@@ -386,19 +424,34 @@ paths:
                 instance: /api/v1/transactions/ai
         '422':
           description: |
-            O áudio foi entendido, mas o comando não pôde ser processado com os dados interpretados (valor não
-            positivo, descrição vazia ou longa, categoria inexistente) ou com mais de um pedido
-            interpretado no mesmo comando. Nenhuma proposta é gravada. Envie um novo comando de voz.
+            Uma de duas situações, sem nenhuma proposta gravada:
+
+            - `invalid-command`: o áudio foi entendido, mas o comando não pôde ser processado com os dados
+              interpretados (valor não positivo, descrição vazia ou longa, categoria inexistente) ou com mais de um
+              pedido interpretado no mesmo comando. Envie um novo comando de voz.
+            - `idempotency-key-reused`: a `Idempotency-Key` já foi usada, nos últimos 2 minutos, com outro áudio.
+              Use uma chave nova.
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-              example:
-                type: urn:problem-type:budgeting:invalid-command
-                title: Comando não processado
-                status: 422
-                detail: Não foi possível processar o comando com os dados entendidos. Envie um novo comando de voz.
-                instance: /api/v1/transactions/ai
+              examples:
+                invalidCommand:
+                  summary: Comando inválido
+                  value:
+                    type: urn:problem-type:budgeting:invalid-command
+                    title: Comando não processado
+                    status: 422
+                    detail: Não foi possível processar o comando com os dados entendidos. Envie um novo comando de voz.
+                    instance: /api/v1/transactions/ai
+                idempotencyKeyReused:
+                  summary: Chave de idempotência reutilizada
+                  value:
+                    type: urn:problem-type:budgeting:idempotency-key-reused
+                    title: Chave de idempotência reutilizada
+                    status: 422
+                    detail: A chave de idempotência já foi usada com outro áudio. Use uma chave nova.
+                    instance: /api/v1/transactions/ai
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '500':

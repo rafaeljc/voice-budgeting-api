@@ -223,7 +223,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       por que o Caffeine local e não MySQL, MongoDB (índice TTL) ou Redis — simplicidade e escopo (uma instância,
       janela curta, sem serviço novo); consequências: memória por instância, perdida no reinício; sem detalhes de
       implementação
-- [ ] [verificação] `docs/openapi.yaml`: cabeçalho `Idempotency-Key` (opcional, `format: uuid`) no
+- [x] [verificação] `docs/openapi.yaml`: cabeçalho `Idempotency-Key` (opcional, `format: uuid`) no
       `POST /transactions/ai`; respostas `409` e `422` (`idempotency-key-reused` ao lado do `invalid-command`); `400`
       da chave malformada; descrições em pt-BR
 - [ ] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
