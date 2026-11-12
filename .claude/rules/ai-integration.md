@@ -100,8 +100,8 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - Montar o `ChatClient` ou orquestrar etapas no controller.
 - Tipo do SDK do provedor (`com.openai.*`) fora do aspecto de tradução; tratar exceção do provedor no adaptador ou
   no advice.
-- Retry sobre o laço de tools (`interpret` inteiro) enquanto houver tool de escrita não idempotente: refaria a
-  conversa e gravaria em dobro.
+- Retry do `AssistantGateway` sobre o laço de tools (`interpret` inteiro): as tools não gravam e o `returnDirect`
+  encerra a chamada, então há uma única chamada ao chat por comando, e o retry dela já é do SDK.
 - Prompt fixo em código Java.
 - Deixar o modelo escrever a resposta falada, ou devolver a ele o resultado de uma tool.
 - Logging do Spring AI em `DEBUG` versionado.

@@ -82,8 +82,14 @@ Spring AI. A falha do provedor sai da porta como `AiProviderUnavailableException
 `AiProviderFailedException` (definitiva), em `application/`, sem tipo do provedor.
 
 Cache é detalhe do adaptador: `@Cacheable` fica no adaptador (`SpringAiTextToSpeechGateway`), nunca na porta nem no use
-case. O tamanho e o TTL ficam só em `application.properties` (`spring.cache.*`), e nenhum tipo do provedor de cache
-(Caffeine) aparece em Java, para que trocar por um cache distribuído mude só dependência e propriedades (ADR 0008).
+case. O tamanho e o TTL ficam só em `application.properties` (`budgeting.cache.*`), e o tipo do provedor de cache
+(`Caffeine`) aparece em Java só no `CachingConfiguration`, que registra cada cache com os seus limites; o adaptador e o
+gateway só conhecem a abstração do Spring (ADR 0008).
+
+A trava de idempotência do comando de voz é a porta `VoiceCommandLock` (`application/`), com o adaptador
+`SpringCacheVoiceCommandLock` em `infrastructure/cache/`, sobre o cache `voice-command-locks`. O use case adquire a
+trava antes de qualquer chamada à IA e a libera se o comando falhar; trocar o armazenamento muda só o adaptador
+(ADR 0009).
 
 Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e
 `XEntity.from(domain)` (`AuditEntryDocument.from(event, traceId)` para a auditoria).

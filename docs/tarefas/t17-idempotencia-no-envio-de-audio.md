@@ -230,7 +230,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
 - [x] [verificação] `docs/escopo.md`: RES-06 → "Reenvio do mesmo comando com a mesma chave de idempotência (ex.:
       envio repetido por instabilidade da interface) não gera proposta duplicada nem nova cobrança de IA."
-- [ ] [verificação] Regras: `architecture.md` (porta `VoiceCommandLock`, adaptador em `infrastructure/cache/`,
+- [x] [verificação] Regras: `architecture.md` (porta `VoiceCommandLock`, adaptador em `infrastructure/cache/`,
       Caffeine só no `CachingConfiguration`); `api-conventions.md` (cabeçalho `Idempotency-Key`); `error-handling.md`
       (linhas do 409 e do 422); `ai-integration.md` (linha do retry sobre o laço de tools: retry é do SDK, uma única
       chamada ao chat); `testing.md` (`VoiceCommandIdempotencyIT`, `SpringCacheVoiceCommandLockTest`, o

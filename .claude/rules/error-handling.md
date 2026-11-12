@@ -39,6 +39,8 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `ConstraintViolationException` (argumentos de tool)  | 422    | `urn:problem-type:budgeting:invalid-command`     | `problem.invalid-command.*`                                 | `INFO` `Request rejected`, com `invalidFields` |
 | `DatabindException` (argumentos de tool)             | 422    | `urn:problem-type:budgeting:invalid-command`     | `problem.invalid-command.*`                                 | `INFO` `Request rejected`, com `invalidFields` |
 | `MultipleToolCallsException` (segunda chamada de tool no mesmo comando) | 422 | `urn:problem-type:budgeting:invalid-command` | `problem.invalid-command.*` | `INFO` `Request rejected`, sem `invalidFields` |
+| `DuplicateVoiceCommandException` (mesma chave e mesmo áudio dentro da janela) | 409 | `urn:problem-type:budgeting:duplicate-voice-command` | `problem.duplicate-voice-command.*` | `INFO` `Request rejected` |
+| `IdempotencyKeyReusedException` (mesma chave com outro áudio) | 422 | `urn:problem-type:budgeting:idempotency-key-reused` | `problem.idempotency-key-reused.*` | `INFO` `Request rejected` |
 | `NoResourceFoundException`                           | 404    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `HttpRequestMethodNotSupportedException`             | 405    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `HttpMediaTypeNotSupportedException`                 | 415    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
@@ -70,6 +72,10 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
   segunda chamada ao modelo nem síntese de voz. As exceções chegam sem invólucro porque o
   `ToolExecutionExceptionProcessor` (`infrastructure/ai/tool/`) as relança; qualquer outra falha de tool vira 500 e
   nunca volta ao modelo como texto.
+- `duplicate-voice-command` (409): o mesmo áudio chegou com a mesma `Idempotency-Key` dentro da janela, com o primeiro
+  envio ainda em processamento ou já concluído. Sem `errors` nem `Retry-After` (repetir depois da janela processa o
+  comando de novo); a trava é adquirida antes da IA, então nada é transcrito, interpretado nem gravado.
+- `idempotency-key-reused` (422): a mesma `Idempotency-Key` chegou com outro áudio; também sem IA e sem `errors`.
 - `@Validated` (method validation) só nos adaptadores de tool; no HTTP a validação é o `@Valid` do controller.
 - `type` em URN (`urn:problem-type:budgeting:<slug>`) só para erro com semântica própria; erro puramente HTTP usa
   `about:blank`, com o `title` em pt-BR pelos códigos do Spring.

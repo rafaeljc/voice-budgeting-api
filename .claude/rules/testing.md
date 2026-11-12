@@ -51,7 +51,11 @@ paths:
 - Cache: o `ResetCacheExtension` (registrado no `@IntegrationTest`) limpa todos os caches pelo `CacheManager` antes de
   cada teste, porque os `*IT` compartilham o contexto e um áudio em cache quebraria as asserções de `speechText()`.
   `AiStub.speechCallCount()` e `givenDelayedSpeech(byte[], Duration)` leem e atrasam a síntese. O `SpeechCacheIT`
-  chama a porta `TextToSpeechGateway` direto, sem HTTP, e o teste de concorrência falha sem o `sync = true`.
+  chama a porta `TextToSpeechGateway` direto, sem HTTP, e o teste de concorrência falha sem o `sync = true`. O mesmo
+  `ResetCacheExtension` zera as travas de idempotência (`voice-command-locks`).
+- Idempotência do comando de voz: o `SpringCacheVoiceCommandLockTest` usa um `ConcurrentMapCache` do Spring, sem
+  contexto; o `VoiceCommandIdempotencyIT` usa `RANDOM_PORT` e `RestClient`, com `AiStub.givenDelayedSpeech`, para que
+  dois envios com a mesma chave se sobreponham.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em
