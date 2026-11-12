@@ -93,6 +93,9 @@ de IA. O critério para identificar um reenvio fica registrado em ADR (RES-06, Q
   `max-entries` diz a unidade; porta sem `throws`, como as `*Gateway` (decisão do usuário)
 - Retry no `AssistantGateway` fora — desde a T12 as tools não gravam, e com `returnDirect` há uma única chamada ao
   chat, já repetida pelo SDK (decisão do usuário)
+- README: a linha `cache.gets` só ganha o filtro `cache="speech"`, sem citar a trava — ela usa o Caffeine por
+  simplicidade e pelo escopo, é detalhe de implementação e não entra como cache documentado (decisão do usuário, na
+  Fase 2)
 - Um ADR só (0009), apenas sobre a idempotência; o ADR 0008 não muda — a mudança da configuração dos caches não é
   decisão para ADR; o estado vigente fica no `architecture.md` e no `application.properties` (decisão do usuário)
 
@@ -204,8 +207,7 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
       da chave malformada; descrições em pt-BR
 - [ ] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
 - [ ] [verificação] `docs/arquitetura.md`: parágrafo da trava e o passo no diagrama de sequência do comando de voz
-- [ ] [verificação] `README.md`: frase sobre o cabeçalho, o 409 e o 422; `voice-command-locks` na tag `cache` da
-      `cache.gets`
+- [ ] [verificação] `README.md`: frase sobre o cabeçalho, o 409 e o 422; na linha `cache.gets`, só o filtro `cache="speech"`
 - [ ] [verificação] `docs/escopo.md`: RES-06 → "Reenvio do mesmo comando com a mesma chave de idempotência (ex.:
       envio repetido por instabilidade da interface) não gera proposta duplicada nem nova cobrança de IA."
 - [ ] [verificação] Regras: `architecture.md` (porta `VoiceCommandLock`, adaptador em `infrastructure/cache/`,
