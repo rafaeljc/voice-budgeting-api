@@ -47,7 +47,7 @@ de IA. O critério para identificar um reenvio fica registrado em ADR (RES-06, Q
 - Testes novos: `ProcessVoiceCommandUseCaseTest` (2 casos), `SpringCacheVoiceCommandLockTest`,
   `VoiceCommandIdempotencyIT`, `ErrorResponseIT` (409, 422, 400). Nenhum teste existente muda: sem chave a trava não é
   chamada
-- Documentação: ADR 0009, `docs/openapi.yaml`, `docs/exemplos/voz.http`, `docs/arquitetura.md`, `README.md`,
+- Documentação: ADR 0009, `docs/openapi.yaml`, `docs/exemplos/voz.http`,
   `docs/escopo.md` (RES-06), regras (`architecture.md`, `api-conventions.md`, `error-handling.md`,
   `ai-integration.md`, `testing.md`), `CLAUDE.md`, `docs/tarefas.md` (nota da T10 e checkbox)
 
@@ -98,6 +98,7 @@ de IA. O critério para identificar um reenvio fica registrado em ADR (RES-06, Q
   Fase 2)
 - O ADR 0009 registra só por que o Caffeine local e não MySQL, MongoDB ou Redis, sem detalhes de implementação; o
   cabeçalho `Idempotency-Key` é padrão de mercado e não é decisão de ADR (decisão do usuário, na Fase 3)
+- Itens de `docs/arquitetura.md` e `README.md` removidos da Fase 3 (decisão do usuário, na Fase 3)
 - Um ADR só (0009), apenas sobre a idempotência; o ADR 0008 não muda — a mudança da configuração dos caches não é
   decisão para ADR; o estado vigente fica no `architecture.md` e no `application.properties` (decisão do usuário)
 
@@ -227,8 +228,6 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `POST /transactions/ai`; respostas `409` e `422` (`idempotency-key-reused` ao lado do `invalid-command`); `400`
       da chave malformada; descrições em pt-BR
 - [x] [verificação] `docs/exemplos/voz.http`: dois envios com a mesma chave fixa, o segundo `409`
-- [ ] [verificação] `docs/arquitetura.md`: parágrafo da trava e o passo no diagrama de sequência do comando de voz
-- [ ] [verificação] `README.md`: frase sobre o cabeçalho, o 409 e o 422; na linha `cache.gets`, só o filtro `cache="speech"`
 - [x] [verificação] `docs/escopo.md`: RES-06 → "Reenvio do mesmo comando com a mesma chave de idempotência (ex.:
       envio repetido por instabilidade da interface) não gera proposta duplicada nem nova cobrança de IA."
 - [ ] [verificação] Regras: `architecture.md` (porta `VoiceCommandLock`, adaptador em `infrastructure/cache/`,
@@ -243,8 +242,8 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 ### Plano de verificação
 
 - `ls docs/adr/0009-*` → o ADR existe, com `status: aceito`
-- `grep -n "Idempotency-Key" docs/openapi.yaml docs/exemplos/voz.http README.md .claude/rules/api-conventions.md` →
-  ocorrências nos quatro
+- `grep -n "Idempotency-Key" docs/openapi.yaml docs/exemplos/voz.http .claude/rules/api-conventions.md` →
+  ocorrências nos três
 - `grep -n "duplicate-voice-command\|idempotency-key-reused" .claude/rules/error-handling.md` → as duas linhas
 - `grep -n "RES-06" docs/escopo.md` → texto com a chave de idempotência
 - `grep -n "\[x\] \[T17" docs/tarefas.md` → checkbox marcado
