@@ -9,20 +9,17 @@ import dio.budgeting.domain.UserId;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.Objects;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SpringCacheVoiceCommandLock implements VoiceCommandLock {
-    static final String CACHE_NAME = "voice-command-locks";
-
     private final Cache cache;
 
-    public SpringCacheVoiceCommandLock(CacheManager cacheManager) {
-        this.cache = Objects.requireNonNull(cacheManager.getCache(CACHE_NAME), "Cache " + CACHE_NAME + " not found");
+    public SpringCacheVoiceCommandLock(@Qualifier("voiceCommandLocksCache") Cache cache) {
+        this.cache = cache;
     }
 
     // putIfAbsent is atomic and returns at once, so the loser never waits for the first request

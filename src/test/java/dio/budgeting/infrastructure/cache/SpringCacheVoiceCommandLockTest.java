@@ -9,12 +9,10 @@ import dio.budgeting.application.input.Audio;
 import dio.budgeting.application.input.AudioFormat;
 import dio.budgeting.application.input.IdempotencyKey;
 import dio.budgeting.domain.UserId;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.support.SimpleCacheManager;
 
 class SpringCacheVoiceCommandLockTest {
     private static final UserId USER_ID = new UserId(UUID.randomUUID());
@@ -26,10 +24,7 @@ class SpringCacheVoiceCommandLockTest {
 
     @BeforeEach
     void setUp() {
-        var cacheManager = new SimpleCacheManager();
-        cacheManager.setCaches(List.of(new ConcurrentMapCache(SpringCacheVoiceCommandLock.CACHE_NAME)));
-        cacheManager.initializeCaches();
-        lock = new SpringCacheVoiceCommandLock(cacheManager);
+        lock = new SpringCacheVoiceCommandLock(new ConcurrentMapCache("voice-command-locks"));
     }
 
     @Test
