@@ -119,13 +119,13 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Caches montados no `CachingConfiguration`
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `CachingProperties` (`budgeting.cache.speech.*` e `budgeting.cache.voice-command-locks.*`:
+- [x] [verificação] `CachingProperties` (`budgeting.cache.speech.*` e `budgeting.cache.voice-command-locks.*`:
       `max-entries`, `time-to-live`) e `CachingConfiguration` com `CacheManagerCustomizer<CaffeineCacheManager>`
       registrando os dois caches por `registerCustomCache` (`maximumSize`, `expireAfterWrite`, `recordStats`),
       manager estático; comentário do porquê (uma `spec` só no Boot)
-- [ ] [verificação] `application.properties`: sai `spring.cache.caffeine.spec` e `spring.cache.cache-names`; entram
+- [x] [verificação] `application.properties`: sai `spring.cache.caffeine.spec` e `spring.cache.cache-names`; entram
       as quatro propriedades com o comentário que hoje explica a `spec` (tamanho, TTL, `recordStats`) e o da janela
       (cobre o pior comando, ~96 s)
 
@@ -139,7 +139,17 @@ Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Os caches `speech` e `voice-command-locks` agora são montados em Java: `CachingProperties` (`budgeting.cache.*`, com
+`Policy(maxEntries, timeToLive)` validada) e `CachingConfiguration` com um
+`CacheManagerCustomizer<CaffeineCacheManager>` que chama `registerCustomCache` com `maximumSize`, `expireAfterWrite` e
+`recordStats`. Saíram `spring.cache.caffeine.spec` e `spring.cache.cache-names` do `application.properties`; entraram as
+quatro propriedades com os comentários da `spec` e da janela. O manager continua estático.
+
+Decisão de implementação: no Boot 4 o `CacheManagerCustomizer` está em `org.springframework.boot.cache.autoconfigure`
+(não em `boot.autoconfigure.cache`). O `voice-command-locks` é registrado, mas ainda sem uso (o adaptador vem na fase 2).
+
+Verificação: `SpeechCacheIT` passou sem mudança; nenhuma ocorrência de `spring.cache.caffeine.spec` ou
+`spring.cache.cache-names`; `Caffeine` só em `CachingConfiguration.java`; `./gradlew build` → `BUILD SUCCESSFUL`.
 
 ## Fase 2: Trava do comando de voz pela chave de idempotência
 
