@@ -24,7 +24,7 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 - **Fraude com IA é uma preocupação declarada**: o Itaú alerta seus clientes sobre golpes com deepfakes e clonagem de voz. Para um sistema que aceita comandos por áudio, isso reforça a necessidade de identidade, isolamento de dados, auditoria e confirmação explícita (SEG-01, SEG-02, SEG-04).
 - **Valores que viram requisitos**: "Só é bom pra gente se for bom para o cliente", "Ética é inegociável" e a centralidade no cliente, da cultura do banco, orientam decisões como nunca gravar sem confirmação, respostas claras e proteção de dados pessoais nos logs (FN-08, SEG-06).
 - **Estratégia "AI First" com IA responsável**: o banco trata a IA generativa como um novo paradigma de atendimento, ampliou em 84% as iniciativas de IA generativa em 2025 e investe em IA responsável. Isso motiva medir o consumo da IA, conter seu custo e protegê-la contra uso indevido (CUS-01, SEG-03, FN-07).
-- **O cliente quer um banco consultivo e confiável**: segundo a pesquisa "Consciência e Prosperidade", do Itaú, 67% dos brasileiros esperam que seus bancos sejam mais consultivos e 53% desejam apoio para tomar decisões mais inteligentes. Um assistente só é consultivo se for confiável: valores corretos, respostas claras e disponibilidade mesmo diante de falhas (FN-01, API-02, RES-05).
+- **O cliente quer um banco consultivo e confiável**: segundo a pesquisa "Consciência e Prosperidade", do Itaú, 67% dos brasileiros esperam que seus bancos sejam mais consultivos e 53% desejam apoio para tomar decisões mais inteligentes. Um assistente só é consultivo se for confiável: valores corretos, respostas claras e disponibilidade mesmo diante de falhas (FN-01, API-02).
 
 ## Legenda
 
@@ -77,9 +77,8 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 |---|---|---|---|---|---|
 | RES-01 | Timeouts | Tempo máximo para toda chamada externa (transcrição, chat, voz, bancos de dados). | Nenhuma requisição fica presa indefinidamente; recursos liberados; latência previsível. | **Crítico** | P |
 | RES-02 | Retries com backoff exponencial e jitter | Repetir chamadas que falharam por erros **transitórios**, com intervalos crescentes e aleatorizados. | Recupera falhas momentâneas sem intervenção; o jitter evita picos sincronizados sobre a dependência. | Alto | P |
-| RES-03 | Circuit breaker | Interromper temporariamente chamadas a uma dependência de IA que está falhando, por dependência. | Falha rápida em vez de esperar timeouts; dá tempo para a dependência se recuperar; evita falhas em cascata. | Alto | M |
+| RES-03 | Circuit breaker | Interromper temporariamente as chamadas ao fluxo de IA quando uma de suas dependências está falhando. | Falha rápida em vez de esperar timeouts; dá tempo para a dependência se recuperar; evita falhas em cascata. | Alto | M |
 | RES-04 | Bulkhead | Limitar chamadas simultâneas a cada dependência de IA. | Lentidão do provedor de IA não esgota as threads da aplicação; endpoints manuais continuam responsivos. | Médio | P |
-| RES-05 | Degradação controlada | Quando uma etapa falha, entregar o melhor resultado possível: resposta em texto se a geração de voz falhar; mensagem clara se a IA estiver indisponível; mensagens comuns (erros, indisponibilidade) geradas uma única vez e servidas como áudio estático; endpoints manuais continuam funcionando. | O cliente nunca fica sem resposta; a falha de um componente não derruba toda a experiência. | Alto | M |
 | RES-06 | Idempotência no envio de áudio | Reenvio do mesmo comando com a mesma chave de idempotência (ex.: envio repetido por instabilidade da interface) não gera proposta duplicada nem nova cobrança de IA. | Elimina duplicidades; reduz custo; permite retry seguro pelo cliente. | Alto | M |
 | RES-07 | Idempotência na confirmação | Confirmar a mesma proposta mais de uma vez não cria transações duplicadas. | Garante que um gasto é registrado exatamente uma vez — requisito básico em finanças. | **Crítico** | P |
 | RES-08 | Estado persistido | Propostas e seus estados ficam armazenados, não apenas em memória. | Reinícios e falhas da aplicação não perdem propostas pendentes. | Alto | P |
@@ -121,7 +120,7 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 |---|---|---|---|---|---|
 | QA-01 | Testes unitários | Testes do domínio, das validações e dos casos de uso. | Feedback rápido; protege regras de negócio contra regressões. | **Crítico** | M |
 | QA-02 | Testes de integração sem OpenAI | Testes do fluxo completo com a IA simulada e banco de dados real em container. | Testes determinísticos, rápidos e gratuitos; rodam no CI sem credenciais. | **Crítico** | M |
-| QA-03 | Testes de falha | Simular timeout, erros e lentidão das dependências e comprovar retry, circuit breaker e degradação. | Prova que a resiliência funciona de fato, em vez de apenas estar configurada. | Alto | M |
+| QA-03 | Testes de falha | Simular timeout, erros e lentidão das dependências e comprovar retry e circuit breaker. | Prova que a resiliência funciona de fato, em vez de apenas estar configurada. | Alto | M |
 | QA-05 | Integração contínua (CI) | Build, testes e análises automáticos a cada alteração. | Qualidade verificada continuamente; evidência pública de que o projeto funciona. | Alto | P |
 
 ## 8. Documentação e apresentação
@@ -151,7 +150,7 @@ Novos tipos de consulta, recursos consultivos/analíticos, novas categorias, cor
 
 | ID | Item | O que é | Por que fica para depois |
 |---|---|---|---|
-| FUT-01 | Fallback multi-provedor de IA | Usar outro provedor/modelo quando o principal estiver indisponível. | A degradação controlada já cobre a indisponibilidade; o multi-provedor adiciona configuração, testes e uma nova fonte de variação na acurácia. |
+| FUT-01 | Fallback multi-provedor de IA | Usar outro provedor/modelo quando o principal estiver indisponível. | O 503 com `Retry-After` e o circuit breaker já cobrem a indisponibilidade; o multi-provedor adiciona configuração, testes e uma nova fonte de variação na acurácia. |
 | FUT-02 | Tools via servidor MCP | Expor os casos de uso como ferramentas em um servidor MCP, desacoplando a IA da aplicação. | Mudança arquitetural que não aumenta a confiabilidade do fluxo atual. |
 | FUT-03 | Microsserviço de áudio | Transcrição e síntese de voz em um serviço isolado. | Mudança arquitetural; adiciona uma dependência de rede sem ganho para o fluxo atual. |
 | FUT-04 | Antifraude externo | Consultar um serviço antifraude antes de confirmar transações. | Integração nova; mais relevante para transferências do que para registro de gastos. |

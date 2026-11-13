@@ -31,8 +31,8 @@ infrastructure/persistence/entity/TransactionEntity            # entidade JPA
 
 Serviços externos seguem o mesmo padrão, com o sufixo `Gateway` (par do `Repository`): a porta fica na raiz de
 `application/`, sem subpacote, como o `TransactionRepository` na raiz de `domain/`; o adaptador, em
-`infrastructure/`, leva o nome da tecnologia. Uma porta por etapa, para que cada dependência tenha timeout, retry,
-circuit breaker e degradação próprios.
+`infrastructure/`, leva o nome da tecnologia. Uma porta por etapa, para que cada dependência tenha timeout, retry e
+bulkhead próprios.
 
 ```
 application/SpeechToTextGateway                                # porta (interface)
