@@ -32,7 +32,6 @@
 
 **Fase 6 — Resiliência e recuperação de falhas**
 - [ ] [T15 — Circuit breaker e bulkhead](#t15)
-- [ ] [T16 — Degradação controlada](#t16)
 - [x] [T17 — Idempotência no envio de áudio](#t17)
 - [x] [T18 — Health checks e encerramento gracioso](#t18)
 
@@ -274,37 +273,22 @@ Padronizar as respostas do assistente (frases fixas, formato único de valores e
 
 **Depende de:** T09
 
-Aplicar circuit breaker e limite de chamadas simultâneas a cada dependência de IA. Incluir testes de falha.
+Aplicar um circuit breaker ao fluxo de voz e um limite de chamadas simultâneas a cada dependência de IA. Incluir testes de falha.
 
 **Itens do escopo:**
 - RES-03 — Circuit breaker
 - RES-04 — Bulkhead
 - QA-03 — Testes de falha (parcial)
 
-**Nota (T09):** um circuit breaker e um bulkhead por gateway (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`), pois as três dependências falham de forma independente.
+**Nota (T09):** um bulkhead por gateway (`SpeechToTextGateway`, `AssistantGateway`, `TextToSpeechGateway`). O circuit
+breaker, ao contrário, observa o fluxo de voz inteiro: se qualquer etapa (transcrição, assistente ou voz) estiver fora,
+o circuito abre para o comando todo e o comando falha antes da primeira chamada à IA, sem gastar com as etapas
+anteriores. Circuito aberto responde como a IA indisponível (503 `assistant-unavailable` com `Retry-After`); a exceção
+do circuito sai como `AiProviderUnavailableException` ou é mapeada para a mesma resposta.
 
 **Nota (T10):** o circuit breaker vê a falha depois dos retries do SDK; timeout e retry por etapa no `application.properties`.
 
 **Nota (T22):** expor as métricas do Resilience4j com `resilience4j-micrometer` (estado do circuit breaker e do bulkhead), que o OBS-02 pede e a T22 não cobriu.
-
-<a id="t16"></a>
-### T16 — Degradação controlada
-
-**Depende de:** T09
-
-Definir a resposta para cada cenário de falha: texto quando a geração de voz falhar, mensagem clara quando a IA estiver indisponível e endpoints manuais funcionando normalmente. Gerar uma única vez as mensagens comuns (erros e indisponibilidade) e servi-las como áudio estático. Incluir testes de falha.
-
-**Itens do escopo:**
-- RES-05 — Degradação controlada
-- QA-03 — Testes de falha (parcial)
-
-**Nota (T09):** o use case de voz (`ProcessVoiceCommandUseCase`) captura a falha do `TextToSpeechGateway` para responder em texto quando a voz falhar; as falhas da transcrição e do assistente seguem como `AiProviderUnavailableException` (503).
-
-**Nota (T12):** ao responder em texto quando a voz falhar, manter a ordem voz → gravação da proposta: a proposta só é gravada depois de a resposta (em texto, nesse caso) estar pronta.
-
-**Nota (T06):** o 422 `invalid-command` (argumentos inválidos da tool) não gera voz hoje e responde só com Problem Details; servir uma mensagem falada como áudio estático.
-
-**Nota (T14):** o texto da resposta falada já é montado pela aplicação (`SpokenAnswers`), não pelo modelo.
 
 <a id="t17"></a>
 ### T17 — Idempotência no envio de áudio
@@ -456,9 +440,9 @@ Concluir o README com a visão geral do projeto, tecnologias, melhorias implemen
 |---|---|
 | Fluxo e regras de negócio | FN-01 → T03 · FN-02 → T06 · FN-03 → T12 · FN-04 → T13 · FN-05 → T11 · FN-06 → T06 · FN-07 → T14 · FN-08 → T14 · FN-09 → T09 |
 | API | API-01 → T07, T12 · API-02 → T03 · API-03 → T07 · API-04 → T05 · API-05 → T07 |
-| Resiliência | RES-01 → T10 · RES-02 → T10 · RES-03 → T15 · RES-04 → T15 · RES-05 → T16 · RES-06 → T17 · RES-07 → T13 · RES-08 → T12 · RES-09 → T18 · RES-10 → T18 |
+| Resiliência | RES-01 → T10 · RES-02 → T10 · RES-03 → T15 · RES-04 → T15 · RES-06 → T17 · RES-07 → T13 · RES-08 → T12 · RES-09 → T18 · RES-10 → T18 |
 | Segurança e rastreabilidade | SEG-01 → T08 · SEG-02 → T08 · SEG-03 → T19 · SEG-04 → T20 · SEG-05 → T21 · SEG-06 → T04 · SEG-07 → T02, T27 · SEG-08 → T02 |
 | Custo e desempenho | CUS-01 → T23 · CUS-02 → T24 · CUS-03 → T25 |
 | Observabilidade | OBS-01 → T04 · OBS-02 → T22 · OBS-03 → T22 |
-| Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T15, T16, T17, T21 · QA-05 → T02 |
+| Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T15, T17, T21 · QA-05 → T02 |
 | Documentação e apresentação | DOC-01 → T02, T26 + transversal · DOC-02 → T26 · DOC-03 → T01, T11, T12, T17, T20, T21, T25 · DOC-04 → T09, T12 + transversal · DOC-05 → T07 + transversal · DOC-06 → T07, T12 · DOC-07 → T01 + transversal · DOC-08 → T26 |
