@@ -126,9 +126,9 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Resilience4j desligado nos testes e bulkhead por etapa
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `build.gradle`: `resilience4j-spring-boot4:2.4.0`; `resilience4j-circuitbreaker` e
+- [x] [verificação] `build.gradle`: `resilience4j-spring-boot4:2.4.0`; `resilience4j-circuitbreaker` e
       `resilience4j-bulkhead` explícitos só se não vierem pelo starter
 - [ ] [verificação] `application-test.properties`: `spring.autoconfigure.exclude` com todas as auto-configurações do
       starter (lista do `META-INF/spring/...AutoConfiguration.imports` do jar) e comentário do porquê (resiliência
