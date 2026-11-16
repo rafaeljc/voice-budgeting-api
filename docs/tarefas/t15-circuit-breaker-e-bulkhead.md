@@ -130,7 +130,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: `resilience4j-spring-boot4:2.4.0`; `resilience4j-circuitbreaker` e
       `resilience4j-bulkhead` explícitos só se não vierem pelo starter
-- [ ] [verificação] `application-test.properties`: `spring.autoconfigure.exclude` com todas as auto-configurações do
+- [x] [verificação] `application-test.properties`: `spring.autoconfigure.exclude` com todas as auto-configurações do
       starter (lista do `META-INF/spring/...AutoConfiguration.imports` do jar) e comentário do porquê (resiliência
       não influencia nenhum teste; quem precisa usa `@EnableResilience`)
 - [ ] [verificação] `support/resilience/EnableResilience`: `@TestPropertySource(properties =
