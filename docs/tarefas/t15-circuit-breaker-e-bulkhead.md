@@ -194,7 +194,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       se aplicar ao método package-private, torná-lo `public`; `resilience4j.circuitbreaker.instances.voice-command.*`
       com comentário; `CallNotPermittedException` no handler do 503; `ResetCircuitBreakerExtension` registrada pela
       `@EnableResilience`)
-- [ ] [TDD] `VoiceCommandCircuitBreakerIT`: `should_keepCircuitClosed_when_providerFailsDefinitively` — 5 comandos com
+- [x] [TDD] `VoiceCommandCircuitBreakerIT`: `should_keepCircuitClosed_when_providerFailsDefinitively` — 5 comandos com
       `REQUEST_REJECTED` (500), depois um comando válido → 200 (`record-exceptions` com
       `AiProviderUnavailableException`)
 - [ ] [TDD] `VoiceCommandCircuitBreakerIT`: `should_logCircuitOpenAsWarning_when_circuitIsOpen` —

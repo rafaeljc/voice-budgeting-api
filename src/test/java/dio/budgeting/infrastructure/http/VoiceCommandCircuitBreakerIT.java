@@ -60,6 +60,22 @@ class VoiceCommandCircuitBreakerIT {
         assertThat(aiStub.transcriptionCallCount()).isEqualTo(callsBefore);
     }
 
+    @Test
+    void should_keepCircuitClosed_when_providerFailsDefinitively() throws Exception {
+        // given
+        aiStub.givenFailure(AiStage.TRANSCRIPTION, AiFailure.REQUEST_REJECTED);
+        for (var i = 0; i < MINIMUM_CALLS; i++) {
+            mockMvc.perform(voiceCommand()).andExpect(status().isInternalServerError());
+        }
+        givenHealthyAi();
+
+        // when
+        var response = mockMvc.perform(voiceCommand());
+
+        // then
+        response.andExpect(status().isOk());
+    }
+
     private void givenHealthyAi() {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("propose-transaction", """
