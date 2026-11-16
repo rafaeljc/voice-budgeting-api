@@ -185,7 +185,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Circuit breaker do fluxo de voz
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `VoiceCommandCircuitBreakerIT` (`@IntegrationTest`, `@AutoConfigureAiStub`, `@EnableResilience`, MockMvc):
       `should_rejectWithoutCallingAi_when_circuitIsOpen` — 5 comandos com falha transitória na transcrição, depois a IA
@@ -199,7 +199,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `AiProviderUnavailableException`)
 - [x] [TDD] `VoiceCommandCircuitBreakerIT`: `should_logCircuitOpenAsWarning_when_circuitIsOpen` —
       `WARN "Circuit breaker open"` com `status=503` e `circuitBreaker=voice-command`, sem stack trace
-- [ ] [verificação] `ignore-exceptions` com `BulkheadFullException` na instância `voice-command`, com comentário (o
+- [x] [verificação] `ignore-exceptions` com `BulkheadFullException` na instância `voice-command`, com comentário (o
       provedor não foi chamado; como sucesso, diluiria a taxa de falha)
 
 ### Plano de verificação
@@ -217,7 +217,23 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `@CircuitBreaker(name = "voice-command")` no `transcribe` do `TransactionController`. O aspecto se aplicou ao
+  método package-private, então ele não precisou virar `public`.
+- Instância `voice-command` no `application.properties`, com comentário: `COUNT_BASED`, janela 10, mínimo 5, 50%,
+  30 s aberto, 1 chamada no meio-aberto, transição automática desligada; `record-exceptions` só com
+  `AiProviderUnavailableException` e `ignore-exceptions` com `BulkheadFullException` (o provedor não foi chamado).
+- `CallNotPermittedException` entrou no mesmo handler do 503 `assistant-unavailable` com `Retry-After`
+  (`handleAssistantUnavailable`) e tem `WARN "Circuit breaker open"` com `status` e `circuitBreaker`, sem stack trace.
+- Testes: `ResetCircuitBreakerExtension` (registrada pela `@EnableResilience`), `AiStub.transcriptionCallCount()` e
+  `VoiceCommandCircuitBreakerIT` (3 casos). O caso das falhas definitivas só ficou vermelho com o `record-exceptions`
+  desligado, e o stub de `REQUEST_REJECTED` devolve 401 (não 500), que vira 500 na API. O item do `ignore-exceptions`
+  não tem teste próprio, como o plano manda (fora de escopo).
+- Verificação: `VoiceCommandCircuitBreakerIT` e `AiBulkheadIT` passam; `git diff main --stat --
+  src/test/java/dio/budgeting/infrastructure` mostra só os dois ITs novos; com `bootRun`, `/actuator/metrics`
+  respondeu `resilience4j.circuitbreaker.state` e `resilience4j.bulkhead.available.concurrent.calls` (nenhum comando
+  de voz enviado, aplicação encerrada); `./gradlew build` → `BUILD SUCCESSFUL`.
+- Para uma sessão nova: a Fase 3 é só documentação; o `CircuitBreakerRegistry` só existe nos testes com
+  `@EnableResilience`.
 
 ## Fase 3: Documentação e T24 para melhorias futuras
 
