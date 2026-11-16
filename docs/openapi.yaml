@@ -457,7 +457,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
-          description: O assistente está temporariamente indisponível. Tente novamente depois do `Retry-After`.
+          description: |
+            O assistente está temporariamente indisponível. Tente novamente depois do `Retry-After`. Acontece quando o
+            provedor de IA falha, quando o circuito do fluxo de voz está aberto (falhas transitórias seguidas do
+            provedor; a requisição é recusada sem chamar a IA) ou quando uma etapa da IA está com a capacidade
+            esgotada (chamadas simultâneas demais).
           headers:
             Retry-After:
               description: Segundos até a próxima tentativa.

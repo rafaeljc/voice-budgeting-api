@@ -237,9 +237,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Documentação e T24 para melhorias futuras
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/openapi.yaml`: descrição do 503 do `POST /transactions/ai` cobre o circuito aberto e a
+- [x] [verificação] `docs/openapi.yaml`: descrição do 503 do `POST /transactions/ai` cobre o circuito aberto e a
       capacidade esgotada
 - [ ] [verificação] `README.md`, seção "Métricas": linhas de `resilience4j.circuitbreaker.state` e
       `resilience4j.bulkhead.available.concurrent.calls`, com o nome no Prometheus
