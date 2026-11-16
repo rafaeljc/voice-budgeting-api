@@ -135,7 +135,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       não influencia nenhum teste; quem precisa usa `@EnableResilience`)
 - [x] [verificação] `support/resilience/EnableResilience`: `@TestPropertySource(properties =
       "spring.autoconfigure.exclude=")`
-- [ ] [TDD] `AiBulkheadIT` (`@IntegrationTest(webEnvironment = RANDOM_PORT)`, `@AutoConfigureAiStub`,
+- [x] [TDD] `AiBulkheadIT` (`@IntegrationTest(webEnvironment = RANDOM_PORT)`, `@AutoConfigureAiStub`,
       `@EnableResilience`, `@TestPropertySource` com `speech-to-text` e `text-to-speech` em 1 vaga; `RestClient` e
       chamadas sobrepostas como no `VoiceCommandIdempotencyIT`):
       `should_rejectWithServiceUnavailable_when_stageIsFull` — transcrição atrasada

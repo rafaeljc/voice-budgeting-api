@@ -40,6 +40,13 @@ public class OpenAiWireMockStub implements AiStub {
     }
 
     @Override
+    public void givenDelayedTranscription(String text, Duration delay) {
+        server.stubFor(post(urlEqualTo(TRANSCRIPTION_PATH))
+                .willReturn(json(payload("transcription.json").replace("${text}", quoted(text)))
+                        .withFixedDelay((int) delay.toMillis())));
+    }
+
+    @Override
     public String transcribedAudioFilename() {
         var requests = server.findAll(postRequestedFor(urlEqualTo(TRANSCRIPTION_PATH)));
         return requests.getLast().getParts().stream()

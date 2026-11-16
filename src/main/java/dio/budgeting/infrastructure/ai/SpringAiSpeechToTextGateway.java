@@ -2,6 +2,7 @@ package dio.budgeting.infrastructure.ai;
 
 import dio.budgeting.application.SpeechToTextGateway;
 import dio.budgeting.application.input.Audio;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import org.springframework.ai.audio.transcription.TranscriptionModel;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ public class SpringAiSpeechToTextGateway implements SpeechToTextGateway {
     }
 
     @Override
+    @Bulkhead(name = "speech-to-text")
     public String transcribe(Audio audio) {
         // The provider infers the audio format from the file extension, so the name carries the detected format
         var resource = new ByteArrayResource(audio.content()) {
