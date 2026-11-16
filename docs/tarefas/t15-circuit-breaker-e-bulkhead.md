@@ -126,7 +126,7 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Resilience4j desligado nos testes e bulkhead por etapa
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `build.gradle`: `resilience4j-spring-boot4:2.4.0`; `resilience4j-circuitbreaker` e
       `resilience4j-bulkhead` explícitos só se não vierem pelo starter
@@ -145,7 +145,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       handler do 503)
 - [x] [TDD] `AiBulkheadIT`: `should_logBulkheadFullAsWarning_when_stageIsFull` — `WARN "Bulkhead full"` com
       `status=503` (e `bulkhead`, se a exceção expuser o nome), sem stack trace (`handleExceptionInternal`)
-- [ ] [TDD] `AiBulkheadIT`: `should_notHoldSpeechPermit_when_waitingForCachedSpeech` — chama a porta
+- [x] [TDD] `AiBulkheadIT`: `should_notHoldSpeechPermit_when_waitingForCachedSpeech` — chama a porta
       `TextToSpeechGateway` direto (como o `SpeechCacheIT`), síntese atrasada, 2 chamadas simultâneas com o mesmo
       texto → as duas devolvem o áudio e `speechCallCount() == 1` (ordem dos aspectos: bulkhead dentro do cache, por
       `@EnableCaching(order = ...)` ou `resilience4j.bulkhead.bulkhead-aspect-order`, com comentário); confirmar que
@@ -161,7 +161,27 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `resilience4j-spring-boot4:2.4.0` entrou no `build.gradle`; o starter já traz `circuitbreaker`, `bulkhead` e
+  `micrometer` (2.4.0), sem dependências explícitas.
+- `application-test.properties` exclui as 22 auto-configurações do starter (lista do `AutoConfiguration.imports` do
+  jar); `@EnableResilience` as devolve com `@TestPropertySource(properties = "spring.autoconfigure.exclude=")`. A
+  `ResetCircuitBreakerExtension` fica para a Fase 2.
+- `@Bulkhead` (`speech-to-text`, `assistant`, `text-to-speech`) nos três `SpringAi*Gateway`; instâncias com 10 chamadas
+  e sem espera no `application.properties`. `BulkheadFullException` entrou no handler do 503
+  (`handleAssistantUnavailable`) e tem `WARN "Bulkhead full"` com `status` e `bulkhead`, sem stack trace; as duas
+  exceções expõem o nome da instância (`getBulkheadName()`, `getCausingCircuitBreakerName()`).
+- Ordem dos aspectos na síntese: o bulkhead do Resilience4j tem ordem padrão `LOWEST_PRECEDENCE - 1` (lida no
+  bytecode de `BulkheadConfigurationProperties`) e o cache, `LOWEST_PRECEDENCE`, então o bulkhead ficava por fora e
+  recusava quem esperava o `sync`. Fica `@EnableCaching(order = Ordered.LOWEST_PRECEDENCE - 2)`, um passo por fora do
+  bulkhead, com comentário. O teste falhou com `BulkheadFullException` na ordem padrão (RED) e passa com o ajuste.
+  Alternativas descartadas pelo usuário: colaborador separado com o `@Bulkhead` (muda o plano) e valores de ordem
+  arbitrários.
+- `AiStub` ganhou `givenDelayedTranscription`; `transcriptionCallCount()` fica para a Fase 2, onde é usado.
+- Verificação: dependências conferidas; `AiBulkheadIT` (3 casos) e `SpeechCacheIT` passam; `git diff main --stat --
+  src/test/java/dio/budgeting/infrastructure` mostra só o `AiBulkheadIT` novo; `./gradlew build` → `BUILD SUCCESSFUL`.
+- Para uma sessão nova: uma execução do `should_logBulkheadFullAsWarning_when_stageIsFull` falhou uma vez com
+  `ResourceAccessException: I/O error on POST ... : null` no cliente do teste; as 4 rodadas seguintes e o build
+  passaram, e a causa-raiz não foi investigada. Se voltar a aparecer, ler o `Caused by` completo do relatório.
 
 ## Fase 2: Circuit breaker do fluxo de voz
 

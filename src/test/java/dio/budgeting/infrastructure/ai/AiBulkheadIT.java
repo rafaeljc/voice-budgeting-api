@@ -4,6 +4,7 @@ import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+import dio.budgeting.application.TextToSpeechGateway;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,9 +55,11 @@ class AiBulkheadIT {
     private int port;
 
     private final AiStub aiStub;
+    private final TextToSpeechGateway textToSpeechGateway;
 
-    AiBulkheadIT(AiStub aiStub) {
+    AiBulkheadIT(AiStub aiStub, TextToSpeechGateway textToSpeechGateway) {
         this.aiStub = aiStub;
+        this.textToSpeechGateway = textToSpeechGateway;
     }
 
     @Test
@@ -92,6 +96,32 @@ class AiBulkheadIT {
         assertThat(event.path("status").asInt()).isEqualTo(503);
         assertThat(event.path("bulkhead").asString()).isEqualTo("speech-to-text");
         assertThat(event.has("error")).isFalse();
+    }
+
+    @Test
+    void should_notHoldSpeechPermit_when_waitingForCachedSpeech() throws Exception {
+        // given
+        var audio = new byte[] {1, 2, 3, 4};
+        aiStub.givenDelayedSpeech(audio, Duration.ofSeconds(1));
+        var start = new CountDownLatch(1);
+
+        // when
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var futures = new ArrayList<Future<byte[]>>();
+            for (var i = 0; i < 2; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    return textToSpeechGateway.synthesize("Registrar mercado de 80 reais?");
+                }));
+            }
+            start.countDown();
+
+            // then
+            for (var future : futures) {
+                assertThat(future.get()).isEqualTo(audio);
+            }
+        }
+        assertThat(aiStub.speechCallCount()).isEqualTo(1);
     }
 
     private void givenSlowTranscriptionStage() {
