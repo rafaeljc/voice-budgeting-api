@@ -243,7 +243,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       capacidade esgotada
 - [x] [verificação] `README.md`, seção "Métricas": linhas de `resilience4j.circuitbreaker.state` e
       `resilience4j.bulkhead.available.concurrent.calls`, com o nome no Prometheus
-- [ ] [verificação] Regras: `error-handling.md` (linhas da `CallNotPermittedException` e da `BulkheadFullException`
+- [x] [verificação] Regras: `error-handling.md` (linhas da `CallNotPermittedException` e da `BulkheadFullException`
       → 503 com `Retry-After`, os dois `WARN`); `ai-integration.md` (bulkhead por gateway com `@Bulkhead`, dentro do
       `@Cacheable` na síntese; circuito no fluxo inteiro e o que conta como falha); `architecture.md` (`@CircuitBreaker`
       no `transcribe` do controller, `@Bulkhead` nos adaptadores, nunca na `application`); `testing.md` (resiliência

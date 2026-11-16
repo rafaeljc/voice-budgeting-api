@@ -56,6 +56,15 @@ paths:
 - Idempotência do comando de voz: o `SpringCacheVoiceCommandLockTest` usa um `ConcurrentMapCache` do Spring, sem
   contexto; o `VoiceCommandIdempotencyIT` usa `RANDOM_PORT` e `RestClient`, com `AiStub.givenDelayedSpeech`, para que
   dois envios com a mesma chave se sobreponham.
+- Resiliência: o perfil `test` exclui as auto-configurações do Resilience4j (`spring.autoconfigure.exclude` no
+  `application-test.properties`), então circuit breaker e bulkhead não influenciam nenhum `*IT`: as anotações ficam
+  inertes. Só o teste que precisa liga, com `@EnableResilience` (`support/resilience/`), que devolve as
+  auto-configurações e registra o `ResetCircuitBreakerExtension`, que zera todos os circuitos antes de cada teste. O
+  `AiBulkheadIT` (instâncias com 1 vaga por `@TestPropertySource`) e o `VoiceCommandCircuitBreakerIT` usam as
+  propriedades do `application.properties`. `AiStub.transcriptionCallCount()` e
+  `givenDelayedTranscription(String, Duration)` leem e atrasam a transcrição; um circuito aberto se prova pelo
+  contador que não aumenta. O `AiBulkheadIT` usa `RANDOM_PORT` e `RestClient`, porque as chamadas precisam se
+  sobrepor.
 - Só `support/ai/OpenAiWireMockStub` e os payloads em `src/test/resources/ai/<provedor>/` conhecem o protocolo do
   provedor.
 - Config de teste em `support/` usa `@TestConfiguration`; `@Configuration` seria carregada pelo component scan em

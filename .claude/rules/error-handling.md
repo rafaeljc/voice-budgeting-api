@@ -46,6 +46,8 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `HttpMediaTypeNotSupportedException`                 | 415    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `MaxUploadSizeExceededException`                     | 413    | `about:blank`                                    | `problemDetail.title.<FQN>`, `problemDetail.<FQN>`          | `INFO` `Request rejected`    |
 | `AiProviderUnavailableException` (IO, 429, 5xx)      | 503    | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After`      | `WARN` `AI provider unavailable` |
+| `CallNotPermittedException` (circuito `voice-command` aberto) | 503 | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After` | `WARN` `Circuit breaker open`, com `circuitBreaker` |
+| `BulkheadFullException` (etapa da IA com a capacidade esgotada) | 503 | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After` | `WARN` `Bulkhead full`, com `bulkhead` |
 | `AiProviderFailedException` (demais status)          | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 | Qualquer outra `Exception`                           | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 
@@ -81,6 +83,9 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
   `about:blank`, com o `title` em pt-BR pelos códigos do Spring.
 - O `detail` do 500 é sempre genérico; a mensagem da exceção só vai para o log, como stack trace.
 - `Retry-After` do 503 vem de `budgeting.errors.assistant-unavailable-retry-after` (padrão `30s`).
+- As três causas do 503 `assistant-unavailable` (provedor indisponível, circuito aberto, bulkhead cheio) têm o mesmo
+  corpo e o mesmo `Retry-After`; o log as distingue. Os dois `WARN` do Resilience4j levam `status` e o nome da
+  instância, sem stack trace nem a causa.
 
 ### Acrescentar uma exceção
 
