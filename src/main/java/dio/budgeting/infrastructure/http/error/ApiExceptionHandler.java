@@ -6,6 +6,8 @@ import dio.budgeting.application.IdempotencyKeyReusedException;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.infrastructure.ai.tool.MultipleToolCallsException;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
@@ -149,8 +151,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.UNAUTHENTICATED, status, null), headers, status, request);
     }
 
-    @ExceptionHandler(AiProviderUnavailableException.class)
-    ResponseEntity<Object> handleAiProviderUnavailable(AiProviderUnavailableException ex, WebRequest request) {
+    // An open circuit or a stage at its concurrency limit: for the client, the assistant is temporarily unavailable
+    @ExceptionHandler({
+        AiProviderUnavailableException.class,
+        BulkheadFullException.class,
+        CallNotPermittedException.class
+    })
+    ResponseEntity<Object> handleAssistantUnavailable(Exception ex, WebRequest request) {
         var status = HttpStatus.SERVICE_UNAVAILABLE;
         var headers = new HttpHeaders();
         headers.set(
@@ -178,6 +185,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         }
         if (ex instanceof AiProviderUnavailableException unavailable) {
             logProviderUnavailable(statusCode, unavailable);
+        } else if (ex instanceof CallNotPermittedException open) {
+            log.atWarn()
+                    .addKeyValue("status", statusCode.value())
+                    .addKeyValue("circuitBreaker", open.getCausingCircuitBreakerName())
+                    .log("Circuit breaker open");
+        } else if (ex instanceof BulkheadFullException full) {
+            log.atWarn()
+                    .addKeyValue("status", statusCode.value())
+                    .addKeyValue("bulkhead", full.getBulkheadName())
+                    .log("Bulkhead full");
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (ex instanceof AuthenticationException) {

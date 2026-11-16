@@ -29,6 +29,16 @@ O timeout e o retry de cada etapa ficam no SDK, por requisição HTTP, com chave
 - A falha do provedor é traduzida por um aspecto (`OpenAiExceptionTranslationAspect`, `@Around` nas portas
   `*Gateway`), a única classe que conhece os tipos do SDK; os adaptadores não tratam exceção do provedor. Trocar de
   provedor é trocar o aspecto. Exceções de argumento de tool passam intactas.
+- Resiliência: o circuito `voice-command` cobre o fluxo de voz inteiro (`@CircuitBreaker` no `transcribe` do
+  `TransactionController`, não por etapa): aberto, recusa o comando antes do use case, sem trava de idempotência e sem
+  IA. Só `AiProviderUnavailableException` conta como falha; `AiProviderFailedException` e qualquer outro desfecho
+  contam como sucesso, e a `BulkheadFullException` é ignorada (o provedor não foi chamado). Cada `SpringAi*Gateway`
+  tem um `@Bulkhead` (`speech-to-text`, `assistant`, `text-to-speech`) de semáforo, sem espera, que limita as chamadas
+  simultâneas ao provedor; a `BulkheadFullException` passa intacta pelo `OpenAiExceptionTranslationAspect`. Os valores
+  ficam em `resilience4j.*` no `application.properties`.
+- Na síntese, o bulkhead fica dentro do `@Cacheable(sync = true)`: um acerto e quem espera o `sync` não ocupam vaga.
+  O Resilience4j põe o bulkhead em `LOWEST_PRECEDENCE - 1`, então o `@EnableCaching` usa `LOWEST_PRECEDENCE - 2`
+  (menor ordem = mais externo); o `AiBulkheadIT` falha se a ordem se inverter.
 - As tools ficam em `infrastructure/ai/tool/` (adaptador de entrada); os argumentos são um `record` em
   `ai/tool/argument/` (`<Verbo><Substantivo>ToolArguments`) com Bean Validation e `@ToolParam`, validado no
   adaptador (`@Validated` + `@Valid`) e convertido com `arguments.toInput()`. O nome do parâmetro do método é a chave

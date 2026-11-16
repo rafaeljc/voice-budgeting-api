@@ -13,6 +13,8 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Spring Cache + Caffeine: cache local da síntese de voz e trava de idempotência do comando de voz
 - Spring Modulith (registro de publicação de eventos, JDBC): outbox transacional da auditoria no MySQL, com reenvio
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
+- Resilience4j (`resilience4j-spring-boot4`): circuit breaker do fluxo de voz e bulkhead por etapa da IA, com métricas
+  no Micrometer; desligado em todos os testes, ligado só pelos que usam `@EnableResilience`
 - Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
   por `scripts/generate_token.py`
 - Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`); métricas e

@@ -10,9 +10,12 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 @Configuration
-@EnableCaching
+// Lower order = outer. The Resilience4j bulkhead defaults to LOWEST_PRECEDENCE - 1, so the cache goes one step outside
+// it: a hit, and a caller waiting on the sync lock of another one, never takes a permit
+@EnableCaching(order = Ordered.LOWEST_PRECEDENCE - 2)
 @EnableConfigurationProperties(CachingProperties.class)
 public class CachingConfiguration {
     private static final String VOICE_COMMAND_LOCKS = "voice-command-locks";

@@ -91,6 +91,11 @@ A trava de idempotência do comando de voz é a porta `VoiceCommandLock` (`appli
 trava antes de qualquer chamada à IA e a libera se o comando falhar; trocar o armazenamento muda só o adaptador
 (ADR 0009).
 
+Resiliência é detalhe de `infrastructure`: o `@CircuitBreaker` do fluxo de voz fica no `transcribe` do
+`TransactionController` e o `@Bulkhead` de cada etapa, nos adaptadores `SpringAi*Gateway`; a `application` e o `domain`
+nunca importam o Resilience4j. A ordem entre o cache e o bulkhead da síntese é explícita
+(`@EnableCaching(order = ...)` no `CachingConfiguration`).
+
 Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptador converte com `entity.toDomain()` e
 `XEntity.from(domain)` (`AuditEntryDocument.from(event, traceId)` para a auditoria).
 
@@ -173,5 +178,6 @@ Entidades JPA e documentos do MongoDB nunca saem de `infrastructure`: o adaptado
 - Use case importando client, controller, repositório JPA ou documento do MongoDB de `infrastructure`.
 - Listener de evento com lógica de negócio que não passa por um use case.
 - Anotações do Spring AI (`@Tool`, `@ToolParam`) em `domain` ou `application`.
+- Anotações do Resilience4j (`@CircuitBreaker`, `@Bulkhead`) em `domain` ou `application`.
 - Lógica de negócio em controller ou adaptador.
 - Injeção por campo; `System.out` / `System.err`.

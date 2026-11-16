@@ -5,6 +5,7 @@ import dio.budgeting.application.output.AssistantOutput;
 import dio.budgeting.domain.UserId;
 import dio.budgeting.infrastructure.ai.tool.InterpretationCollector;
 import dio.budgeting.infrastructure.ai.tool.TransactionTools;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import java.util.Map;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -21,6 +22,7 @@ public class SpringAiAssistantGateway implements AssistantGateway {
     }
 
     @Override
+    @Bulkhead(name = "assistant")
     public AssistantOutput interpret(UserId userId, String command) {
         var collector = new InterpretationCollector();
         chatClient

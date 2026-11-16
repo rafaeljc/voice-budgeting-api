@@ -31,7 +31,7 @@
 - [x] [T14 — Respostas claras e proteções da IA](#t14)
 
 **Fase 6 — Resiliência e recuperação de falhas**
-- [ ] [T15 — Circuit breaker e bulkhead](#t15)
+- [x] [T15 — Circuit breaker e bulkhead](#t15)
 - [x] [T17 — Idempotência no envio de áudio](#t17)
 - [x] [T18 — Health checks e encerramento gracioso](#t18)
 
@@ -45,7 +45,6 @@
 - [x] [T23 — Medição de consumo de IA](#t23)
 
 **Fase 9 — Desempenho**
-- [ ] [T24 — Cache de consultas](#t24)
 - [x] [T25 — Cache da síntese de voz](#t25)
 
 **Fase 10 — Entrega**
@@ -331,6 +330,8 @@ Limitar a quantidade de requisições por usuário, com limite específico para 
 **Itens do escopo:**
 - SEG-03 — Rate limiting por usuário
 
+**Nota (T15):** o rate limiter segue o mesmo padrão do circuit breaker e do bulkhead: desligado em todos os testes (auto-configurações do Resilience4j excluídas no perfil `test`) e ligado só pelos testes dele, com `@EnableResilience`.
+
 <a id="t20"></a>
 ### T20 — Auditoria em banco NoSQL
 
@@ -395,16 +396,6 @@ Registrar o consumo de IA por requisição e por usuário (tokens, segundos de �
 
 ## Fase 9 — Desempenho
 
-<a id="t24"></a>
-### T24 — Cache de consultas
-
-**Depende de:** T08, T12
-
-Nos endpoints convencionais (sem IA), reaproveitar os resultados de consultas de transações, por usuário, invalidando-os quando uma transação for registrada (cadastro manual ou confirmação de proposta).
-
-**Itens do escopo:**
-- CUS-02 — Cache de consultas
-
 <a id="t25"></a>
 ### T25 — Cache da síntese de voz
 
@@ -442,7 +433,7 @@ Concluir o README com a visão geral do projeto, tecnologias, melhorias implemen
 | API | API-01 → T07, T12 · API-02 → T03 · API-03 → T07 · API-04 → T05 · API-05 → T07 |
 | Resiliência | RES-01 → T10 · RES-02 → T10 · RES-03 → T15 · RES-04 → T15 · RES-06 → T17 · RES-07 → T13 · RES-08 → T12 · RES-09 → T18 · RES-10 → T18 |
 | Segurança e rastreabilidade | SEG-01 → T08 · SEG-02 → T08 · SEG-03 → T19 · SEG-04 → T20 · SEG-05 → T21 · SEG-06 → T04 · SEG-07 → T02, T27 · SEG-08 → T02 |
-| Custo e desempenho | CUS-01 → T23 · CUS-02 → T24 · CUS-03 → T25 |
+| Custo e desempenho | CUS-01 → T23 · CUS-03 → T25 |
 | Observabilidade | OBS-01 → T04 · OBS-02 → T22 · OBS-03 → T22 |
 | Qualidade | QA-01 → T02 + transversal · QA-02 → T02 + transversal · QA-03 → T15, T17, T21 · QA-05 → T02 |
 | Documentação e apresentação | DOC-01 → T02, T26 + transversal · DOC-02 → T26 · DOC-03 → T01, T11, T12, T17, T20, T21, T25 · DOC-04 → T09, T12 + transversal · DOC-05 → T07 + transversal · DOC-06 → T07, T12 · DOC-07 → T01 + transversal · DOC-08 → T26 |

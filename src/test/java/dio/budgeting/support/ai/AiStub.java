@@ -6,6 +6,8 @@ public interface AiStub {
 
     void givenTranscription(String text);
 
+    void givenDelayedTranscription(String text, Duration delay);
+
     void givenToolCall(String tool, String argumentsJson);
 
     void givenToolCalls(AiToolCall... calls);
@@ -21,6 +23,8 @@ public interface AiStub {
     String speechText();
 
     String assistantCommand();
+
+    int transcriptionCallCount();
 
     int assistantCallCount();
 
