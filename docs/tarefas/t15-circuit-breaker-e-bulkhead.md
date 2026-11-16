@@ -102,17 +102,17 @@ melhorias futuras.
 
 ## Definição de pronto
 
-- [ ] Com 5 falhas transitórias, o comando seguinte responde 503 `assistant-unavailable` com `Retry-After: 30` sem
+- [x] Com 5 falhas transitórias, o comando seguinte responde 503 `assistant-unavailable` com `Retry-After: 30` sem
       chamar a IA (`VoiceCommandCircuitBreakerIT`)
-- [ ] Falhas definitivas não abrem o circuito (`VoiceCommandCircuitBreakerIT`)
-- [ ] Etapa cheia responde 503 `assistant-unavailable` com `Retry-After: 30`; quem espera o cache da síntese não
+- [x] Falhas definitivas não abrem o circuito (`VoiceCommandCircuitBreakerIT`)
+- [x] Etapa cheia responde 503 `assistant-unavailable` com `Retry-After: 30`; quem espera o cache da síntese não
       ocupa vaga (`AiBulkheadIT`)
-- [ ] Os dois `WARN` sem stack trace (`Circuit breaker open`, `Bulkhead full`)
-- [ ] Nenhum teste existente alterado; resiliência desligada fora dos testes com `@EnableResilience`
-- [ ] Métricas `resilience4j.circuitbreaker.state` e `resilience4j.bulkhead.available.concurrent.calls` em
+- [x] Os dois `WARN` sem stack trace (`Circuit breaker open`, `Bulkhead full`)
+- [x] Nenhum teste existente alterado; resiliência desligada fora dos testes com `@EnableResilience`
+- [x] Métricas `resilience4j.circuitbreaker.state` e `resilience4j.bulkhead.available.concurrent.calls` em
       `/actuator/metrics`
-- [ ] T24 em melhorias futuras (FUT-19) e documentação atualizada
-- [ ] `./gradlew build` passa
+- [x] T24 em melhorias futuras (FUT-19) e documentação atualizada
+- [x] `./gradlew build` passa
 
 ## Para futuros agentes
 
@@ -237,7 +237,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Documentação e T24 para melhorias futuras
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/openapi.yaml`: descrição do 503 do `POST /transactions/ai` cobre o circuito aberto e a
       capacidade esgotada
@@ -258,7 +258,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       consultas" | "Nos endpoints convencionais (sem IA), resultados de consultas reaproveitados e invalidados quando
       uma transação é registrada (cadastro manual ou confirmação de proposta)." | "O foco atual é evoluir a
       funcionalidade, e no momento não há necessidade real de reaproveitar os resultados das consultas."
-- [ ] [verificação] `docs/tarefas.md`: no último commit, checkbox da T15
+- [x] [verificação] `docs/tarefas.md`: no último commit, checkbox da T15
 
 ### Plano de verificação
 
@@ -272,8 +272,31 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- `docs/openapi.yaml`: o 503 do `POST /transactions/ai` descreve as três causas (provedor, circuito aberto, capacidade
+  esgotada). `README.md`: linhas das métricas `resilience4j.circuitbreaker.state` e
+  `resilience4j.bulkhead.available.concurrent.calls`, com o nome no Prometheus.
+- Regras: `error-handling.md` (as duas linhas do 503 e os `WARN`), `ai-integration.md` (circuito no fluxo inteiro,
+  o que conta como falha, bulkhead por gateway e a ordem com o cache), `architecture.md` (resiliência só em
+  `infrastructure`) e `testing.md` (exclusão no perfil `test`, `@EnableResilience`, os dois ITs, os métodos novos do
+  `AiStub`). `CLAUDE.md`: Resilience4j na Stack.
+- T24 saiu do sumário, da seção e da rastreabilidade de `docs/tarefas.md`; a nota da T15 entrou na T19. No
+  `docs/escopo.md`, a CUS-02 virou FUT-19. Checkbox da T15 marcado.
+- Verificação: os `grep` do plano deram o esperado (nenhum `T24`/`CUS-02`; `FUT-19`, as duas exceções, `EnableResilience`,
+  as duas métricas e o checkbox presentes); `./gradlew build` → `BUILD SUCCESSFUL` (as tarefas de teste vieram do cache,
+  porque só a documentação mudou desde o build completo da Fase 2).
+- Para uma sessão nova: nada pendente; a tarefa está pronta para PR.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+- Circuit breaker `voice-command` no `transcribe` do `TransactionController` e bulkhead de semáforo (10, sem espera)
+  em cada `SpringAi*Gateway`, com o Resilience4j `2.4.0`. Circuito aberto e etapa cheia respondem 503
+  `assistant-unavailable` com `Retry-After: 30`, com os `WARN` `Circuit breaker open` e `Bulkhead full` sem stack
+  trace. Só `AiProviderUnavailableException` conta como falha, e a `BulkheadFullException` é ignorada pelo circuito.
+- Resiliência desligada em todos os `*IT` (auto-configurações excluídas no perfil `test`) e ligada só por
+  `@EnableResilience`; nenhum teste existente mudou (só entraram métodos no `AiStub` e no `OpenAiWireMockStub`).
+- Decisão da execução: o bulkhead da síntese fica dentro do `@Cacheable` com `@EnableCaching(order =
+  Ordered.LOWEST_PRECEDENCE - 2)`, porque o bulkhead do Resilience4j tem ordem `LOWEST_PRECEDENCE - 1`. Alternativas
+  descartadas: colaborador separado e valores de ordem arbitrários.
+- Ponto em aberto: um erro de I/O intermitente no cliente do `should_logBulkheadFullAsWarning_when_stageIsFull`, visto
+  uma vez, sem causa-raiz investigada (ver o resumo da Fase 1).
+- T24 (CUS-02) virou FUT-19.

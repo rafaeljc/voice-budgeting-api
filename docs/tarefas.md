@@ -31,7 +31,7 @@
 - [x] [T14 — Respostas claras e proteções da IA](#t14)
 
 **Fase 6 — Resiliência e recuperação de falhas**
-- [ ] [T15 — Circuit breaker e bulkhead](#t15)
+- [x] [T15 — Circuit breaker e bulkhead](#t15)
 - [x] [T17 — Idempotência no envio de áudio](#t17)
 - [x] [T18 — Health checks e encerramento gracioso](#t18)
 
