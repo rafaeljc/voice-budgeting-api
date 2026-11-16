@@ -249,7 +249,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       no `transcribe` do controller, `@Bulkhead` nos adaptadores, nunca na `application`); `testing.md` (resiliência
       desligada em todos os `*IT` pela exclusão no perfil `test`; `@EnableResilience` liga e zera os circuitos;
       `AiBulkheadIT`, `VoiceCommandCircuitBreakerIT`; `transcriptionCallCount()` e `givenDelayedTranscription`)
-- [ ] [verificação] `CLAUDE.md`: Stack ganha o Resilience4j (circuit breaker do fluxo de voz e bulkhead por etapa,
+- [x] [verificação] `CLAUDE.md`: Stack ganha o Resilience4j (circuit breaker do fluxo de voz e bulkhead por etapa,
       métricas no Micrometer)
 - [ ] [verificação] `docs/tarefas.md`: nota da T15 na T19 (o rate limiter segue o mesmo padrão: desligado nos testes,
       ligado pela `@EnableResilience`); T24 sai do sumário, da seção e da rastreabilidade (`CUS-01 → T23 · CUS-03 →
