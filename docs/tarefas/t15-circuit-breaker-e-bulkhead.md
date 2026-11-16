@@ -251,7 +251,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `AiBulkheadIT`, `VoiceCommandCircuitBreakerIT`; `transcriptionCallCount()` e `givenDelayedTranscription`)
 - [x] [verificação] `CLAUDE.md`: Stack ganha o Resilience4j (circuit breaker do fluxo de voz e bulkhead por etapa,
       métricas no Micrometer)
-- [ ] [verificação] `docs/tarefas.md`: nota da T15 na T19 (o rate limiter segue o mesmo padrão: desligado nos testes,
+- [x] [verificação] `docs/tarefas.md`: nota da T15 na T19 (o rate limiter segue o mesmo padrão: desligado nos testes,
       ligado pela `@EnableResilience`); T24 sai do sumário, da seção e da rastreabilidade (`CUS-01 → T23 · CUS-03 →
       T25`)
 - [ ] [verificação] `docs/escopo.md`: a linha CUS-02 sai da seção de custo e desempenho; entra a FUT-19 — "Cache de
