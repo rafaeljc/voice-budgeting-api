@@ -7,6 +7,7 @@ import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.infrastructure.ai.tool.MultipleToolCallsException;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
@@ -150,8 +151,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.UNAUTHENTICATED, status, null), headers, status, request);
     }
 
-    // The stage is at its concurrency limit: for the client, the assistant is temporarily unavailable
-    @ExceptionHandler({AiProviderUnavailableException.class, BulkheadFullException.class})
+    // An open circuit or a stage at its concurrency limit: for the client, the assistant is temporarily unavailable
+    @ExceptionHandler({
+        AiProviderUnavailableException.class,
+        BulkheadFullException.class,
+        CallNotPermittedException.class
+    })
     ResponseEntity<Object> handleAssistantUnavailable(Exception ex, WebRequest request) {
         var status = HttpStatus.SERVICE_UNAVAILABLE;
         var headers = new HttpHeaders();

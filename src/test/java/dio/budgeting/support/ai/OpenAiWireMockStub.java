@@ -130,6 +130,11 @@ public class OpenAiWireMockStub implements AiStub {
     }
 
     @Override
+    public int transcriptionCallCount() {
+        return server.findAll(postRequestedFor(urlEqualTo(TRANSCRIPTION_PATH))).size();
+    }
+
+    @Override
     public int assistantCallCount() {
         return server.findAll(postRequestedFor(urlEqualTo(CHAT_PATH))).size();
     }

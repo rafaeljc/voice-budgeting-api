@@ -185,9 +185,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Circuit breaker do fluxo de voz
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `VoiceCommandCircuitBreakerIT` (`@IntegrationTest`, `@AutoConfigureAiStub`, `@EnableResilience`, MockMvc):
+- [x] [TDD] `VoiceCommandCircuitBreakerIT` (`@IntegrationTest`, `@AutoConfigureAiStub`, `@EnableResilience`, MockMvc):
       `should_rejectWithoutCallingAi_when_circuitIsOpen` — 5 comandos com falha transitória na transcrição, depois a IA
       saudável → 503 `assistant-unavailable` com `Retry-After: 30` e `transcriptionCallCount()` sem aumentar
       (`AiStub.transcriptionCallCount()`; `@CircuitBreaker(name = "voice-command")` no `transcribe` — se o aspecto não

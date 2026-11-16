@@ -24,6 +24,8 @@ public interface AiStub {
 
     String assistantCommand();
 
+    int transcriptionCallCount();
+
     int assistantCallCount();
 
     int speechCallCount();

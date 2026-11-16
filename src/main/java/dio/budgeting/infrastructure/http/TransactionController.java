@@ -13,6 +13,7 @@ import dio.budgeting.infrastructure.http.request.VoiceCommandRequest;
 import dio.budgeting.infrastructure.http.response.TransactionPageResponse;
 import dio.budgeting.infrastructure.http.response.TransactionResponse;
 import dio.budgeting.infrastructure.http.response.VoiceCommandResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
@@ -90,6 +91,7 @@ public class TransactionController {
             value = "/ai",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
+    @CircuitBreaker(name = "voice-command")
     VoiceCommandResponse transcribe(
             @AuthenticationPrincipal Jwt jwt,
             @RequestHeader(name = "Idempotency-Key", required = false) UUID idempotencyKey,
