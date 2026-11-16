@@ -133,7 +133,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `application-test.properties`: `spring.autoconfigure.exclude` com todas as auto-configurações do
       starter (lista do `META-INF/spring/...AutoConfiguration.imports` do jar) e comentário do porquê (resiliência
       não influencia nenhum teste; quem precisa usa `@EnableResilience`)
-- [ ] [verificação] `support/resilience/EnableResilience`: `@TestPropertySource(properties =
+- [x] [verificação] `support/resilience/EnableResilience`: `@TestPropertySource(properties =
       "spring.autoconfigure.exclude=")`
 - [ ] [TDD] `AiBulkheadIT` (`@IntegrationTest(webEnvironment = RANDOM_PORT)`, `@AutoConfigureAiStub`,
       `@EnableResilience`, `@TestPropertySource` com `speech-to-text` e `text-to-speech` em 1 vaga; `RestClient` e
