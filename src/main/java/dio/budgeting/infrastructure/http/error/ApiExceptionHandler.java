@@ -180,6 +180,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         }
         if (ex instanceof AiProviderUnavailableException unavailable) {
             logProviderUnavailable(statusCode, unavailable);
+        } else if (ex instanceof BulkheadFullException full) {
+            log.atWarn()
+                    .addKeyValue("status", statusCode.value())
+                    .addKeyValue("bulkhead", full.getBulkheadName())
+                    .log("Bulkhead full");
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (ex instanceof AuthenticationException) {

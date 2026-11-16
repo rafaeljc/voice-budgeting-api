@@ -143,7 +143,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       um 503 `assistant-unavailable` com `Retry-After: 30` (`@Bulkhead` nos três `SpringAi*Gateway`, instâncias em
       `resilience4j.bulkhead.instances.*` no `application.properties` com comentário, `BulkheadFullException` no
       handler do 503)
-- [ ] [TDD] `AiBulkheadIT`: `should_logBulkheadFullAsWarning_when_stageIsFull` — `WARN "Bulkhead full"` com
+- [x] [TDD] `AiBulkheadIT`: `should_logBulkheadFullAsWarning_when_stageIsFull` — `WARN "Bulkhead full"` com
       `status=503` (e `bulkhead`, se a exceção expuser o nome), sem stack trace (`handleExceptionInternal`)
 - [ ] [TDD] `AiBulkheadIT`: `should_notHoldSpeechPermit_when_waitingForCachedSpeech` — chama a porta
       `TextToSpeechGateway` direto (como o `SpeechCacheIT`), síntese atrasada, 2 chamadas simultâneas com o mesmo
