@@ -121,6 +121,8 @@ consultas abaixo só dão resultado depois de o primeiro valor ser exportado.
 | `process.cpu.usage`                     | `process_cpu_usage`                              | uso de CPU                                           |
 | `cache.gets`                            | `cache_gets_total`                               | acertos e erros do cache da síntese de voz, tags `cache` (`speech`) e `result` (`hit`, `miss`); consulte sempre com `cache="speech"` |
 | `budgeting.ai.interpretations`          | `budgeting_ai_interpretations_total`             | desfecho das interpretações da IA, tag `outcome`: `confirmed`, `canceled`, `not_understood` |
+| `resilience4j.circuitbreaker.state`     | `resilience4j_circuitbreaker_state`              | estado do circuito do fluxo de voz, tags `name` (`voice-command`) e `state` (`closed`, `open`, `half_open`); vale 1 no estado atual |
+| `resilience4j.bulkhead.available.concurrent.calls` | `resilience4j_bulkhead_available_concurrent_calls` | vagas livres de cada etapa da IA, tag `name` (`speech-to-text`, `assistant`, `text-to-speech`) |
 
 O contador conta, desde que a aplicação subiu, quantas interpretações da IA terminaram em cada desfecho: a proposta
 confirmada (a IA acertou), a cancelada (errou a proposta) e o comando não entendido (não identificou o comando). Ele é

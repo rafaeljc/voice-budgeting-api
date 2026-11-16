@@ -241,7 +241,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/openapi.yaml`: descrição do 503 do `POST /transactions/ai` cobre o circuito aberto e a
       capacidade esgotada
-- [ ] [verificação] `README.md`, seção "Métricas": linhas de `resilience4j.circuitbreaker.state` e
+- [x] [verificação] `README.md`, seção "Métricas": linhas de `resilience4j.circuitbreaker.state` e
       `resilience4j.bulkhead.available.concurrent.calls`, com o nome no Prometheus
 - [ ] [verificação] Regras: `error-handling.md` (linhas da `CallNotPermittedException` e da `BulkheadFullException`
       → 503 com `Retry-After`, os dois `WARN`); `ai-integration.md` (bulkhead por gateway com `@Bulkhead`, dentro do
