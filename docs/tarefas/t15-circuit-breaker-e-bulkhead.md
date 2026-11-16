@@ -254,7 +254,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/tarefas.md`: nota da T15 na T19 (o rate limiter segue o mesmo padrão: desligado nos testes,
       ligado pela `@EnableResilience`); T24 sai do sumário, da seção e da rastreabilidade (`CUS-01 → T23 · CUS-03 →
       T25`)
-- [ ] [verificação] `docs/escopo.md`: a linha CUS-02 sai da seção de custo e desempenho; entra a FUT-19 — "Cache de
+- [x] [verificação] `docs/escopo.md`: a linha CUS-02 sai da seção de custo e desempenho; entra a FUT-19 — "Cache de
       consultas" | "Nos endpoints convencionais (sem IA), resultados de consultas reaproveitados e invalidados quando
       uma transação é registrada (cadastro manual ou confirmação de proposta)." | "O foco atual é evoluir a
       funcionalidade, e no momento não há necessidade real de reaproveitar os resultados das consultas."

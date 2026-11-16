@@ -103,7 +103,6 @@ Este projeto nasce de um bootcamp patrocinado pelo Itaú Unibanco, e o escopo fo
 | ID | Item | O que é | Benefícios | Prioridade | Esforço |
 |---|---|---|---|---|---|
 | CUS-01 | Medição de consumo por usuário | Registrar o consumo de IA por requisição e por usuário (tokens, segundos de áudio transcritos, caracteres sintetizados). | Dados de consumo por usuário, que o provedor de IA não possui, disponíveis para análises futuras. | Alto | M |
-| CUS-02 | Cache de consultas | Nos endpoints convencionais (sem IA), resultados de consultas reaproveitados e invalidados quando uma transação é registrada (cadastro manual ou confirmação de proposta). | Menos carga no banco e respostas mais rápidas em consultas repetidas. | Baixo | P |
 | CUS-03 | Cache da síntese de voz | Reaproveitar o áudio já gerado para um mesmo texto de resposta, usando como chave o texto completo e padronizado, com TTL. O áudio enviado pelo usuário nunca é usado como chave. | Menos custo e latência de TTS em respostas repetidas, sem risco de entregar a um usuário um conteúdo diferente do que ele deveria ouvir. | Médio | M |
 
 ## 6. Observabilidade
@@ -168,6 +167,7 @@ Novos tipos de consulta, recursos consultivos/analíticos, novas categorias, cor
 | FUT-16 | Backend de traces | Envio dos traces ao X-Ray em produção, via ADOT Collector ou CloudWatch Agent. | O coletor local `grafana/otel-lgtm` existe desde a T22 (`compose.yml`, reconhecido pelo `spring-boot-docker-compose`); o que segue futuro é o coletor de produção, infraestrutura de ambiente. A aplicação já exporta por OTLP quando há endpoint configurado. |
 | FUT-17 | Validação robusta do áudio | Verificar a duração mínima e máxima, o silêncio ou áudio inaudível e a integridade do arquivo (corrompido ou truncado), por Apache Tika, leitura própria do contêiner ou decodificação com ffmpeg. | A validação básica (vazio, tamanho e assinatura dos bytes) já barra o óbvio; duração, silêncio e integridade exigem inspecionar o conteúdo, com dependência ou processo externo. Ver [ADR 0004](adr/0004-validacao-basica-do-audio.md). |
 | FUT-18 | IA em serviço gerenciado na nuvem | Trocar o acesso à OpenAI por chave de API (`OPENAI_API_KEY`) por um serviço gerenciado na nuvem, como AWS Bedrock ou Azure AI Foundry, com identidade da própria plataforma (IAM ou Entra ID) no lugar de chaves. | A chave em variável de ambiente basta para o desenvolvimento local; credencial de longa duração, rotação e governança de acesso e de consumo são preocupações do ambiente de produção. A troca fica nos adaptadores `SpringAi*Gateway` e na configuração, sem mudar os use cases. |
+| FUT-19 | Cache de consultas | Nos endpoints convencionais (sem IA), resultados de consultas reaproveitados e invalidados quando uma transação é registrada (cadastro manual ou confirmação de proposta). | O foco atual é evoluir a funcionalidade, e no momento não há necessidade real de reaproveitar os resultados das consultas. |
 
 ---
 
