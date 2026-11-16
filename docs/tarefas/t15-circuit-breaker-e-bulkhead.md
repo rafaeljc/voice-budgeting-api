@@ -197,7 +197,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [TDD] `VoiceCommandCircuitBreakerIT`: `should_keepCircuitClosed_when_providerFailsDefinitively` — 5 comandos com
       `REQUEST_REJECTED` (500), depois um comando válido → 200 (`record-exceptions` com
       `AiProviderUnavailableException`)
-- [ ] [TDD] `VoiceCommandCircuitBreakerIT`: `should_logCircuitOpenAsWarning_when_circuitIsOpen` —
+- [x] [TDD] `VoiceCommandCircuitBreakerIT`: `should_logCircuitOpenAsWarning_when_circuitIsOpen` —
       `WARN "Circuit breaker open"` com `status=503` e `circuitBreaker=voice-command`, sem stack trace
 - [ ] [verificação] `ignore-exceptions` com `BulkheadFullException` na instância `voice-command`, com comentário (o
       provedor não foi chamado; como sucesso, diluiria a taxa de falha)

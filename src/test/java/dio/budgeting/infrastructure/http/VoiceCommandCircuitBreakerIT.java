@@ -13,12 +13,16 @@ import dio.budgeting.support.ai.AiFailure;
 import dio.budgeting.support.ai.AiStage;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
+import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.resilience.EnableResilience;
 import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +32,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 @AutoConfigureMockMvc
 @AutoConfigureAiStub
 @EnableResilience
+@ExtendWith(OutputCaptureExtension.class)
 class VoiceCommandCircuitBreakerIT {
     // The circuit needs 5 calls before it can open
     private static final int MINIMUM_CALLS = 5;
@@ -74,6 +79,25 @@ class VoiceCommandCircuitBreakerIT {
 
         // then
         response.andExpect(status().isOk());
+    }
+
+    @Test
+    void should_logCircuitOpenAsWarning_when_circuitIsOpen(CapturedOutput output) throws Exception {
+        // given
+        aiStub.givenFailure(AiStage.TRANSCRIPTION, AiFailure.RATE_LIMITED);
+        for (var i = 0; i < MINIMUM_CALLS; i++) {
+            mockMvc.perform(voiceCommand()).andExpect(status().isServiceUnavailable());
+        }
+
+        // when
+        mockMvc.perform(voiceCommand()).andExpect(status().isServiceUnavailable());
+
+        // then
+        var event = LogEvents.withMessage(output, "Circuit breaker open");
+        assertThat(event.path("log").path("level").asString()).isEqualTo("WARN");
+        assertThat(event.path("status").asInt()).isEqualTo(503);
+        assertThat(event.path("circuitBreaker").asString()).isEqualTo("voice-command");
+        assertThat(event.has("error")).isFalse();
     }
 
     private void givenHealthyAi() {

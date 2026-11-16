@@ -185,6 +185,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         }
         if (ex instanceof AiProviderUnavailableException unavailable) {
             logProviderUnavailable(statusCode, unavailable);
+        } else if (ex instanceof CallNotPermittedException open) {
+            log.atWarn()
+                    .addKeyValue("status", statusCode.value())
+                    .addKeyValue("circuitBreaker", open.getCausingCircuitBreakerName())
+                    .log("Circuit breaker open");
         } else if (ex instanceof BulkheadFullException full) {
             log.atWarn()
                     .addKeyValue("status", statusCode.value())
