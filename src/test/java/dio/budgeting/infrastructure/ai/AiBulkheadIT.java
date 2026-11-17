@@ -8,7 +8,6 @@ import dio.budgeting.application.TextToSpeechGateway;
 import dio.budgeting.support.IntegrationTest;
 import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
-import dio.budgeting.support.log.LogEvents;
 import dio.budgeting.support.resilience.EnableResilience;
 import dio.budgeting.support.security.AccessTokens;
 import java.io.IOException;
@@ -24,10 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
@@ -41,7 +37,6 @@ import tools.jackson.databind.json.JsonMapper;
 @IntegrationTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureAiStub
 @EnableResilience
-@ExtendWith(OutputCaptureExtension.class)
 @TestPropertySource(
         properties = {
             "resilience4j.bulkhead.instances.speech-to-text.max-concurrent-calls=1",
@@ -80,22 +75,6 @@ class AiBulkheadIT {
         assertThat(refused.retryAfter()).isEqualTo("30");
         assertThat(refused.body().path("type").asString())
                 .isEqualTo("urn:problem-type:budgeting:assistant-unavailable");
-    }
-
-    @Test
-    void should_logBulkheadFullAsWarning_when_stageIsFull(CapturedOutput output) throws Exception {
-        // given
-        givenSlowTranscriptionStage();
-
-        // when
-        callTogether(List.of(this::send, this::send));
-
-        // then
-        var event = LogEvents.withMessage(output, "Bulkhead full");
-        assertThat(event.path("log").path("level").asString()).isEqualTo("WARN");
-        assertThat(event.path("status").asInt()).isEqualTo(503);
-        assertThat(event.path("bulkhead").asString()).isEqualTo("speech-to-text");
-        assertThat(event.has("error")).isFalse();
     }
 
     @Test

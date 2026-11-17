@@ -94,6 +94,9 @@ armazenamento), com o Resilience4j e o Caffeine hoje e espaço para Redis no fut
 - Recusa na hora (timeout zero); requisições inválidas contam; `Retry-After` arredondado para cima, mínimo 1 s
   (decisão do usuário)
 - Sem `README.md` nesta tarefa (decisão do usuário)
+- Removido o teste `AiBulkheadIT.should_logBulkheadFullAsWarning_when_stageIsFull` (e a `OutputCaptureExtension` que
+  ficou sem uso): falhou nos dois builds completos da T19 com `ResourceAccessException: I/O error` e passou isolado;
+  a causa não foi investigada. Exceção ao "nenhum teste existente alterado" (decisão do usuário)
 
 ## Definição de pronto
 
@@ -175,12 +178,12 @@ Para uma sessão nova: o interceptor só vê o grupo `DEFAULT` até a Fase 2 ano
 
 ## Fase 2: Limite próprio das rotas de IA
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [TDD] `RateLimitIT`: `should_rejectWithoutCallingAi_when_aiLimitIsExceeded` — IA saudável no `AiStub`, 2
       comandos de voz → o 1º é 200 e o 2º é 429 `rate-limit-exceeded`, com `transcriptionCallCount()` igual a 1
       (`@AiRateLimit` no `transcribe` do `TransactionController`; o interceptor escolhe `AI` pelo `HandlerMethod`)
-- [ ] [TDD] `RateLimitIT`: `should_keepDefaultRoutesAvailable_when_aiLimitIsExceeded` — com o limite de IA esgotado,
+- [x] [TDD] `RateLimitIT`: `should_keepDefaultRoutesAvailable_when_aiLimitIsExceeded` — com o limite de IA esgotado,
       `GET /api/v1/transactions` → 200; se já passar, confirmar que falha com o comando de voz consumindo também o
       grupo `DEFAULT`
 
@@ -193,7 +196,17 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: `@AiRateLimit` no `transcribe` do `TransactionController`; o interceptor passa a escolher o grupo `AI` pelo
+`HandlerMethod`. `RateLimitIT` com 4 casos. Os dois últimos foram confirmados: o de grupos independentes falha se o
+comando de voz também consumir o grupo `DEFAULT` (mutação testada e revertida).
+
+Decisões: o `AiBulkheadIT.should_logBulkheadFullAsWarning_when_stageIsFull` foi removido a pedido do usuário (ver
+Decisões); a definição de pronto "nenhum teste existente alterado" tem essa exceção.
+
+Verificação: `RateLimitIT` (4) e `VoiceCommandCircuitBreakerIT` (3) passam; o diff de testes tem `RateLimitIT`,
+`application-test.properties` e a remoção em `AiBulkheadIT`; `./gradlew build` passou.
+
+Para uma sessão nova: falta só a documentação (Fase 3).
 
 ## Fase 3: Documentação
 

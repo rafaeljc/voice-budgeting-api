@@ -94,6 +94,21 @@ class RateLimitIT {
         assertThat(aiStub.transcriptionCallCount()).isEqualTo(1);
     }
 
+    @Test
+    void should_keepDefaultRoutesAvailable_when_aiLimitIsExceeded() throws Exception {
+        // given
+        var userId = randomUser();
+        givenHealthyAi();
+        voiceCommand(userId).andExpect(status().isOk());
+        voiceCommand(userId).andExpect(status().isTooManyRequests());
+
+        // when
+        var response = list(userId);
+
+        // then
+        response.andExpect(status().isOk());
+    }
+
     private void givenHealthyAi() {
         aiStub.givenTranscription("gastei 80 reais no mercado");
         aiStub.givenToolCall("propose-transaction", """
