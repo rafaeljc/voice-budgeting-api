@@ -91,6 +91,12 @@ A trava de idempotência do comando de voz é a porta `VoiceCommandLock` (`appli
 trava antes de qualquer chamada à IA e a libera se o comando falhar; trocar o armazenamento muda só o adaptador
 (ADR 0009).
 
+O limite de requisições por usuário tem um núcleo neutro de canal em `infrastructure/security/ratelimit/`
+(`UserRateLimiter`, que não conhece HTTP) e um adaptador por canal: hoje o `RateLimitInterceptor` em
+`infrastructure/http/interceptor/`, que traduz a recusa em 429; gRPC ou GraphQL teriam o seu. Os limitadores ficam no
+cache `rate-limiters` (`CachingConfiguration`, expiração por inatividade). Migrar para o Redis é um adaptador novo de
+`UserRateLimiter` que lê as mesmas propriedades `budgeting.rate-limit.*` (ADR 0010).
+
 Resiliência é detalhe de `infrastructure`: o `@CircuitBreaker` do fluxo de voz fica no `transcribe` do
 `TransactionController` e o `@Bulkhead` de cada etapa, nos adaptadores `SpringAi*Gateway`; a `application` e o `domain`
 nunca importam o Resilience4j. A ordem entre o cache e o bulkhead da síntese é explícita

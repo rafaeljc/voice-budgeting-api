@@ -48,6 +48,7 @@ Todo erro sai em `application/problem+json` pelo `ApiExceptionHandler` (`infrast
 | `AiProviderUnavailableException` (IO, 429, 5xx)      | 503    | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After`      | `WARN` `AI provider unavailable` |
 | `CallNotPermittedException` (circuito `voice-command` aberto) | 503 | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After` | `WARN` `Circuit breaker open`, com `circuitBreaker` |
 | `BulkheadFullException` (etapa da IA com a capacidade esgotada) | 503 | `urn:problem-type:budgeting:assistant-unavailable` | `problem.assistant-unavailable.*`, com `Retry-After` | `WARN` `Bulkhead full`, com `bulkhead` |
+| `RateLimitExceededException` (limite do usuário excedido, grupo `AI` ou `DEFAULT`) | 429 | `urn:problem-type:budgeting:rate-limit-exceeded` | `problem.rate-limit-exceeded.*`, com `Retry-After` | `WARN` `Rate limit exceeded`, com `rateLimitGroup`, `userId` e `retryAfterSeconds`, sem stack trace |
 | `AiProviderFailedException` (demais status)          | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 | Qualquer outra `Exception`                           | 500    | `about:blank`                                    | `problem.unexpected-error.*`                                | `ERROR` `Unexpected error`   |
 

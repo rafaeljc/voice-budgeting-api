@@ -219,7 +219,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/openapi.yaml`: resposta reutilizável `TooManyRequests` (cabeçalho `Retry-After`, exemplo
       `rate-limit-exceeded`) referenciada nas 6 rotas autenticadas; a descrição do `POST /transactions/ai` cita o limite
       próprio das rotas de IA
-- [ ] [verificação] Regras: `error-handling.md` (linha da `RateLimitExceededException` → 429 com `Retry-After` e o
+- [x] [verificação] Regras: `error-handling.md` (linha da `RateLimitExceededException` → 429 com `Retry-After` e o
       `WARN`); `api-conventions.md` (dois grupos por usuário, `@AiRateLimit` em rota de IA nova, `Retry-After` dinâmico);
       `security.md` (troca "Rate limiting fica para a T19" por uma seção curta: por usuário, grupos, rotas públicas fora,
       limite por IP na borda); `architecture.md` (núcleo neutro em `security/ratelimit/`, um adaptador por canal, cache
