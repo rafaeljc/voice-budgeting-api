@@ -10,7 +10,12 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties("budgeting.cache")
 public record CachingProperties(
-        @Valid @NotNull Policy speech, @Valid @NotNull Policy voiceCommandLocks) {
+        @Valid @NotNull Policy speech,
+        @Valid @NotNull Policy voiceCommandLocks,
+        @Valid @NotNull IdlePolicy rateLimiters) {
 
     public record Policy(@Positive long maxEntries, @NotNull Duration timeToLive) {}
+
+    public record IdlePolicy(
+            @Positive long maxEntries, @NotNull Duration timeToIdle) {}
 }

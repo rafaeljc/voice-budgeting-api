@@ -128,7 +128,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       um limitador descartado pelo teto recomeça cheio)
 - [x] [verificação] `application-test.properties`: `budgeting.rate-limit.enabled=false`, com comentário (o rate limiting
       não influencia nenhum teste; o `RateLimitIT` liga na própria classe)
-- [ ] [verificação] `CachingProperties.IdlePolicy(@Positive long maxEntries, @NotNull Duration timeToIdle)` e campo
+- [x] [verificação] `CachingProperties.IdlePolicy(@Positive long maxEntries, @NotNull Duration timeToIdle)` e campo
       `rateLimiters`; `CachingConfiguration` registra `rate-limiters` com `expireAfterAccess` e expõe o bean
       `rateLimitersCache`, como o `voiceCommandLocksCache`
 - [ ] [TDD] `RateLimitIT` (`infrastructure/http/`; `@IntegrationTest`, `@AutoConfigureMockMvc`, `@AutoConfigureAiStub`,
