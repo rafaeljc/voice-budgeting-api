@@ -225,9 +225,9 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       limite por IP na borda); `architecture.md` (núcleo neutro em `security/ratelimit/`, um adaptador por canal, cache
       `rate-limiters`, Redis como adaptador novo); `testing.md` (chave desligada no perfil `test`, ligada só pelo
       `@TestPropertySource` do `RateLimitIT`, sem `@EnableResilience`)
-- [ ] [verificação] `CLAUDE.md`: Stack (Caffeine também guarda os limitadores por usuário; Resilience4j também no rate
+- [x] [verificação] `CLAUDE.md`: Stack (Caffeine também guarda os limitadores por usuário; Resilience4j também no rate
       limiting por usuário) e Estrutura (`http/interceptor/`, `security/ratelimit/`)
-- [ ] [verificação] `docs/escopo.md`: FUT-20 — "Rate limiting distribuído" (limitadores no Redis atrás da mesma
+- [x] [verificação] `docs/escopo.md`: FUT-20 — "Rate limiting distribuído" (limitadores no Redis atrás da mesma
       interface, para várias instâncias; ADR 0010) e FUT-21 — "Rate limiting por IP na borda" (API gateway, ingress ou
       WAF para o tráfego anônimo), cada um com descrição e motivo
 - [ ] [verificação] `docs/tarefas.md`: no último commit, checkbox da T19

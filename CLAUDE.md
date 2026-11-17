@@ -10,11 +10,14 @@ Escopo e plano: `docs/escopo.md`, `docs/tarefas.md`. Plan files das tarefas: `do
 - Java 25 (toolchain), Spring Boot 4.1.2, Gradle 9.4.1 (Groovy DSL, wrapper)
 - Spring Web MVC, Spring Data JPA, MySQL 9.6, Spring Data MongoDB, MongoDB 9.0 (`compose.yml`,
   iniciados pelo `spring-boot-docker-compose`); requisições, `@Async` e `@Scheduled` em virtual threads
-- Spring Cache + Caffeine: cache local da síntese de voz e trava de idempotência do comando de voz
+- Spring Cache + Caffeine: cache local da síntese de voz, trava de idempotência do comando de voz e limitadores do
+  rate limiting por usuário
 - Spring Modulith (registro de publicação de eventos, JDBC): outbox transacional da auditoria no MySQL, com reenvio
 - Spring AI 2.0.2 + OpenAI: `whisper-1` (transcrição), `gpt-4o-mini` (chat + tools), `gpt-4o-mini-tts` (voz)
-- Resilience4j (`resilience4j-spring-boot4`): circuit breaker do fluxo de voz e bulkhead por etapa da IA, com métricas
-  no Micrometer; desligado em todos os testes, ligado só pelos que usam `@EnableResilience`
+- Resilience4j (`resilience4j-spring-boot4`): circuit breaker do fluxo de voz, bulkhead por etapa da IA, com métricas
+  no Micrometer; desligado em todos os testes, ligado só pelos que usam `@EnableResilience`. O rate limiting por
+  usuário também usa o `RateLimiter` dele (sem registry), com chave própria (`budgeting.rate-limit.enabled`), ligada só
+  no `RateLimitIT`
 - Spring Security como *resource server*: JWT HS256 com `sub` (UUID do usuário) e `exp`; tokens de desenvolvimento
   por `scripts/generate_token.py`
 - Spring Boot Actuator e Micrometer Tracing com OpenTelemetry (logs JSON ECS com `traceId`, `X-Request-Id`); métricas e
@@ -45,6 +48,7 @@ src/main/java/dio/budgeting/
   infrastructure/
     http/                       # *Controller
       request/  response/  filter/  error/   # *Filter, *ExceptionHandler
+      interceptor/              # *Interceptor (RateLimitInterceptor: adaptador HTTP do limite por usuário)
     ai/                         # SpringAi*Gateway, AssistantConfiguration, OpenAiExceptionTranslationAspect,
                                 # AiUsageObservationHandler (consumo da IA pela observation do Spring AI)
       event/                    # AiUsageMeasuredEvent (evento de aplicação, não de domínio)
@@ -55,6 +59,7 @@ src/main/java/dio/budgeting/
     event/                      # *Listener (ouvem eventos de domínio e de aplicação: adaptador de entrada)
     scheduling/                 # *Job (rotinas agendadas: adaptador de entrada)
     security/                   # SecurityConfiguration, JwtProperties (JWT, resource server)
+      ratelimit/                # UserRateLimiter, Resilience4jUserRateLimiter, @AiRateLimit (núcleo neutro de canal)
     persistence/
       entity/  repository/      # *Entity, Jpa*Repository, *EntityRepository, Mongo*Repository, *DocumentRepository
       document/                 # *Document (MongoDB, ex.: AuditEntryDocument, AiUsageEntryDocument), irmão de entity/
