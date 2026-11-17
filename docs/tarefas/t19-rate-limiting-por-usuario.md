@@ -100,14 +100,15 @@ armazenamento), com o Resilience4j e o Caffeine hoje e espaço para Redis no fut
 
 ## Definição de pronto
 
-- [ ] A 3ª requisição de um usuário a uma rota comum, com limite 2, responde 429 `rate-limit-exceeded` com
+- [x] A 3ª requisição de um usuário a uma rota comum, com limite 2, responde 429 `rate-limit-exceeded` com
       `Retry-After` entre 1 e 3600 (`RateLimitIT`)
-- [ ] O 2º comando de voz, com limite 1, responde 429 sem chamar a IA (`RateLimitIT`)
-- [ ] Os grupos são independentes e o limite é por usuário (`RateLimitIT`)
-- [ ] Com a aplicação no ar, a 61ª requisição em um minuto responde 429 e o log tem `WARN "Rate limit exceeded"`
-- [ ] Nenhum teste existente alterado; rate limiting desligado nos testes, fora do `RateLimitIT`
-- [ ] ADR 0010, OpenAPI, regras, `CLAUDE.md` e escopo atualizados
-- [ ] `./gradlew build` passa
+- [x] O 2º comando de voz, com limite 1, responde 429 sem chamar a IA (`RateLimitIT`)
+- [x] Os grupos são independentes e o limite é por usuário (`RateLimitIT`)
+- [x] Com a aplicação no ar, a 61ª requisição em um minuto responde 429 e o log tem `WARN "Rate limit exceeded"`
+- [x] Rate limiting desligado nos testes, fora do `RateLimitIT`; nenhum teste existente alterado, exceto a remoção do
+      `AiBulkheadIT.should_logBulkheadFullAsWarning_when_stageIsFull` (ver Decisões)
+- [x] ADR 0010, OpenAPI, regras, `CLAUDE.md` e escopo atualizados
+- [x] `./gradlew build` passa
 
 ## Para futuros agentes
 
@@ -210,7 +211,7 @@ Para uma sessão nova: falta só a documentação (Fase 3).
 
 ## Fase 3: Documentação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `docs/adr/0010-limite-de-requisicoes-por-usuario-em-memoria-local.md` (do `template.md`, `aceito`):
       opções `@RateLimiter` anotado; interceptor com o Resilience4j e o Caffeine atrás de uma interface; Redis já agora;
@@ -230,7 +231,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `docs/escopo.md`: FUT-20 — "Rate limiting distribuído" (limitadores no Redis atrás da mesma
       interface, para várias instâncias; ADR 0010) e FUT-21 — "Rate limiting por IP na borda" (API gateway, ingress ou
       WAF para o tráfego anônimo), cada um com descrição e motivo
-- [ ] [verificação] `docs/tarefas.md`: no último commit, checkbox da T19
+- [x] [verificação] `docs/tarefas.md`: no último commit, checkbox da T19
 
 ### Plano de verificação
 
@@ -245,8 +246,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: ADR 0010; `TooManyRequests` no OpenAPI (definição e 6 referências) e a nota da descrição da rota de IA; as 5
+regras, o `CLAUDE.md` (Stack e Estrutura), FUT-20 e FUT-21 no escopo e o checkbox da T19. Também atualizei a nota
+(T15) da T19 em `docs/tarefas.md`, que dizia que o rate limiter usaria a `@EnableResilience`, contra a decisão desta
+tarefa.
+
+Verificação: todos os `grep` e o `ls` do plano deram o esperado (`TooManyRequests` 7, nenhuma ocorrência de `T19` em
+`security.md`); `./gradlew build` passou.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+Cada usuário autenticado tem dois limites independentes, `AI` (10 por minuto, rotas com `@AiRateLimit`, hoje só o
+comando de voz) e `DEFAULT` (60 por minuto, as demais). O excesso recebe 429 `rate-limit-exceeded` com `Retry-After`
+exato e o `WARN "Rate limit exceeded"`, sem chamar a IA. O núcleo (`security/ratelimit/`) é neutro de canal, com o
+Resilience4j e o Caffeine hoje e o Redis como adaptador futuro (ADR 0010). Em `RateLimitIT`, 4 casos cobrem os
+requisitos; os de isolamento foram confirmados por mutação.
+
+Para o PR: o `AiBulkheadIT.should_logBulkheadFullAsWarning_when_stageIsFull` foi removido a pedido do usuário, depois de
+falhar em dois builds completos e passar isolado; a causa não foi investigada. A verificação com a aplicação no ar deu
+`60 200` e `1 429`, `Retry-After: 57` e o log esperado. Sem plano de deploy (fora do escopo).
