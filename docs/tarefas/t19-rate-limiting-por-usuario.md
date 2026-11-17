@@ -118,7 +118,7 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Limite das demais rotas, por usuário
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] `application.properties`: `budgeting.rate-limit.enabled=true`,
       `budgeting.rate-limit.groups.ai.max-requests=10`, `.ai.period=1m`, `.default.max-requests=60`,
@@ -140,7 +140,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `Resilience4jUserRateLimiter`, `RateLimitExceededException`, `RateLimitInterceptor` com grupo `DEFAULT`,
       `WebMvcConfiguration`, `ProblemType.RATE_LIMIT_EXCEEDED`, `problem.rate-limit-exceeded.*`, handler do 429 com
       `Retry-After` e `WARN "Rate limit exceeded"` sem stack trace no `handleExceptionInternal`)
-- [ ] [TDD] `RateLimitIT`: `should_keepOtherUsersAvailable_when_userExceedsLimit` — um usuário esgota o limite e outro
+- [x] [TDD] `RateLimitIT`: `should_keepOtherUsersAvailable_when_userExceedsLimit` — um usuário esgota o limite e outro
       recebe 200; se já passar, confirmar que falha com a chave do cache sem o usuário
 
 ### Plano de verificação
@@ -156,7 +156,22 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+Feito: propriedades `budgeting.rate-limit.*` e cache `rate-limiters` (`IdlePolicy`, `expireAfterAccess`); núcleo em
+`infrastructure/security/ratelimit/` (`UserRateLimiter`, `Resilience4jUserRateLimiter`, `RateLimitGroup`,
+`RateLimitExceededException`, `RateLimitProperties`, `@AiRateLimit`); `RateLimitInterceptor` e `WebMvcConfiguration`;
+429 `rate-limit-exceeded` com `Retry-After` e `WARN "Rate limit exceeded"` no `ApiExceptionHandler`; `RateLimitIT` com
+2 casos. A `@AiRateLimit` existe, mas ainda não está no `TransactionController` (Fase 2).
+
+Decisões: nenhuma fora do plano. O registro das propriedades (`@EnableConfigurationProperties`) fica no
+`Resilience4jUserRateLimiter`, condicional como o interceptor.
+
+Verificação: `RateLimitIT` passa; diff de testes só com `RateLimitIT` e `application-test.properties`; com a aplicação
+no ar, 61 requisições deram `60 200` e `1 429`, `Retry-After: 57` e o log tem `Rate limit exceeded` com
+`rateLimitGroup` `default`; `./gradlew build` passou. Um primeiro build falhou em
+`AiBulkheadIT.should_logBulkheadFullAsWarning_when_stageIsFull` (I/O error em requisição concorrente) e passou isolado e
+no build seguinte; suspeita de instabilidade do teste, não confirmada.
+
+Para uma sessão nova: o interceptor só vê o grupo `DEFAULT` até a Fase 2 anotar o `transcribe`.
 
 ## Fase 2: Limite próprio das rotas de IA
 

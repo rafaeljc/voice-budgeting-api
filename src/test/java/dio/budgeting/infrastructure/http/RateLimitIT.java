@@ -55,6 +55,20 @@ class RateLimitIT {
         assertThat(retryAfter).isBetween(1L, 3600L);
     }
 
+    @Test
+    void should_keepOtherUsersAvailable_when_userExceedsLimit() throws Exception {
+        // given
+        var exhausted = randomUser();
+        exhaustDefaultLimit(exhausted);
+        list(exhausted).andExpect(status().isTooManyRequests());
+
+        // when
+        var response = list(randomUser());
+
+        // then
+        response.andExpect(status().isOk());
+    }
+
     private void exhaustDefaultLimit(UserId userId) throws Exception {
         for (var i = 0; i < DEFAULT_LIMIT; i++) {
             list(userId).andExpect(status().isOk());
