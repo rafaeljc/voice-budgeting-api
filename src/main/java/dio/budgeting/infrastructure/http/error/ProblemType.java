@@ -11,6 +11,7 @@ enum ProblemType {
     IDEMPOTENCY_KEY_REUSED("idempotency-key-reused"),
     TRANSACTION_NOT_FOUND("transaction-not-found"),
     TRANSACTION_PROPOSAL_NOT_FOUND("transaction-proposal-not-found"),
+    RATE_LIMIT_EXCEEDED("rate-limit-exceeded"),
     UNAUTHENTICATED("unauthenticated");
 
     private static final String URN_PREFIX = "urn:problem-type:budgeting:";

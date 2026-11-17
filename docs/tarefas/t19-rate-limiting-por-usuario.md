@@ -131,7 +131,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] `CachingProperties.IdlePolicy(@Positive long maxEntries, @NotNull Duration timeToIdle)` e campo
       `rateLimiters`; `CachingConfiguration` registra `rate-limiters` com `expireAfterAccess` e expõe o bean
       `rateLimitersCache`, como o `voiceCommandLocksCache`
-- [ ] [TDD] `RateLimitIT` (`infrastructure/http/`; `@IntegrationTest`, `@AutoConfigureMockMvc`, `@AutoConfigureAiStub`,
+- [x] [TDD] `RateLimitIT` (`infrastructure/http/`; `@IntegrationTest`, `@AutoConfigureMockMvc`, `@AutoConfigureAiStub`,
       `@TestPropertySource` com `budgeting.rate-limit.enabled=true`, `groups.default.max-requests=2`,
       `groups.ai.max-requests=1` e os dois `period=1h`; um `UserId` aleatório por teste com
       `AccessTokens.authorization(userId)`): `should_rejectWithTooManyRequests_when_defaultLimitIsExceeded` — 3 ×
