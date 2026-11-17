@@ -216,7 +216,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       opções `@RateLimiter` anotado; interceptor com o Resilience4j e o Caffeine atrás de uma interface; Redis já agora;
       limite por IP na aplicação. Consequências: limite por instância (com N instâncias, N vezes o valor), perdido no
       reinício, migração = um adaptador novo; métricas sem série por usuário
-- [ ] [verificação] `docs/openapi.yaml`: resposta reutilizável `TooManyRequests` (cabeçalho `Retry-After`, exemplo
+- [x] [verificação] `docs/openapi.yaml`: resposta reutilizável `TooManyRequests` (cabeçalho `Retry-After`, exemplo
       `rate-limit-exceeded`) referenciada nas 6 rotas autenticadas; a descrição do `POST /transactions/ai` cita o limite
       próprio das rotas de IA
 - [ ] [verificação] Regras: `error-handling.md` (linha da `RateLimitExceededException` → 429 com `Retry-After` e o
