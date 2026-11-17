@@ -210,9 +210,9 @@ Para uma sessão nova: falta só a documentação (Fase 3).
 
 ## Fase 3: Documentação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `docs/adr/0010-limite-de-requisicoes-por-usuario-em-memoria-local.md` (do `template.md`, `aceito`):
+- [x] [verificação] `docs/adr/0010-limite-de-requisicoes-por-usuario-em-memoria-local.md` (do `template.md`, `aceito`):
       opções `@RateLimiter` anotado; interceptor com o Resilience4j e o Caffeine atrás de uma interface; Redis já agora;
       limite por IP na aplicação. Consequências: limite por instância (com N instâncias, N vezes o valor), perdido no
       reinício, migração = um adaptador novo; métricas sem série por usuário
