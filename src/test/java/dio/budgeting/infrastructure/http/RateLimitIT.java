@@ -1,20 +1,26 @@
 package dio.budgeting.infrastructure.http;
 
 import static dio.budgeting.support.ApiPaths.TRANSACTIONS_PATH;
+import static dio.budgeting.support.ApiPaths.VOICE_COMMAND_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.RETRY_AFTER;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dio.budgeting.domain.UserId;
 import dio.budgeting.support.IntegrationTest;
+import dio.budgeting.support.ai.AiStub;
 import dio.budgeting.support.ai.AutoConfigureAiStub;
 import dio.budgeting.support.security.AccessTokens;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -35,8 +41,11 @@ class RateLimitIT {
 
     private final MockMvc mockMvc;
 
-    RateLimitIT(MockMvc mockMvc) {
+    private final AiStub aiStub;
+
+    RateLimitIT(MockMvc mockMvc, AiStub aiStub) {
         this.mockMvc = mockMvc;
+        this.aiStub = aiStub;
     }
 
     @Test
@@ -67,6 +76,40 @@ class RateLimitIT {
 
         // then
         response.andExpect(status().isOk());
+    }
+
+    @Test
+    void should_rejectWithoutCallingAi_when_aiLimitIsExceeded() throws Exception {
+        // given
+        var userId = randomUser();
+        givenHealthyAi();
+        voiceCommand(userId).andExpect(status().isOk());
+
+        // when
+        var response = voiceCommand(userId);
+
+        // then
+        response.andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.type").value("urn:problem-type:budgeting:rate-limit-exceeded"));
+        assertThat(aiStub.transcriptionCallCount()).isEqualTo(1);
+    }
+
+    private void givenHealthyAi() {
+        aiStub.givenTranscription("gastei 80 reais no mercado");
+        aiStub.givenToolCall("propose-transaction", """
+                {"arguments": {"description": "Mercado", "amount": 80.00, "category": "GROCERIES"}}
+                """);
+        aiStub.givenSpeech(new byte[] {1, 2, 3, 4});
+    }
+
+    private ResultActions voiceCommand(UserId userId) throws Exception {
+        return mockMvc.perform(multipart(VOICE_COMMAND_PATH)
+                .file(new MockMultipartFile(
+                        "file",
+                        "recording-1.m4a",
+                        "audio/mp4",
+                        Files.readAllBytes(Path.of("src/test/resources/audio/recording-1.m4a"))))
+                .header(AUTHORIZATION, AccessTokens.authorization(userId)));
     }
 
     private void exhaustDefaultLimit(UserId userId) throws Exception {

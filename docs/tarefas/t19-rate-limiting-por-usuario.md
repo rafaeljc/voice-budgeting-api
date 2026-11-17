@@ -175,9 +175,9 @@ Para uma sessão nova: o interceptor só vê o grupo `DEFAULT` até a Fase 2 ano
 
 ## Fase 2: Limite próprio das rotas de IA
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [TDD] `RateLimitIT`: `should_rejectWithoutCallingAi_when_aiLimitIsExceeded` — IA saudável no `AiStub`, 2
+- [x] [TDD] `RateLimitIT`: `should_rejectWithoutCallingAi_when_aiLimitIsExceeded` — IA saudável no `AiStub`, 2
       comandos de voz → o 1º é 200 e o 2º é 429 `rate-limit-exceeded`, com `transcriptionCallCount()` igual a 1
       (`@AiRateLimit` no `transcribe` do `TransactionController`; o interceptor escolhe `AI` pelo `HandlerMethod`)
 - [ ] [TDD] `RateLimitIT`: `should_keepDefaultRoutesAvailable_when_aiLimitIsExceeded` — com o limite de IA esgotado,
