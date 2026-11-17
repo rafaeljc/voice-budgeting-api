@@ -86,8 +86,16 @@ Corpo sempre em Problem Details (ver `error-handling.md`).
 - `Idempotency-Key` opcional (UUID) no `POST /transactions/ai`, lido com `@RequestHeader(required = false) UUID`; fora
   do formato, a resposta é 400 `validation-error` com `parameter: "Idempotency-Key"`. Sem ele, o comando é
   processado sem trava.
+- `Retry-After` (segundos) no 429 e no 503; no 429 é a espera exata até o limite do usuário liberar, e no 503 vem de
+  `budgeting.errors.assistant-unavailable-retry-after`.
 - `X-Request-Id` em toda resposta, com o `traceId` da requisição (32 hex); um `X-Request-Id` enviado pelo cliente é
   ignorado. A correlação de entrada é pelo `traceparent` (W3C).
+
+## Limite de requisições
+
+- Toda rota autenticada tem um limite por usuário, aplicado pelo `RateLimitInterceptor`; há dois grupos independentes:
+  `AI` (rotas com `@AiRateLimit`) e `DEFAULT` (as demais); os valores ficam em `budgeting.rate-limit.*`.
+- Rota que chama a IA leva `@AiRateLimit` no método do controller; sem ela, cai no limite `DEFAULT`, nunca em nenhum.
 
 ## Controllers e DTOs
 

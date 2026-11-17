@@ -5,7 +5,7 @@ paths:
 
 # Segurança
 
-Detalhes e uso em `docs/autenticacao.md`. Rate limiting fica para a T19.
+Detalhes e uso em `docs/autenticacao.md`.
 
 ## Identidade
 
@@ -32,6 +32,14 @@ Detalhes e uso em `docs/autenticacao.md`. Rate limiting fica para a T19.
   `Input` nem do `TransactionFilter`.
 - Recurso de outro usuário responde 404, com o mesmo corpo do inexistente.
 - As tools da IA recebem o usuário pelo `ToolContext`, nunca pelos argumentos que o modelo escolhe.
+
+## Limite de requisições
+
+- Por usuário (o `sub` do JWT), em toda rota autenticada, com um grupo `AI` e um `DEFAULT` independentes (ADR 0010);
+  o excesso é 429 com `Retry-After`.
+- Rotas públicas (health) ficam fora: o interceptor roda depois do Spring Security e só limita quem tem JWT.
+- Limite por IP não é da aplicação: exige confiar no `X-Forwarded-For`, e cabe ao gateway, ao ingress ou ao WAF
+  (FUT-21).
 
 ## Não fazer
 

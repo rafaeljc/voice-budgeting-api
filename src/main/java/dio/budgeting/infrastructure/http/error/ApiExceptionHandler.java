@@ -6,12 +6,14 @@ import dio.budgeting.application.IdempotencyKeyReusedException;
 import dio.budgeting.domain.TransactionNotFoundException;
 import dio.budgeting.domain.TransactionProposalNotFoundException;
 import dio.budgeting.infrastructure.ai.tool.MultipleToolCallsException;
+import dio.budgeting.infrastructure.security.ratelimit.RateLimitExceededException;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -167,6 +169,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex, problem(ProblemType.ASSISTANT_UNAVAILABLE, status, null), headers, status, request);
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    ResponseEntity<Object> handleRateLimitExceeded(RateLimitExceededException ex, WebRequest request) {
+        var status = HttpStatus.TOO_MANY_REQUESTS;
+        var headers = new HttpHeaders();
+        headers.set(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfter().toSeconds()));
+        return handleExceptionInternal(
+                ex, problem(ProblemType.RATE_LIMIT_EXCEEDED, status, null), headers, status, request);
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<Object> handleUnexpected(Exception ex, WebRequest request) {
         var problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -195,6 +206,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                     .addKeyValue("status", statusCode.value())
                     .addKeyValue("bulkhead", full.getBulkheadName())
                     .log("Bulkhead full");
+        } else if (ex instanceof RateLimitExceededException limited) {
+            log.atWarn()
+                    .addKeyValue("status", statusCode.value())
+                    .addKeyValue("rateLimitGroup", limited.getGroup().name().toLowerCase(Locale.ROOT))
+                    .addKeyValue("userId", limited.getUserId().uuid().toString())
+                    .addKeyValue("retryAfterSeconds", limited.getRetryAfter().toSeconds())
+                    .log("Rate limit exceeded");
         } else if (statusCode.is5xxServerError()) {
             log.atError().setCause(ex).log("Unexpected error");
         } else if (ex instanceof AuthenticationException) {

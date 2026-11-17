@@ -85,6 +85,8 @@ paths:
           $ref: '#/components/responses/UnsupportedMediaType'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
     get:
@@ -150,6 +152,8 @@ paths:
                     detail: A ordenação deve seguir o padrão "campo,direção" (por exemplo "amount,desc"), com campo createdAt ou amount e direção asc ou desc.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transactions/{id}:
@@ -189,6 +193,8 @@ paths:
                 instance: /api/v1/transactions/00000000-0000-4000-8000-000000000000
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transaction-proposals/{id}/confirm:
@@ -236,6 +242,8 @@ paths:
                 instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/confirm
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transaction-proposals/{id}/cancel:
@@ -271,6 +279,8 @@ paths:
                 instance: /api/v1/transaction-proposals/00000000-0000-4000-8000-000000000000/cancel
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/transactions/ai:
@@ -293,6 +303,9 @@ paths:
         O cabeçalho `Idempotency-Key` (UUID) é opcional e protege contra o reenvio do mesmo comando: dentro de 2
         minutos, o mesmo áudio enviado com a mesma chave recebe `409` e não é processado de novo, sem nova cobrança
         de IA. Se o envio falhar, a chave volta a ser aceita.
+
+        As rotas de IA têm um limite de requisições por usuário próprio, separado do das demais rotas, por causa do
+        custo e da latência; o excesso recebe `429` com `Retry-After`, sem chamar a IA.
       parameters:
         - name: Idempotency-Key
           in: header
@@ -454,6 +467,8 @@ paths:
                     instance: /api/v1/transactions/ai
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -507,6 +522,28 @@ components:
             title: Não autenticado
             status: 401
             detail: Envie um token válido no cabeçalho Authorization.
+            instance: /api/v1/transactions
+    TooManyRequests:
+      description: |
+        Limite de requisições do usuário excedido. Cada usuário tem um limite por minuto nas rotas de IA
+        (`POST /transactions/ai`) e outro, maior, em todas as demais rotas autenticadas; os dois são independentes.
+        O corpo é o mesmo nos dois casos.
+      headers:
+        Retry-After:
+          description: Segundos até a próxima requisição ser aceita.
+          schema:
+            type: integer
+            minimum: 1
+            example: 42
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:problem-type:budgeting:rate-limit-exceeded
+            title: Limite de requisições excedido
+            status: 429
+            detail: Você fez requisições demais em pouco tempo. Aguarde o tempo indicado em Retry-After e tente novamente.
             instance: /api/v1/transactions
     UnsupportedMediaType:
       description: Tipo de mídia da requisição não suportado.

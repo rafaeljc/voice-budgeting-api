@@ -36,7 +36,7 @@
 - [x] [T18 — Health checks e encerramento gracioso](#t18)
 
 **Fase 7 — Segurança e rastreabilidade**
-- [ ] [T19 — Rate limiting por usuário](#t19)
+- [x] [T19 — Rate limiting por usuário](#t19)
 - [x] [T20 — Auditoria em banco NoSQL](#t20)
 - [x] [T21 — Garantia de entrega da auditoria](#t21)
 
@@ -330,7 +330,7 @@ Limitar a quantidade de requisições por usuário, com limite específico para 
 **Itens do escopo:**
 - SEG-03 — Rate limiting por usuário
 
-**Nota (T15):** o rate limiter segue o mesmo padrão do circuit breaker e do bulkhead: desligado em todos os testes (auto-configurações do Resilience4j excluídas no perfil `test`) e ligado só pelos testes dele, com `@EnableResilience`.
+**Nota (T15):** o rate limiter segue o mesmo padrão do circuit breaker e do bulkhead: desligado em todos os testes e ligado só pelo teste dele. Ele tem chave própria (`budgeting.rate-limit.enabled`), ligada pelo `@TestPropertySource` do `RateLimitIT`, não pela `@EnableResilience`.
 
 <a id="t20"></a>
 ### T20 — Auditoria em banco NoSQL

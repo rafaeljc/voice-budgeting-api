@@ -56,6 +56,9 @@ paths:
 - Idempotência do comando de voz: o `SpringCacheVoiceCommandLockTest` usa um `ConcurrentMapCache` do Spring, sem
   contexto; o `VoiceCommandIdempotencyIT` usa `RANDOM_PORT` e `RestClient`, com `AiStub.givenDelayedSpeech`, para que
   dois envios com a mesma chave se sobreponham.
+- Rate limiting: o perfil `test` tem `budgeting.rate-limit.enabled=false`, então nenhum `*IT` é limitado. Só o
+  `RateLimitIT` liga, pelo próprio `@TestPropertySource` (limites pequenos e `period=1h`), sem `@EnableResilience`: o
+  limitador não depende das auto-configurações do Resilience4j.
 - Resiliência: o perfil `test` exclui as auto-configurações do Resilience4j (`spring.autoconfigure.exclude` no
   `application-test.properties`), então circuit breaker e bulkhead não influenciam nenhum `*IT`: as anotações ficam
   inertes. Só o teste que precisa liga, com `@EnableResilience` (`support/resilience/`), que devolve as
