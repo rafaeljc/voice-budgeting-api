@@ -118,9 +118,9 @@ Execute com `/executar-tarefa`. Durante a execução:
 
 ## Fase 1: Limite das demais rotas, por usuário
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] `application.properties`: `budgeting.rate-limit.enabled=true`,
+- [x] [verificação] `application.properties`: `budgeting.rate-limit.enabled=true`,
       `budgeting.rate-limit.groups.ai.max-requests=10`, `.ai.period=1m`, `.default.max-requests=60`,
       `.default.period=1m`, com comentário (valores provisórios: o real viria do uso observado e, na IA, do limite da
       conta na OpenAI; o limite vale por instância; migração para Redis na ADR 0010);
