@@ -160,12 +160,16 @@ importantes e não óbvias têm ADR em [docs/adr/](docs/adr/).
 | GitHub Actions, gitleaks, dependency review | CI, varredura de segredos e revisão das dependências vulneráveis em cada PR |
 | Lombok, Jackson 3 | Menos código repetitivo e serialização JSON |
 
-## Pré-requisitos
+## Como executar
+
+### Pré-requisitos
 
 - JDK 25
-- Docker (MySQL e MongoDB do `compose.yml` e Testcontainers nos testes)
+- Docker (MySQL, MongoDB e Grafana do `compose.yml` e Testcontainers nos testes)
+- Python 3, `curl` e `jq`, para gerar o token e seguir o roteiro de teste
+- Uma chave da OpenAI (ou um recurso do Azure OpenAI), só para executar a aplicação
 
-## Configuração
+### Configuração
 
 Copie o modelo e ajuste os valores:
 
@@ -183,7 +187,10 @@ cp .env.example .env
 | `MONGO_PASSWORD`      | senha desse usuário                                      |
 | `JWT_SECRET`          | segredo (mínimo de 32 bytes) que assina e valida os tokens; a aplicação não sobe sem ele |
 
-## Execução
+Para usar o Azure OpenAI no lugar da OpenAI, siga o bloco comentado logo abaixo da `OPENAI_API_KEY` no [`.env.example`](.env.example):
+deployments necessários e variáveis a descomentar.
+
+### Execução
 
 ```bash
 set -a && source .env && set +a
