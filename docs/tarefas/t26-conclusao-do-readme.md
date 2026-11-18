@@ -136,7 +136,7 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Conteúdo novo do README
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Visão geral no topo: o que a API faz, o fluxo áudio → transcrição → IA (tool calling) → proposta
       → confirmação → fala, e o princípio "a IA propõe, o cliente decide"; links para escopo, tarefas e arquitetura
@@ -158,7 +158,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       aplicar a revisão dele antes de concluir a fase
 - [x] [verificação] Seção "Melhorias futuras": lista agrupada por tema (ver Decisões), apontando para a tabela do
       `escopo.md`
-- [ ] [verificação] `docs/escopo.md`: atualizar os itens FUT desatualizados pelo que foi entregue (ex.: FUT-16)
+- [x] [verificação] `docs/escopo.md`: atualizar os itens FUT desatualizados pelo que foi entregue (ex.: FUT-16)
 
 ### Plano de verificação
 
@@ -172,7 +172,33 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- README com as 12 seções na ordem do escopo: Visão geral, Contexto de negócio, Melhorias implementadas, Tecnologias,
+  Como executar (Pré-requisitos, Configuração e Execução como `###`), Como testar o fluxo principal, API, Operação,
+  Testes, Processo de desenvolvimento, Aprendizados e Melhorias futuras.
+- Contexto de negócio: cinco necessidades, cada uma com o que a API faz hoje e as fontes por número; lista "Fontes"
+  com as nove do `escopo.md`. As citações literais dos valores ("Só é bom pra gente...", "Ética é inegociável") não
+  aparecem no HTML da fonte 5 (provavelmente estão em imagem); a página traz "centralidade no cliente". Mantidas como
+  no `escopo.md`.
+- Melhorias implementadas: sete tabelas (áreas do escopo), com os ADRs 0001–0010 linkados.
+- Como testar: o roteiro grava `resposta.json` e `fala.mp3` em `build/` (ignorada pelo git), para não sujar o working
+  tree; o bloco `curl` da seção API saiu, e a seção aponta para o roteiro. A criação manual por `curl` não está no
+  roteiro; os exemplos `.http` seguem linkados na seção API. Pré-requisitos ganharam Python 3, `curl`, `jq` e a chave
+  da IA.
+- Aprendizados: reescritos várias vezes com o usuário até a aprovação. Ficaram em prosa, em primeira pessoa, sem
+  enumeração nem links, em dois temas: o contexto do banco (valores e imagem que o banco quer passar, dados e LGPD) e
+  o que muda com IA no fluxo (validação, barreiras contra *prompt injection* em vez de confiar no prompt, erro
+  inerente ao modelo e falha elegante, métricas de qualidade, custo por consumo).
+- Melhorias futuras: 18 linhas em quatro temas cobrindo os 21 FUT. `escopo.md`: FUT-13 (Grafana local já recebe as
+  métricas) e FUT-18 (Azure OpenAI por chave já funciona por configuração) atualizados; o FUT-16 já estava em dia.
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL` (11 s, tarefas em dia: só documentação mudou desde a Fase 1);
+  `grep '^## ' README.md` → as 12 seções na ordem; script de links (scratchpad) sobre `README.md` e `docs/operacao.md`
+  → 31 links, 0 falhas (provado com um arquivo de teste com âncora e arquivo inexistentes → 2 falhas).
+- Fontes externas: o `curl -sIL` do plano, sem cabeçalhos de navegador, dá `403` nas fontes 1, 4, 5, 7, 8 (itau.com.br)
+  e 9, e `200` nas 2, 3 e 6. Com `User-Agent` e `Accept` de navegador, 1 a 8 respondem `200` com o conteúdo esperado
+  (afirmações conferidas: confirmação final do cliente, AI First, 84%, deepfakes e clonagem de voz, 67% e 53%). A
+  fonte 9 (Seu Crédito Digital) segue em `403`: desafio do Cloudflare, que exige navegador; o link foi mantido.
+- Para a Fase 3: o roteiro do README (seção "Como testar o fluxo principal") é o que deve ser executado ao pé da letra;
+  ele grava em `build/`, então os artefatos precisam ser copiados para `roteiro-t26/` no scratchpad.
 
 ## Fase 3: Roteiro de ponta a ponta com IA real
 
