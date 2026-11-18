@@ -105,7 +105,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] Remover `transaction(UserId, String, Category)` de
       `src/test/java/dio/budgeting/infrastructure/persistence/JpaTransactionRepositoryIT.java` (`test: remove método
       auxiliar não usado do teste do repositório`)
-- [ ] [verificação] Criar `docs/operacao.md` com "Logs e rastreamento", "Métricas" e "Health checks e encerramento"
+- [x] [verificação] Criar `docs/operacao.md` com "Logs e rastreamento", "Métricas" e "Health checks e encerramento"
       movidas do README, sem mudar o conteúdo (só ajustar níveis de título e links relativos); no README, trocar as
       três seções por uma seção "Operação" de um parágrafo que aponta para o arquivo
 - [ ] [verificação] `CLAUDE.md` (Estrutura): adicionar `docs/operacao.md` ao lado de `docs/openapi.yaml`
