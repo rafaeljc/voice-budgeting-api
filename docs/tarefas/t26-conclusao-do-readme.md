@@ -148,7 +148,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       entregues das T03–T25 e T27, com links para os ADRs 0001–0010
 - [x] [verificação] Seção "Tecnologias": tabela tecnologia → para que serve, a partir da Stack do `CLAUDE.md`
 - [x] [verificação] Configuração: linha sobre a alternativa Azure OpenAI no `.env.example`
-- [ ] [verificação] Seção "Como testar o fluxo principal": passos numerados com a API no ar — gerar token; enviar
+- [x] [verificação] Seção "Como testar o fluxo principal": passos numerados com a API no ar — gerar token; enviar
       `recording-1.m4a` e guardar a resposta; extrair a fala (`jq -r .speech.content | base64 -d > fala.mp3`) e
       ouvir; confirmar pelo `transactionProposal.id` (201 + `Location`); listar as transações e ver a nova; nota de
       que `recording-2` a `recording-6` também são comandos de registro. O bloco `curl` da seção API é absorvido aqui

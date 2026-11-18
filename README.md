@@ -197,6 +197,57 @@ set -a && source .env && set +a
 ./gradlew bootRun
 ```
 
+## Como testar o fluxo principal
+
+Com a API no ar (seção anterior), em outro terminal na raiz do projeto. As respostas são gravadas em `build/`, pasta
+ignorada pelo git.
+
+1. Gere um token. Sem `--user-id`, cada token é de um usuário novo, então use o mesmo `TOKEN` em todos os passos:
+
+   ```bash
+   set -a && source .env && set +a
+   TOKEN=$(python3 scripts/generate_token.py)
+   ```
+
+2. Envie o comando de voz `recording-1.m4a` e guarde a resposta:
+
+   ```bash
+   curl -s -X POST http://localhost:8080/api/v1/transactions/ai \
+     -H "Authorization: Bearer $TOKEN" \
+     -F file=@src/test/resources/audio/recording-1.m4a \
+     -o build/resposta.json
+   jq .transactionProposal build/resposta.json
+   ```
+
+   A resposta traz a proposta (`id`, `description`, `amount`, `currency`, `category` e `expiresAt`) e a fala em
+   `speech.content`. Nenhuma transação foi gravada ainda.
+
+3. Extraia a fala e ouça o arquivo `build/fala.mp3` em qualquer player: ela repete o que foi entendido e pergunta se
+   você confirma.
+
+   ```bash
+   jq -r .speech.content build/resposta.json | base64 -d > build/fala.mp3
+   ```
+
+4. Confirme a proposta, em até 5 minutos:
+
+   ```bash
+   PROPOSAL_ID=$(jq -r .transactionProposal.id build/resposta.json)
+   curl -i -X POST "http://localhost:8080/api/v1/transaction-proposals/$PROPOSAL_ID/confirm" \
+     -H "Authorization: Bearer $TOKEN"
+   ```
+
+   A resposta é `201 Created`, com a transação no corpo e o endereço dela no cabeçalho `Location`.
+
+5. Liste as transações e veja a nova:
+
+   ```bash
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/transactions | jq
+   ```
+
+Os áudios `recording-2.m4a` a `recording-6.m4a`, na mesma pasta `src/test/resources/audio/`, também são comandos de
+registro: para testá-los, repita os passos 2 a 5 trocando o arquivo.
+
 ## API
 
 Base `/api/v1`. Todas as rotas exigem um token JWT (`Authorization: Bearer`); veja como gerá-lo e usá-lo em
@@ -217,26 +268,8 @@ decide é o usuário, por `confirm` ou `cancel`. A proposta expira em 5 minutos 
 depois de `expiresAt`, confirmar ou cancelar responde 404. Consultas respondem direto, só com a fala.
 
 Exemplos de requisição em [`docs/exemplos/transacoes.http`](docs/exemplos/transacoes.http) e
-[`docs/exemplos/voz.http`](docs/exemplos/voz.http). Com `curl`:
-
-```bash
-TOKEN=$(python3 scripts/generate_token.py)
-
-curl -i -X POST http://localhost:8080/api/v1/transactions \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"description": "Mercado", "category": "GROCERIES", "amount": "80.00", "currency": "BRL"}'
-
-curl -H "Authorization: Bearer $TOKEN" 'http://localhost:8080/api/v1/transactions?category=GROCERIES&sort=amount,desc'
-
-# comando de voz: devolve a fala (base64) e a proposta; confirme ou cancele pelo id da proposta
-PROPOSAL_ID=$(curl -s -X POST http://localhost:8080/api/v1/transactions/ai \
-  -H "Authorization: Bearer $TOKEN" \
-  -F file=@src/test/resources/audio/recording-1.m4a | jq -r .transactionProposal.id)
-
-curl -i -X POST "http://localhost:8080/api/v1/transaction-proposals/$PROPOSAL_ID/confirm" \
-  -H "Authorization: Bearer $TOKEN"
-```
+[`docs/exemplos/voz.http`](docs/exemplos/voz.http); o fluxo de voz com `curl` está em
+[Como testar o fluxo principal](#como-testar-o-fluxo-principal).
 
 ## Operação
 
