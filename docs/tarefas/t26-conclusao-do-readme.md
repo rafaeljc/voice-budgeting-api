@@ -144,7 +144,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       fraude com IA/deepfake, valores da cultura, AI First com IA responsável, banco consultivo e confiável)
       ligada ao que a API faz hoje; lista "Fontes" com todas as fontes do `escopo.md`; sem aviso de vínculo e sem
       sugerir vínculo
-- [ ] [verificação] Seção "Melhorias implementadas": uma tabela por área (ver Decisões), cobrindo todos os itens
+- [x] [verificação] Seção "Melhorias implementadas": uma tabela por área (ver Decisões), cobrindo todos os itens
       entregues das T03–T25 e T27, com links para os ADRs 0001–0010
 - [ ] [verificação] Seção "Tecnologias": tabela tecnologia → para que serve, a partir da Stack do `CLAUDE.md`
 - [ ] [verificação] Configuração: linha sobre a alternativa Azure OpenAI no `.env.example`

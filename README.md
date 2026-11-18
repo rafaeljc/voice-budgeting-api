@@ -61,6 +61,84 @@ necessidade abaixo aponta o que a API faz hoje para atendê-la (números das fon
 8. [Itaú lança Feito.Itaú e pesquisa "Consciência e Prosperidade" (09/02/2026)](https://www.itau.com.br/media/dam/m/1c23db1493e188a/original/09-02-2026-itau-unibanco-lanca-feito-itau-hub-de-conteudo-proprietario-que-amplia-o-acesso-ao-conhecimento-financeiro-e-reforca-o-papel-do-banco-como-parceiro-estrategico-na-vida-das-pessoas-e-empresas.pdf)
 9. [Seu Crédito Digital — Itaú lança programa de alívio financeiro](https://seucreditodigital.com.br/itau-lanca-programa-alivio-financeiro/)
 
+## Melhorias implementadas
+
+Todas as melhorias fortalecem a mesma funcionalidade, o registro e a consulta de gastos por voz. As decisões
+importantes e não óbvias têm ADR em [docs/adr/](docs/adr/).
+
+### Fluxo e regras de negócio
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Valor monetário correto | O valor registrado é o valor falado, em reais e sem arredondamento: antes, o valor saía 100 vezes maior. | [0001](docs/adr/0001-representacao-de-valores-monetarios.md) |
+| Data e hora da transação | Toda transação registra o instante da criação, definido pelo servidor. | |
+| Regras de negócio validadas | Valor positivo e dentro de um teto, descrição presente e categoria válida, venha o dado da IA ou do cadastro manual. | |
+| Confirmação em duas etapas | A IA só cria uma proposta, guardada no banco; a transação nasce na confirmação explícita do cliente, e o cancelamento descarta a proposta. | [0005](docs/adr/0005-proposta-de-transacao-em-entidade-propria.md) |
+| Expiração da proposta | Uma proposta não decidida em 5 minutos não pode mais ser confirmada, e uma faxina periódica a apaga. | |
+| Validação do áudio | Áudio vazio, acima de 1 MB ou fora de M4A, MP3 e WAV (pelos bytes, não pela extensão) é recusado antes de qualquer custo de IA. | [0004](docs/adr/0004-validacao-basica-do-audio.md) |
+| Respostas faladas claras | A frase é montada pela aplicação, não pelo modelo: frases fixas, valores em R$ e repetição do que foi entendido. | [0006](docs/adr/0006-resposta-falada-montada-pela-aplicacao.md) |
+| Proteções da IA | O assistente fica restrito a registrar e consultar gastos; a transcrição vai delimitada, uma única ação por comando e saída limitada em tokens, e um comando falado não muda as instruções. | |
+| Orquestração fora do controller | O fluxo de voz é um caso de uso com uma porta por etapa da IA, e só os adaptadores conhecem o provedor. | |
+
+### API
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Padrão REST e versionamento | Rotas sob `/api/v1`, `201` com `Location` nas criações, consulta por ID e a proposta como recurso com as ações `confirm` e `cancel`. | |
+| Dinheiro sem ponto flutuante | Valores trafegam como string decimal com duas casas e o código da moeda, sem a leitura como `double` nos clientes. | [0001](docs/adr/0001-representacao-de-valores-monetarios.md) |
+| Paginação e ordenação | A listagem devolve no máximo 100 itens por página, com filtro por categoria e ordenação por data ou valor. | |
+| Contrato de erro padronizado | Todo erro, inclusive da IA, sai em Problem Details (RFC 9457), em pt-BR e sem detalhes internos. | [0003](docs/adr/0003-contrato-de-erro.md) |
+| Contrato OpenAPI e exemplos | O contrato fica em `docs/openapi.yaml`, navegável pelo Swagger UI, com exemplos de requisição prontos. | |
+
+### Resiliência
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Timeouts e retries | Toda chamada externa tem tempo máximo, e uma falha transitória da IA é repetida uma vez, com backoff exponencial e jitter; o pior caso do comando de voz é de cerca de 96 s. | |
+| Circuit breaker | Com a IA falhando, o comando de voz falha na hora com `503` e `Retry-After`, sem gastar com as etapas anteriores e dando tempo para o provedor se recuperar. | |
+| Bulkhead | Cada etapa da IA atende no máximo 10 chamadas simultâneas, então a lentidão do provedor não esgota a aplicação. | |
+| Idempotência no envio do áudio | Com o cabeçalho `Idempotency-Key`, o reenvio do mesmo comando não gera outra proposta nem nova cobrança de IA. | [0009](docs/adr/0009-trava-de-idempotencia-em-caffeine-local.md) |
+| Idempotência na confirmação | Confirmar a mesma proposta duas vezes, mesmo ao mesmo tempo, cria uma única transação. | |
+| Estado persistido | As propostas ficam no MySQL e sobrevivem a um reinício da aplicação. | [0005](docs/adr/0005-proposta-de-transacao-em-entidade-propria.md) |
+| Health checks | Liveness e readiness para o orquestrador e o monitoramento detectarem falhas. | |
+| Encerramento gracioso | No desligamento, as requisições em andamento terminam antes de a aplicação parar. | |
+
+### Segurança e rastreabilidade
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Identidade | Toda rota exige um token JWT, então toda operação tem um autor. | |
+| Isolamento por usuário | Cada usuário vê, propõe e confirma só os próprios dados; o dado de outro usuário responde `404`, como se não existisse. | |
+| Limite de requisições por usuário | 10 comandos de voz e 60 demais requisições por minuto, com `429` e `Retry-After`, contendo abuso e custo de IA. | [0010](docs/adr/0010-limite-de-requisicoes-por-usuario-em-memoria-local.md) |
+| Auditoria em banco NoSQL | Cada proposta criada, comando não entendido, confirmação e cancelamento fica registrado no MongoDB, com autor, instante, `traceId`, metadados do áudio e transcrição. | [0007](docs/adr/0007-auditoria-em-banco-de-documentos-separado.md) |
+| Garantia de entrega da auditoria | Nenhum registro se perde (outbox transacional com reenvio), e o MongoDB fora do ar não interrompe o cliente. | |
+| Dados sensíveis fora dos logs | Os logs têm só IDs e metadados, nunca transcrição, prompt, resposta do modelo ou dados de negócio. | [0002](docs/adr/0002-observabilidade-e-correlacao.md) |
+| Dependências sem vulnerabilidades conhecidas | O CI revisa as dependências de cada PR, e as versões com alertas foram atualizadas. | |
+| Segredos fora do repositório | Credenciais só por variável de ambiente, com varredura de segredos no CI. | |
+
+### Custo e desempenho
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Medição de consumo por usuário | Tokens, segundos de áudio transcritos e caracteres sintetizados ficam registrados por usuário e requisição, dado que o provedor não tem. | |
+| Cache da síntese de voz | A mesma frase não é sintetizada duas vezes: menos custo e latência nas respostas repetidas, sem nunca usar o áudio do usuário como chave. | [0008](docs/adr/0008-cache-local-da-sintese-de-voz.md) |
+
+### Observabilidade
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Logs estruturados com correlação | Logs em JSON com o `traceId` em cada linha, o mesmo devolvido em `X-Request-Id`, para achar uma requisição de ponta a ponta. | [0002](docs/adr/0002-observabilidade-e-correlacao.md) |
+| Métricas técnicas | Latência por etapa da IA, erros HTTP, estado do circuit breaker e do bulkhead e uso de recursos, com métricas e traces no Grafana local. | |
+| Métrica de negócio | O desfecho de cada interpretação da IA (confirmada, cancelada, não entendida) mede quanto a IA acerta. | |
+
+### Qualidade
+
+| Melhoria | O que garante | ADR |
+|---|---|---|
+| Testes unitários e de integração sem OpenAI | A IA é simulada com WireMock, e o MySQL e o MongoDB rodam em containers: testes determinísticos e gratuitos, sem chave de IA. | |
+| Testes de falha | Falha de cada etapa da IA, circuito aberto, etapa cheia, envios e confirmações simultâneos e auditoria com o MongoDB falhando comprovam a resiliência. | |
+| Integração contínua | Cada PR passa por formatação, Checkstyle, testes, cobertura, varredura de segredos e revisão de dependências. | |
+
 ## Pré-requisitos
 
 - JDK 25
