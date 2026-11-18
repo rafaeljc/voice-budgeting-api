@@ -297,3 +297,67 @@ ciclo, e para ao fim de cada fase para a revisão; desvios só entram com aprova
 Cada tarefa vira um PR, com squash merge feito pelo autor. As instruções dos agentes estão em [CLAUDE.md](CLAUDE.md) e
 em `.claude/rules/`, as decisões importantes em ADRs ([docs/adr/](docs/adr/)) e os commits seguem o Conventional
 Commits, validado por hook.
+
+## Aprendizados
+
+O desafio partia de um fluxo que já funcionava: falar um gasto e vê-lo registrado. O que mais aprendi foi a olhar para
+ele com os olhos de quem o banco quer atender. O Itaú diz nos próprios valores que "só é bom pra gente se for bom para o
+cliente" e que "ética é inegociável", coloca o cliente no centro da cultura e quer ser visto como um banco consultivo e
+confiável, que usa IA de forma responsável. Com isso em mente, o código original deixou de ter só problemas técnicos. Um
+valor exibido errado não é um bug qualquer, é o cliente deixando de confiar no que vê. Uma IA que grava sozinha o que
+entendeu tira dele o controle sobre o próprio dinheiro.
+
+O mesmo vale para os dados. Num banco, informação pessoal e financeira só pode ser vista por quem precisa, e esse acesso
+tem de ser controlado. Um log com a transcrição do que a pessoa falou escapa desse controle, porque logs são copiados,
+ficam guardados por muito tempo e passam pelas mãos de muita gente e de várias ferramentas. O que precisa ser guardado
+foi para um registro de auditoria separado, e os logs ficaram só com identificadores, como pedem a LGPD e a segurança da
+informação.
+
+Foi daí que veio a decisão de não criar nenhuma funcionalidade nova. Cada melhoria tenta fazer o cliente sentir o que o
+banco promete: que o dinheiro dele está certo, que nada acontece sem ele concordar, que ele entende o que ouve e que,
+quando algo dá errado do lado do banco, recebe um aviso honesto em vez de um erro confuso. Melhorar o que já existe
+acabou sendo, em boa parte, traduzir em comportamento do sistema a imagem que a empresa quer passar. O mesmo filtro
+ajudou a decidir o que deixar para depois: o que não aproximava o projeto dessa imagem podia esperar. E ver que o ia.i,
+do próprio banco, só conclui uma transação depois da confirmação do cliente, e que o banco alerta abertamente sobre
+golpes com voz clonada, mostrou que confirmação, identidade e rastreabilidade não eram excesso de zelo, e sim o mínimo
+para um assistente de voz que lida com dinheiro.
+
+Colocar IA no meio do fluxo trouxe situações que uma API tradicional não tem. Sem IA, validar uma requisição é conferir
+os campos de um JSON. Aqui, ela traz um áudio, que passa por duas transformações antes de virar dado, a transcrição e a
+interpretação, e qualquer uma delas pode sair errada sem que nada acuse o problema. A validação passou a acontecer em
+mais de um ponto: o arquivo é conferido antes de ir para a IA, e o que o modelo extraiu é tratado com a mesma
+desconfiança de qualquer dado vindo de fora.
+
+A própria fala também pode trazer ordens para o assistente. Tudo o que está no prompt é uma sugestão: o modelo é
+estatístico, e sempre existe a chance de ele se desviar, por mais explícita que seja a instrução. Ficou clara para mim a
+diferença entre sugerir e impedir. A garantia não pode depender da obediência do modelo; ela precisa vir de barreiras no
+código, antes e depois dele. Antes, a transcrição vai entre tags e sem os caracteres que poderiam fechá-las, para que
+nada do que foi dito se passe por instrução. Depois, a aplicação não aceita texto livre: o modelo só pode chamar uma das
+duas ferramentas disponíveis, uma única vez, e os argumentos são verificados um a um; o que fugir disso vira "não
+entendi". Uma ordem escondida na fala pode até desviar o modelo, mas não cria uma ação que não existe nem alcança os
+dados de outra pessoa, porque a identidade do usuário vem do token, e não do modelo.
+
+Também precisei mudar a forma de pensar no erro. Num sistema sem IA, uma resposta errada é um bug: você encontra a
+causa, corrige e ele não volta. Num modelo estatístico, errar faz parte de como ele funciona. Não dá para zerar o erro,
+então a pergunta muda: como torná-lo raro e o que fazer quando ele acontecer. Para torná-lo raro, o modelo recebe a
+menor tarefa possível, com instruções e exemplos claros: entender a intenção e extrair os dados, e mais nada. A frase
+que o cliente ouve é montada pela aplicação.
+
+Quando o erro acontece, a aplicação precisa falhar com elegância, sem que a experiência do cliente piore. Se o modelo
+não entende o comando, a pessoa ouve uma frase simples pedindo para repetir, e não uma mensagem técnica. Se entende
+errado, o engano aparece na resposta falada antes de ter qualquer efeito, e desfazê-lo custa só um cancelamento. Se o
+problema é o próprio provedor, lento ou fora do ar, a resposta vem rápido e diz quando tentar de novo, em vez de deixar
+o cliente esperando por algo que não vai chegar; enquanto isso, o resto da API continua funcionando. Em nenhum desses
+casos um erro da IA vira um gasto gravado sem querer ou uma espera sem fim.
+
+E, se o erro é esperado, é preciso saber com que frequência ele acontece. Uma requisição em que a IA entendeu tudo
+errado responde `200` como qualquer outra, então tempo de resposta e taxa de erros dizem pouco sobre a qualidade. O que
+mostra a qualidade é quantas propostas são confirmadas, quantas são canceladas e quantos comandos a IA não consegue
+entender.
+
+O custo também muda de natureza. Numa API tradicional, uma requisição a mais sai praticamente de graça. Com IA, cada
+áudio é cobrado em segundos de transcrição, tokens e caracteres de voz sintetizada, e o provedor manda a conta do total,
+sem dizer quem gastou. Isso trouxe o consumo para dentro do desenho da solução: medir quanto cada usuário gasta, recusar
+o áudio inválido antes da transcrição, não processar duas vezes o mesmo comando, limitar quantos comandos cada um pode
+enviar e reaproveitar as falas que se repetem. No fim, a otimização que mais importa com IA é evitar a chamada, e não
+deixá-la mais rápida.

@@ -154,7 +154,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       que `recording-2` a `recording-6` também são comandos de registro. O bloco `curl` da seção API é absorvido aqui
 - [x] [verificação] Seção "Processo de desenvolvimento": parágrafo curto (um plan file por tarefa em
       `docs/tarefas/`, planejar e executar com agentes, um PR por tarefa, ADRs em `docs/adr/`, Conventional Commits)
-- [ ] [verificação] Seção "Aprendizados": rascunho a partir dos resumos dos plan files; mostrar ao usuário e
+- [x] [verificação] Seção "Aprendizados": rascunho a partir dos resumos dos plan files; mostrar ao usuário e
       aplicar a revisão dele antes de concluir a fase
 - [ ] [verificação] Seção "Melhorias futuras": lista agrupada por tema (ver Decisões), apontando para a tabela do
       `escopo.md`
