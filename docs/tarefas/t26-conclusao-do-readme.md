@@ -51,16 +51,16 @@ roteiro é comprovado de ponta a ponta com IA real.
 
 ## Definição de pronto
 
-- [ ] README com as 12 seções na ordem do escopo, sem as seções operacionais detalhadas
-- [ ] `docs/operacao.md` com logs, métricas e health checks, conteúdo idêntico ao que saiu do README
-- [ ] Contexto de negócio com cada necessidade ligada a uma melhoria entregue e todas as fontes citadas
-- [ ] Todos os links internos (arquivos e âncoras) de `README.md` e `docs/operacao.md` resolvem
-- [ ] Todos os links externos das fontes respondem HTTP 200 (ou o problema registrado no resumo da fase)
-- [ ] Roteiro do README executado ao pé da letra com Azure OpenAI: proposta gerada, fala MP3 válida, transação
+- [x] README com as 12 seções na ordem do escopo, sem as seções operacionais detalhadas
+- [x] `docs/operacao.md` com logs, métricas e health checks, conteúdo idêntico ao que saiu do README
+- [x] Contexto de negócio com cada necessidade ligada a uma melhoria entregue e todas as fontes citadas
+- [x] Todos os links internos (arquivos e âncoras) de `README.md` e `docs/operacao.md` resolvem
+- [x] Todos os links externos das fontes respondem HTTP 200 (ou o problema registrado no resumo da fase)
+- [x] Roteiro do README executado ao pé da letra com Azure OpenAI: proposta gerada, fala MP3 válida, transação
       confirmada (201) e presente na listagem; artefatos no scratchpad, caminho no resumo da fase
-- [ ] `./gradlew build` passa e o warning do `JpaTransactionRepositoryIT` some
-- [ ] Aprendizados revisados pelo usuário
-- [ ] `docs/tarefas.md` com a T26 marcada
+- [x] `./gradlew build` passa e o warning do `JpaTransactionRepositoryIT` some
+- [x] Aprendizados revisados pelo usuário
+- [x] `docs/tarefas.md` com a T26 marcada
 
 ## Para futuros agentes
 
@@ -202,14 +202,14 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Roteiro de ponta a ponta com IA real
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Executar o roteiro do README ao pé da letra contra o Azure OpenAI do `.env` (`bootRun` em
       segundo plano), salvando no scratchpad da sessão em `roteiro-t26/`: cópia do áudio de entrada
       (`recording-1.m4a`), resposta JSON do comando de voz, `fala.mp3`, resposta da confirmação (status e
       `Location`) e resposta da listagem
 - [x] [verificação] Corrigir no README qualquer comando ou saída que o roteiro revelar errado
-- [ ] [verificação] Marcar a T26 em `docs/tarefas.md`
+- [x] [verificação] Marcar a T26 em `docs/tarefas.md`
 
 ### Plano de verificação
 
@@ -222,8 +222,34 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Roteiro executado ao pé da letra (comandos idênticos aos da seção "Como testar o fluxo principal", só com a saída
+  redirecionada para os artefatos) contra o Azure OpenAI do `.env`, com a API em `bootRun` em segundo plano e readiness
+  `UP`. Uma única transcrição.
+- Comando de voz (`recording-1.m4a`) → proposta `três itens da farmácia`, `80.00` `BRL`, `PHARMA`, com `id` e
+  `expiresAt`; `speech.content` com 117.760 caracteres base64. `file fala.mp3` → `MPEG ADTS, layer III, v2, 128 kbps,
+  24 kHz, Monaural`.
+- Confirmação → `HTTP/1.1 201` com `Location: http://localhost:8080/api/v1/transactions/<id>` e a transação no corpo;
+  listagem → `totalElements: 1`, com a transação confirmada.
+- Log da aplicação: só o `WARN` de `spring.jpa.open-in-view` da inicialização, já existente.
+- Correção no README revelada pelo roteiro: o passo 4 dizia `201 Created`, mas o Tomcat devolve a linha de status sem a
+  frase (`HTTP/1.1 201`); passou a dizer `201`. Os demais comandos e saídas conferem.
+- Verificação: os quatro resultados acima; `./gradlew build` → `BUILD SUCCESSFUL`; script de links → 0 falhas.
+- Artefatos (fora do versionamento): `/tmp/claude-1000/-home-rafael-Projects-dio-voice-budgeting-api/8d2fd747-1291-4aea-81a0-1a826f5cf395/scratchpad/roteiro-t26/` — `recording-1.m4a` (entrada), `resposta.json`,
+  `passo2-proposta.txt`, `fala.mp3` (para ouvir), `passo4-confirmacao.txt` (status e `Location`), `passo5-listagem.json`
+  e `bootrun.log`.
 
 ## Resumo final
 
-_(preencher ao concluir todas as fases)_
+O README virou a porta de entrada do projeto, com as 12 seções na ordem do escopo: visão geral, contexto de negócio
+ligado às fontes públicas do Itaú, melhorias implementadas por área (com os ADRs 0001–0010), tecnologias, como
+executar, roteiro do fluxo principal, API, operação, testes, processo de desenvolvimento, aprendizados e melhorias
+futuras. As seções operacionais detalhadas foram para `docs/operacao.md` sem mudança de conteúdo. Também entraram o
+bloco Azure OpenAI do `.env.example`, a remoção do método auxiliar sem uso do `JpaTransactionRepositoryIT`, a linha de
+`docs/operacao.md` no `CLAUDE.md` e a atualização do FUT-13 e do FUT-18 no `escopo.md`.
+
+O roteiro do README foi executado de ponta a ponta com IA real (Azure OpenAI): proposta gerada, fala MP3 válida,
+transação confirmada (`201` com `Location`) e presente na listagem; a única correção foi o texto do status.
+
+Definição de pronto conferida: todos os critérios marcados. Ressalva no critério dos links externos: a fonte 9 (Seu
+Crédito Digital) responde `403` por um desafio do Cloudflare, e as do itau.com.br só respondem `200` com cabeçalhos de
+navegador (registrado no resumo da Fase 2). Os Aprendizados foram reescritos com o usuário até a aprovação.
