@@ -55,10 +55,6 @@ class JpaTransactionRepositoryIT {
         assertThat(summary.total()).isEqualTo(new Money(new BigDecimal("0.00")));
     }
 
-    private static Transaction transaction(UserId userId, String description, Category category) {
-        return transaction(userId, description, category, "10.00");
-    }
-
     private static Transaction transaction(UserId userId, String description, Category category, String amount) {
         return new Transaction(userId, description, new Money(new BigDecimal(amount)), category, NOW);
     }

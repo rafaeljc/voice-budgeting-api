@@ -102,7 +102,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Commitar o bloco Azure OpenAI do `.env.example` (`docs: documenta o azure openai como alternativa
       no env de exemplo`)
-- [ ] [verificação] Remover `transaction(UserId, String, Category)` de
+- [x] [verificação] Remover `transaction(UserId, String, Category)` de
       `src/test/java/dio/budgeting/infrastructure/persistence/JpaTransactionRepositoryIT.java` (`test: remove método
       auxiliar não usado do teste do repositório`)
 - [ ] [verificação] Criar `docs/operacao.md` com "Logs e rastreamento", "Métricas" e "Health checks e encerramento"
