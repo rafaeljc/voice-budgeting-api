@@ -69,6 +69,7 @@ src/main/resources/
 src/test/resources/audio/       # áudios de exemplo para testes
 src/test/resources/ai/          # payloads da IA simulada, por provedor (ai/openai/)
 docs/openapi.yaml               # contrato OpenAPI da API
+docs/operacao.md                # logs, rastreamento, métricas, health checks e encerramento
 docs/exemplos/                  # exemplos de requisição (.http)
 ```
 

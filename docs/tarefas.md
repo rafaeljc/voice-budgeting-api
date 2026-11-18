@@ -48,7 +48,7 @@
 - [x] [T25 — Cache da síntese de voz](#t25)
 
 **Fase 10 — Entrega**
-- [ ] [T26 — Conclusão do README](#t26)
+- [x] [T26 — Conclusão do README](#t26)
 
 ---
 
