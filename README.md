@@ -286,3 +286,14 @@ Logs JSON com `traceId` (o mesmo do cabeçalho `X-Request-Id`), traces e métric
 ```
 
 Os testes não usam chave de IA: a OpenAI é simulada com WireMock. O relatório de cobertura (JaCoCo) fica em `build/reports/jacoco/test/html/index.html`.
+
+## Processo de desenvolvimento
+
+O projeto foi desenvolvido com agentes de IA (Claude Code), com as decisões e a revisão sob responsabilidade humana.
+Cada tarefa de [docs/tarefas.md](docs/tarefas.md) tem um plan file em [docs/tarefas/](docs/tarefas/), escrito com a
+skill `/planejar-tarefa` a partir de uma entrevista até não restar ambiguidade: escopo, decisões, definição de pronto e
+fases com plano de verificação. A skill `/executar-tarefa` executa o plano em uma sessão nova, com TDD e um commit por
+ciclo, e para ao fim de cada fase para a revisão; desvios só entram com aprovação e ficam registrados no próprio plano.
+Cada tarefa vira um PR, com squash merge feito pelo autor. As instruções dos agentes estão em [CLAUDE.md](CLAUDE.md) e
+em `.claude/rules/`, as decisões importantes em ADRs ([docs/adr/](docs/adr/)) e os commits seguem o Conventional
+Commits, validado por hook.

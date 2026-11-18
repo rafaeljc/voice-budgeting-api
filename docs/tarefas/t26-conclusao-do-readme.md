@@ -152,7 +152,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `recording-1.m4a` e guardar a resposta; extrair a fala (`jq -r .speech.content | base64 -d > fala.mp3`) e
       ouvir; confirmar pelo `transactionProposal.id` (201 + `Location`); listar as transações e ver a nova; nota de
       que `recording-2` a `recording-6` também são comandos de registro. O bloco `curl` da seção API é absorvido aqui
-- [ ] [verificação] Seção "Processo de desenvolvimento": parágrafo curto (um plan file por tarefa em
+- [x] [verificação] Seção "Processo de desenvolvimento": parágrafo curto (um plan file por tarefa em
       `docs/tarefas/`, planejar e executar com agentes, um PR por tarefa, ADRs em `docs/adr/`, Conventional Commits)
 - [ ] [verificação] Seção "Aprendizados": rascunho a partir dos resumos dos plan files; mostrar ao usuário e
       aplicar a revisão dele antes de concluir a fase
