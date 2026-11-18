@@ -98,7 +98,7 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Arrumação
 
-Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Commitar o bloco Azure OpenAI do `.env.example` (`docs: documenta o azure openai como alternativa
       no env de exemplo`)
@@ -108,7 +108,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 - [x] [verificação] Criar `docs/operacao.md` com "Logs e rastreamento", "Métricas" e "Health checks e encerramento"
       movidas do README, sem mudar o conteúdo (só ajustar níveis de título e links relativos); no README, trocar as
       três seções por uma seção "Operação" de um parágrafo que aponta para o arquivo
-- [ ] [verificação] `CLAUDE.md` (Estrutura): adicionar `docs/operacao.md` ao lado de `docs/openapi.yaml`
+- [x] [verificação] `CLAUDE.md` (Estrutura): adicionar `docs/operacao.md` ao lado de `docs/openapi.yaml`
 
 ### Plano de verificação
 
@@ -120,7 +120,19 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 ### Resumo da fase
 
-_(preencher ao concluir a fase)_
+- Bloco Azure OpenAI do `.env.example` commitado como estava no working tree.
+- Removido o overload `transaction(UserId, String, Category)` do `JpaTransactionRepositoryIT`; o IT segue com 2
+  testes passando.
+- `docs/operacao.md` criado com um título `# Operação`, um parágrafo de abertura (link para o README) e as seções
+  "Logs e rastreamento", "Métricas" e "Health checks e encerramento" copiadas sem mudança: os níveis `##` já serviam e
+  as seções não tinham links relativos. No README, as três viraram a seção "Operação" (um parágrafo com o link). Nenhum
+  documento fora de `docs/tarefas/` apontava para âncoras dessas seções.
+- `CLAUDE.md` (Estrutura): linha `docs/operacao.md`.
+- Verificação: `./gradlew build` → `BUILD SUCCESSFUL`; o `grep` do overload → nenhuma linha; o trecho removido do
+  README (linhas 81–174 do `HEAD` anterior) é idêntico ao corpo do `docs/operacao.md` (`diff` sem saída); working
+  tree limpo após o commit.
+- Para a Fase 2: o README ainda tem a ordem antiga (Pré-requisitos, Configuração, Execução, API, Operação, Testes);
+  a seção "Operação" já existe e entra na posição do escopo.
 
 ## Fase 2: Conteúdo novo do README
 
