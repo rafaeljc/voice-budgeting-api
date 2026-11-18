@@ -98,9 +98,9 @@ Contexto para uma sessão nova:
 
 ## Fase 1: Arrumação
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Commitar o bloco Azure OpenAI do `.env.example` (`docs: documenta o azure openai como alternativa
+- [x] [verificação] Commitar o bloco Azure OpenAI do `.env.example` (`docs: documenta o azure openai como alternativa
       no env de exemplo`)
 - [ ] [verificação] Remover `transaction(UserId, String, Category)` de
       `src/test/java/dio/budgeting/infrastructure/persistence/JpaTransactionRepositoryIT.java` (`test: remove método
