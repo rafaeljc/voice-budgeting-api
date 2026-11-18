@@ -22,6 +22,45 @@ controlado), sem criar funcionalidades novas. O escopo está em [docs/escopo.md]
 em [docs/tarefas.md](docs/tarefas.md), e as camadas e os diagramas do fluxo de voz em
 [docs/arquitetura.md](docs/arquitetura.md).
 
+## Contexto de negócio
+
+O bootcamp é patrocinado pelo Itaú Unibanco, e as prioridades deste projeto foram tiradas de informações públicas do
+banco, para que cada decisão técnica responda a uma necessidade real do negócio, e não só aplique uma tecnologia. Cada
+necessidade abaixo aponta o que a API faz hoje para atendê-la (números das fontes ao final da seção).
+
+- **Validar a intenção antes de executar.** O ia.i, assistente conversacional lançado pelo Itaú em julho de 2026,
+  entende voz, analisa gastos e faz Pix, e a confirmação final da transação é sempre do cliente (fontes 1, 2 e 3).
+  Aqui, a IA só cria uma proposta; a transação nasce na confirmação explícita, por uma chamada à API sem IA, e a
+  proposta não decidida expira em 5 minutos.
+- **Fraude com IA.** O banco alerta os clientes para golpes com deepfakes e clonagem de voz (fonte 7). Uma API que
+  aceita comandos por áudio responde com identidade por token, isolamento dos dados de cada usuário, auditoria de cada
+  comando e decisão em um banco separado e a confirmação explícita de toda escrita.
+- **Valores que viram requisitos.** "Só é bom pra gente se for bom para o cliente", "Ética é inegociável" e a
+  centralidade no cliente, da cultura do banco (fontes 5 e 6), orientam as regras de nunca gravar sem confirmação, de
+  responder em frases fixas que repetem o que foi entendido e de manter transcrições e dados de negócio fora dos logs.
+- **AI First com IA responsável.** A estratégia AI First trata a IA generativa como um novo paradigma de
+  atendimento, e o banco ampliou em 84% as iniciativas de IA generativa em 2025, com uso responsável da tecnologia
+  (fontes 1 e 4). A API mede o consumo da IA por usuário, contém o custo (validação do áudio antes da IA, cache da
+  síntese de voz, idempotência do envio e limite de requisições por usuário) e restringe o assistente ao escopo
+  financeiro, com proteção contra *prompt injection* falada.
+- **Banco consultivo e confiável.** Segundo a pesquisa "Consciência e Prosperidade", do Itaú, 67% dos brasileiros
+  esperam que seus bancos sejam mais consultivos e 53% desejam apoio para decisões mais inteligentes (fontes 8 e 9).
+  Um assistente só é consultivo se for confiável: valores exatos em reais, consultas agregadas no próprio banco de
+  dados, respostas claras e falha elegante quando a IA está fora do ar (timeouts, retries, circuit breaker e 503 com
+  `Retry-After`).
+
+### Fontes
+
+1. [Itaú Unibanco lança ia.i, nova experiência conversacional com IA generativa (27/07/2026)](https://www.itau.com.br/media/dam/m/6faa1448dd30b9a0/original/27-07-2026-Itau-Unibanco-lanc-a-ia-i-nova-experie-ncia-conversacional-que-levara-a-IA-generativa-a-todos-os-produtos-e-servic-os-do-banco.pdf)
+2. [Let's Money — ia.i, o assistente de IA do Itaú, e a confirmação explícita de Pix](https://www.letsmoney.com.br/noticias/itau-ia-i-assistente-app/)
+3. [Cartões e Viagens — Itaú coloca IA no app que entende voz, analisa gastos e faz Pix](https://cartoeseviagens.com.br/artigos/itau-ia-app-voz-analisa-gastos-faz-pix)
+4. [Itaú avança 35% em velocidade de implantações tecnológicas e amplia uso de IA generativa (09/02/2026)](https://www.itau.com.br/media/dam/m/11c5a26e8fc3cd99/original/09-02-2026-itau-avanca-35-por-cento-em-velocidade-de-implantacoes-tecnologicas-em-2025-e-amplia-uso-de-ia-generativa-na-experiencia-dos-clientes.pdf)
+5. [Itaú — Cultura Itubers e nosso novo conjunto de valores](https://www.itau.com.br/relacoes-com-investidores/noticias/cultura-itubers-e-nosso-novo-conjunto-de-valores/)
+6. [Forbes — CEO do Itaú prioriza cultura centrada no cliente](https://forbes.com.br/forbes-money/2023/12/ceo-do-itau-prioriza-cultura-centrada-no-cliente-em-cenario-ultracompetitivo/)
+7. [Itaú alerta para golpes com deepfakes e reforça orientações de segurança digital](https://www.itau.com.br/relacoes-com-investidores/noticias/itau-unibanco-alerta-para-golpes-com-deepfakes-e-reforca-orientacoes-de-seguranca-digital/)
+8. [Itaú lança Feito.Itaú e pesquisa "Consciência e Prosperidade" (09/02/2026)](https://www.itau.com.br/media/dam/m/1c23db1493e188a/original/09-02-2026-itau-unibanco-lanca-feito-itau-hub-de-conteudo-proprietario-que-amplia-o-acesso-ao-conhecimento-financeiro-e-reforca-o-papel-do-banco-como-parceiro-estrategico-na-vida-das-pessoas-e-empresas.pdf)
+9. [Seu Crédito Digital — Itaú lança programa de alívio financeiro](https://seucreditodigital.com.br/itau-lanca-programa-alivio-financeiro/)
+
 ## Pré-requisitos
 
 - JDK 25

@@ -140,7 +140,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
 - [x] [verificação] Visão geral no topo: o que a API faz, o fluxo áudio → transcrição → IA (tool calling) → proposta
       → confirmação → fala, e o princípio "a IA propõe, o cliente decide"; links para escopo, tarefas e arquitetura
-- [ ] [verificação] Seção "Contexto de negócio": cada necessidade pública do Itaú (ia.i com confirmação explícita,
+- [x] [verificação] Seção "Contexto de negócio": cada necessidade pública do Itaú (ia.i com confirmação explícita,
       fraude com IA/deepfake, valores da cultura, AI First com IA responsável, banco consultivo e confiável)
       ligada ao que a API faz hoje; lista "Fontes" com todas as fontes do `escopo.md`; sem aviso de vínculo e sem
       sugerir vínculo
