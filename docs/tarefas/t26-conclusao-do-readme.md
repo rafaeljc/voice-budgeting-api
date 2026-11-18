@@ -146,7 +146,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       sugerir vínculo
 - [x] [verificação] Seção "Melhorias implementadas": uma tabela por área (ver Decisões), cobrindo todos os itens
       entregues das T03–T25 e T27, com links para os ADRs 0001–0010
-- [ ] [verificação] Seção "Tecnologias": tabela tecnologia → para que serve, a partir da Stack do `CLAUDE.md`
+- [x] [verificação] Seção "Tecnologias": tabela tecnologia → para que serve, a partir da Stack do `CLAUDE.md`
 - [ ] [verificação] Configuração: linha sobre a alternativa Azure OpenAI no `.env.example`
 - [ ] [verificação] Seção "Como testar o fluxo principal": passos numerados com a API no ar — gerar token; enviar
       `recording-1.m4a` e guardar a resposta; extrair a fala (`jq -r .speech.content | base64 -d > fala.mp3`) e

@@ -139,6 +139,27 @@ importantes e não óbvias têm ADR em [docs/adr/](docs/adr/).
 | Testes de falha | Falha de cada etapa da IA, circuito aberto, etapa cheia, envios e confirmações simultâneos e auditoria com o MongoDB falhando comprovam a resiliência. | |
 | Integração contínua | Cada PR passa por formatação, Checkstyle, testes, cobertura, varredura de segredos e revisão de dependências. | |
 
+## Tecnologias
+
+| Tecnologia | Para que serve |
+|---|---|
+| Java 25, Spring Boot 4.1, Gradle 9 | Linguagem, framework e build; requisições, tarefas assíncronas e agendadas em virtual threads |
+| Spring Web MVC | Endpoints REST e upload do áudio |
+| Spring Data JPA + MySQL 9.6 | Transações e propostas (banco transacional) |
+| Spring Data MongoDB + MongoDB 9.0 | Auditoria e medição de consumo da IA, separadas do banco transacional |
+| Spring Modulith (registro de publicação de eventos) | Outbox transacional da auditoria no MySQL, com reenvio |
+| Spring AI 2.0 + OpenAI | Transcrição (`whisper-1`), interpretação com tool calling (`gpt-4o-mini`) e síntese de voz (`gpt-4o-mini-tts`) |
+| Spring Cache + Caffeine | Cache local da síntese de voz, trava de idempotência do comando de voz e limitadores por usuário |
+| Resilience4j | Circuit breaker do fluxo de voz, bulkhead por etapa da IA e limite de requisições por usuário |
+| Spring Security (resource server) | Autenticação por JWT HS256 |
+| Spring Boot Actuator, Micrometer, OpenTelemetry | Health checks, métricas e traces exportados por OTLP |
+| Grafana LGTM (`grafana/otel-lgtm`) | Grafana local com Prometheus e Tempo para métricas e traces |
+| Docker Compose (`spring-boot-docker-compose`) | Sobe MySQL, MongoDB e Grafana junto com a aplicação |
+| JUnit 5, AssertJ, Mockito, Testcontainers, WireMock | Testes unitários e de integração, com bancos em containers e a OpenAI simulada |
+| Spotless, Checkstyle, JaCoCo | Formatação, convenções e cobertura, verificadas no build |
+| GitHub Actions, gitleaks, dependency review | CI, varredura de segredos e revisão das dependências vulneráveis em cada PR |
+| Lombok, Jackson 3 | Menos código repetitivo e serialização JSON |
+
 ## Pré-requisitos
 
 - JDK 25
