@@ -2,10 +2,25 @@
 
 [![CI](https://github.com/rafaeljc/voice-budgeting-api/actions/workflows/ci.yml/badge.svg)](https://github.com/rafaeljc/voice-budgeting-api/actions/workflows/ci.yml)
 
-API que registra e consulta transações financeiras a partir de comandos de voz. O áudio é transcrito, interpretado
-pela IA (tool calling) e executado pelos use cases da aplicação, e a resposta volta falada. Escopo e plano em
-[docs/escopo.md](docs/escopo.md) e [docs/tarefas.md](docs/tarefas.md).
-Camadas e fluxo de voz em [docs/arquitetura.md](docs/arquitetura.md).
+## Visão geral
+
+API REST que registra e consulta gastos a partir de comandos de voz. O cliente envia um áudio, como "gastei 80 reais
+no mercado", e recebe de volta uma resposta falada:
+
+```
+áudio → transcrição → interpretação pela IA (tool calling) → proposta → confirmação → resposta falada
+```
+
+O princípio que guia o fluxo é **a IA propõe, o cliente decide**. A IA nunca grava nada: um comando de registro vira
+uma proposta, que a resposta falada repete ("Um gasto de R$ 80,00 com mercado, na categoria mercado. Você confirma?") e que expira em 5 minutos. A transação só nasce
+quando o cliente a confirma por uma chamada explícita à API, sem IA; se a IA entendeu errado, ele cancela e fala de
+novo. Consultas ("quanto gastei com mercado?") respondem direto, só com a fala.
+
+O projeto parte do código fornecido pelo desafio final do bootcamp "Itaú - Java com Inteligência Artificial", da DIO,
+e eleva essa funcionalidade a um padrão de produção (segura, confiável, resiliente, observável e com custo
+controlado), sem criar funcionalidades novas. O escopo está em [docs/escopo.md](docs/escopo.md), o plano de tarefas
+em [docs/tarefas.md](docs/tarefas.md), e as camadas e os diagramas do fluxo de voz em
+[docs/arquitetura.md](docs/arquitetura.md).
 
 ## Pré-requisitos
 

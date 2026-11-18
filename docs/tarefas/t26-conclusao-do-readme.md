@@ -136,9 +136,9 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 2: Conteúdo novo do README
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Visão geral no topo: o que a API faz, o fluxo áudio → transcrição → IA (tool calling) → proposta
+- [x] [verificação] Visão geral no topo: o que a API faz, o fluxo áudio → transcrição → IA (tool calling) → proposta
       → confirmação → fala, e o princípio "a IA propõe, o cliente decide"; links para escopo, tarefas e arquitetura
 - [ ] [verificação] Seção "Contexto de negócio": cada necessidade pública do Itaú (ia.i com confirmação explícita,
       fraude com IA/deepfake, valores da cultura, AI First com IA responsável, banco consultivo e confiável)
