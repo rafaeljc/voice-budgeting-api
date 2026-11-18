@@ -237,7 +237,7 @@ ignorada pelo git.
      -H "Authorization: Bearer $TOKEN"
    ```
 
-   A resposta é `201 Created`, com a transação no corpo e o endereço dela no cabeçalho `Location`.
+   A resposta é `201`, com a transação no corpo e o endereço dela no cabeçalho `Location`.
 
 5. Liste as transações e veja a nova:
 

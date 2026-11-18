@@ -202,13 +202,13 @@ Status: Concluída  <!-- Não iniciada | Em andamento | Concluída -->
 
 ## Fase 3: Roteiro de ponta a ponta com IA real
 
-Status: Não iniciada  <!-- Não iniciada | Em andamento | Concluída -->
+Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
 
-- [ ] [verificação] Executar o roteiro do README ao pé da letra contra o Azure OpenAI do `.env` (`bootRun` em
+- [x] [verificação] Executar o roteiro do README ao pé da letra contra o Azure OpenAI do `.env` (`bootRun` em
       segundo plano), salvando no scratchpad da sessão em `roteiro-t26/`: cópia do áudio de entrada
       (`recording-1.m4a`), resposta JSON do comando de voz, `fala.mp3`, resposta da confirmação (status e
       `Location`) e resposta da listagem
-- [ ] [verificação] Corrigir no README qualquer comando ou saída que o roteiro revelar errado
+- [x] [verificação] Corrigir no README qualquer comando ou saída que o roteiro revelar errado
 - [ ] [verificação] Marcar a T26 em `docs/tarefas.md`
 
 ### Plano de verificação
