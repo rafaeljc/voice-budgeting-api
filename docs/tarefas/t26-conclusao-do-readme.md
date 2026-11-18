@@ -156,7 +156,7 @@ Status: Em andamento  <!-- Não iniciada | Em andamento | Concluída -->
       `docs/tarefas/`, planejar e executar com agentes, um PR por tarefa, ADRs em `docs/adr/`, Conventional Commits)
 - [x] [verificação] Seção "Aprendizados": rascunho a partir dos resumos dos plan files; mostrar ao usuário e
       aplicar a revisão dele antes de concluir a fase
-- [ ] [verificação] Seção "Melhorias futuras": lista agrupada por tema (ver Decisões), apontando para a tabela do
+- [x] [verificação] Seção "Melhorias futuras": lista agrupada por tema (ver Decisões), apontando para a tabela do
       `escopo.md`
 - [ ] [verificação] `docs/escopo.md`: atualizar os itens FUT desatualizados pelo que foi entregue (ex.: FUT-16)
 

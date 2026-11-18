@@ -361,3 +361,47 @@ sem dizer quem gastou. Isso trouxe o consumo para dentro do desenho da solução
 o áudio inválido antes da transcrição, não processar duas vezes o mesmo comando, limitar quantos comandos cada um pode
 enviar e reaproveitar as falas que se repetem. No fim, a otimização que mais importa com IA é evitar a chamada, e não
 deixá-la mais rápida.
+
+## Melhorias futuras
+
+O que ficou de fora e por quê. A lista completa, com o que cada item é, está na tabela de
+[melhorias futuras do escopo](docs/escopo.md#melhorias-futuras).
+
+**IA e áudio**
+
+- Outro provedor de IA como alternativa automática: o circuit breaker e o `503` com `Retry-After` já cobrem a queda do
+  provedor, e um segundo modelo traria outra fonte de variação na interpretação.
+- IA em serviço gerenciado na nuvem, com a identidade da plataforma no lugar de chave: a chave basta para rodar
+  localmente, e a troca fica nos adaptadores e na configuração.
+- Validação completa do áudio (duração, silêncio, arquivo corrompido): exige decodificar o áudio, com uma dependência
+  ou um processo externo.
+- Detecção de voz sintética ou clonada: exige tecnologia especializada; a autenticação e a confirmação já reduzem o
+  risco.
+- Tools em servidor MCP e microsserviço de áudio: mudam a arquitetura sem deixar o fluxo atual mais confiável.
+
+**Identidade e segurança**
+
+- Cadastro e login próprios: em produção, a identidade viria de um provedor corporativo.
+- Consulta a um antifraude antes da confirmação: faz mais sentido em transferências do que no registro de gastos.
+- Limite de requisições por IP: cabe à borda (API gateway, ingress ou WAF), que conhece o IP real do cliente.
+- ID de interação gerado pelo cliente (`x-fapi-interaction-id`, do Open Finance): o `X-Request-Id` já correlaciona as
+  requisições; ele só cobriria o caso da resposta que não chega.
+
+**Escala e operação**
+
+- Migrations versionadas do banco: a geração automática das tabelas basta enquanto não há dados reais a preservar.
+- Limite de requisições distribuído (Redis): com uma instância, a memória local basta, e a troca é um adaptador novo.
+- Deploy na nuvem e envio dos traces a um backend de produção: são infraestrutura do ambiente; a aplicação já exporta
+  por OTLP.
+- Cota de consumo de IA por usuário e alertas de gasto no provedor: o limite por usuário já contém abusos, e a medição
+  do consumo permite calibrar uma cota depois.
+- Cache das consultas: hoje não há necessidade real.
+- Painel pronto no Grafana: as métricas já chegam ao Grafana local, e as consultas estão em
+  [docs/operacao.md](docs/operacao.md).
+
+**Qualidade e avaliação**
+
+- Avaliação da acurácia da IA com um conjunto de comandos e resultados esperados: a confirmação impede que um erro
+  chegue ao banco, e a métrica de desfechos já indica a qualidade.
+- Teste de carga: o comportamento sob falha já é coberto pelos testes de falha.
+- Demonstração em vídeo: o roteiro deste README permite executar o fluxo de ponta a ponta.
